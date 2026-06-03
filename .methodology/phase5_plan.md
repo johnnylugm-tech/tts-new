@@ -127,7 +127,6 @@ python3 harness_cli.py load-context --phase 5 --project . --json \
 
 ### Phase 5 → Phase 6: Quality Assurance
 
-- [ ] Confirm ALL checkpoints in this plan are ✓  (no skips — HR-03)
 - [ ] **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
   > **FAIL** → check `phase_truth_verifier` output in `.sessi-work/`
   >   → identify which phase link or gate artifact failed

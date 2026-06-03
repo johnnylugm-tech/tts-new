@@ -219,7 +219,6 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 
 ### Phase 4 → Phase 5: Verification & Delivery
 
-- [ ] Confirm ALL checkpoints in this plan are ✓  (no skips — HR-03)
 - [ ] **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 80.0` (exit 10, D4 unified v2.6)

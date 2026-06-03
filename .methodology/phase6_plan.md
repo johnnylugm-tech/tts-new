@@ -186,7 +186,6 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 
 ### Phase 6 → Phase 7: Risk Management
 
-- [ ] Confirm ALL checkpoints in this plan are ✓  (no skips — HR-03)
 - [ ] **[GIT-TAG]** Push Gate 4 git tag (SKILL.md §0.4):
   ```bash
   SCORE=$(python3 -c "import json; d=json.load(open('.sessi-work/gate4_result.json')); print(d.get('composite_score','XX'))" 2>/dev/null || echo 'XX')

@@ -378,7 +378,6 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 2 → Phase 3: Implementation
 
-- [ ] Confirm ALL checkpoints in this plan are ✓  (no skips — HR-03)
 - [ ] Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 2 --project .

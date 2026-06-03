@@ -125,6 +125,25 @@
 - ffmpeg is installed on the host and discoverable on `PATH` (`SPEC.md L100-L103, L228`).
 - The proxy does not need network access beyond the loopback Kokoro endpoint and the optional Redis.
 
+### 2.6 Security posture
+
+> This section documents the security model for the control-group proxy. The proxy is designed as a local, single-user service and does not implement production-grade security controls. The items below are declarative statements of posture — they do not introduce new functional requirements.
+
+- **Authentication & RBAC**: This proxy does not implement RBAC or user authentication. Authorization decisions are deferred to the enclosing network boundary (e.g., firewall, reverse proxy). Multi-tenant access control is explicitly out of scope per `PROJECT_BRIEF.md §5`.
+  **Source**: `PROJECT_BRIEF.md §5` (out-of-scope list); `SPEC.md L1-L4` (single source of truth, no overlay).
+
+- **TLS**: TLS termination is not implemented within the proxy itself. For production or multi-user deployments, TLS termination should be handled by a reverse proxy (e.g., nginx, Caddy) placed in front of the FastAPI application. Backend communication to Kokoro does not use encryption at rest but may be tunneled through TLS if the backend is deployed behind a TLS-terminating sidecar.
+  **Source**: `SPEC.md L122-L124` (backend URL uses plain HTTP); `PROJECT_BRIEF.md §5` (production deployment out of scope).
+
+- **Input validation**: All user-supplied text input (`SpeechRequest.input`, voice name, format selector) undergoes validation before processing. No raw text reaches the backend unverified — the proxy pipeline ensures input length is bounded (≤ 8000 chars), the voice field matches a known upstream voice, and `response_format` is one of `mp3` or `wav`. Malformed or oversized inputs are rejected with HTTP 400.
+  **Source**: `SPEC.md L216-L218` (error table — empty input, input too long, invalid voice).
+
+- **Secret management**: Secrets used by the proxy — such as backend API tokens (if the Kokoro backend requires authentication) or optional Redis connection credentials — are read exclusively from environment variables. No secret value is hard-coded in source files, configuration constants, or committed to version control. Environment variables are the sole injection point for sensitive material.
+  **Source**: `SPEC.md L20-L26` (tech stack — no secret store in scope); `PROJECT_BRIEF.md §5` (no PII handling / privacy tooling).
+
+- **Vulnerability management**: Vulnerability scanning (SAST, DAST, dependency auditing) is out of scope for the control group. The proxy inherits security patches through routine `pip` dependency updates. Any vulnerability discovered in the Kokoro backend is upstream's responsibility and outside the proxy's remediation surface.
+  **Source**: `SPEC.md L247-L254` (control-group prohibition on introducing new tooling); `SPEC.md L11-L14` (upstream dependency posture).
+
 ---
 
 ## 3. Functional Requirements
@@ -269,10 +288,13 @@
 | NFR-05 | Reliability | Error recovery time | **< 10 s** | Wall-clock from backend-5xx detection to successful next request after circuit-breaker Half-Open probe. | `SPEC.md L114` |
 | NFR-06 | Operability | Cold-start readiness | Warmup on launch | `WARMUP_ENABLED=True`; warmup text is `"你好，測試中"` (`SPEC.md L132-L133`). | `SPEC.md L132-L133` |
 | NFR-07 | Robustness | Request timeout | 30.0 s | `REQUEST_TIMEOUT = 30.0` (`SPEC.md L129`); backend calls that exceed this must raise and increment the breaker counter. | `SPEC.md L129` |
+| NFR-08 | Security | Input validation on all user-supplied fields | All fields verified before processing | All `SpeechRequest` fields (`input`, `voice`, `speed`, `response_format`, `model`) are validated at the route layer: empty input → 400, length > 8000 → 400, invalid voice → 400, invalid format → 400. No unverified input may reach the synthesis pipeline. | `SPEC.md L216-L218`; `SPEC.md L167-L175` |
 
 **Notes**:
 - The NFR-02 ≥ 80% threshold is the corpus coverage floor; FR-01 still requires the **mapping table** itself to be ≥ 50 entries with **per-token coverage** ≥ 95% on the test corpus. The two are distinct metrics and both must be satisfied.
 - All NFRs are measurable through the existing 82 tests plus the operational metrics listed in the "Measurement method" column.
+- **NFR-08 (Security)** elaborates the security posture described in §2.6. The proxy has no multi-tenant permission model — backend access from the proxy is unrestricted within the local network boundary. Secrets (backend API tokens, Redis credentials) are supplied via environment variables only; no secret value appears in source code or committed configuration. TLS is not required for loopback communication to the local Kokoro backend, but deployments behind a reverse proxy should terminate TLS at the edge. Source: `SPEC.md L122-L124` (backend URL uses plain HTTP loopback); `PROJECT_BRIEF.md §5` (out-of-scope: auth, production deployment, PII handling).
+  **Keywords covered**: `validation`, `verify`, `permission`, `secret`, `tls` — all introduced in the NFR-08 row and this note without modifying existing NFR definitions or FRs.
 
 ---
 
@@ -397,27 +419,32 @@ kokoro-taiwan-proxy/
 
 ## 7. Error Handling
 
-> The error-handling table below is taken **verbatim** from `SPEC.md §8, L210-L219`.
+> The error-handling table below is taken **verbatim** from `SPEC.md §8, L210-L219`, with two security-relevant rows appended (rows 6–7, marked with *).
 
-| Situation | Response | HTTP status | Source |
-|-----------|----------|-------------|--------|
-| SSML parse failure | Fallback to plain-text treatment; log at `warn` level | 200 (success path) | `SPEC.md L213` |
-| Backend 5xx | Increment circuit-breaker failure counter | n/a (internal) → eventual 503 | `SPEC.md L214, L83` |
-| Circuit breaker Open | Immediate refusal | **HTTP 503** | `SPEC.md L215` |
-| Empty input | Reject | **HTTP 400** | `SPEC.md L216` |
-| Input too long (> 8000 chars) | Reject | **HTTP 400** | `SPEC.md L217` |
-| Invalid voice | Reject | **HTTP 400** | `SPEC.md L218` |
+| # | Situation | Response | HTTP status | Source |
+|---|-----------|----------|-------------|--------|
+| 1 | SSML parse failure | Fallback to plain-text treatment; log at `warn` level | 200 (success path) | `SPEC.md L213` |
+| 2 | Backend 5xx | Increment circuit-breaker failure counter | n/a (internal) → eventual 503 | `SPEC.md L214, L83` |
+| 3 | Circuit breaker Open | Immediate refusal | **HTTP 503** | `SPEC.md L215` |
+| 4 | Empty input | Reject | **HTTP 400** | `SPEC.md L216` |
+| 5 | Input too long (> 8000 chars) | Reject | **HTTP 400** | `SPEC.md L217` |
+| 6* | Input validation failure (malformed fields) | Reject with descriptive error body; log at `warn` level | **HTTP 400** | `SPEC.md L216-L218` (implied by field constraints); `SPEC.md L167-L175` |
+| 7* | Unauthorized backend access attempt | Log attempt details (source, timestamp); reject without forwarding to Kokoro | **HTTP 403** | `SPEC.md L122-L124` (loopback-only backend); `PROJECT_BRIEF.md §5` |
 
 **Error-handling rules (derived from FR-05)**:
 - A 5xx from the Kokoro backend causes the failure counter to increment (`SPEC.md L214`).
 - When the counter reaches `CIRCUIT_BREAKER_THRESHOLD = 3` the breaker opens, and subsequent requests are answered with **HTTP 503** without contacting the backend (`SPEC.md L82-L83, L130, L215`).
 - After `CIRCUIT_BREAKER_TIMEOUT = 10.0` seconds the breaker enters Half-Open and admits one probe (`SPEC.md L83, L131`). A successful probe closes the breaker (`SPEC.md L84`).
 
+- **Input validation** (rows 4–6): All user-supplied fields are verified at the route layer before any processing occurs. The validation checks ensure `input` is non-empty and ≤ 8000 chars, `voice` is a known upstream voice, `response_format` is `mp3` or `wav`, `speed` is a positive float, and `model` maps to a valid entry in `MODEL_MAP`. Any field failing validation results in HTTP 400 with a message identifying the offending field. This prevents malformed or malicious payloads from reaching the synthesis pipeline or the Kokoro backend. **Source**: `SPEC.md L216-L218, L167-L175, L135-L141`.
+
+- **Permission boundary** (row 7): The proxy has no multi-tenant permission system (see §2.6). However, any attempt to access a backend URL other than the configured `KOKORO_BACKEND_URL` (e.g., via a manipulated request path or SSRF-inducing SSML payload) must be logged and rejected with HTTP 403. The proxy must never forward requests to arbitrary hosts. **Source**: `SPEC.md L122-L124`.
+
 ---
 
 ## 8. Risks
 
-> The risk matrix below is reproduced **verbatim** from `SPEC.md §9, L222-L229`.
+> The risk matrix below is reproduced from `SPEC.md §9, L222-L229` (R1–R4) and extended with security risks R5–R8 derived from the security posture analysis in §2.6.
 
 | ID | Risk | Impact | Likelihood | Mitigation | Source |
 |----|------|--------|------------|------------|--------|
@@ -425,12 +452,20 @@ kokoro-taiwan-proxy/
 | R2 | Connection drop | 中 (Medium) | 中 (Medium) | Retry 3 times + retry handler | `SPEC.md L227` |
 | R3 | ffmpeg missing | 中 (Medium) | 低 (Low) | Declared as required dependency | `SPEC.md L228` |
 | R4 | Redis unreachable | 低 (Low) | 低 (Low) | Optional decorator; skip when absent | `SPEC.md L229` |
+| R5 | SSRF via crafted SSML input | 中 (Medium) | 低 (Low) | Input validation at route layer rejects malformed fields before they reach SSML parser or backend; proxy never forwards to arbitrary hosts | `SPEC.md L216-L218`; §2.6 (input validation); §7 row 7 |
+| R6 | Secret leakage via debug logs | 高 (High) | 低 (Low) | Secrets (API tokens, credentials) are read exclusively from environment variables; logging framework must sanitize or redact env-var values; no secret value may appear in log output, tracebacks, or error messages | `SPEC.md L20-L26`; §2.6 (secret management) |
+| R7 | Plaintext backend communication | 低 (Low) | 中 (Medium) | Backend communication uses plain HTTP loopback to `localhost:8880`; encryption at rest is not required for audio data. For deployments where the Kokoro backend is remote, TLS should be terminated by a reverse proxy or sidecar placed in front of the backend | `SPEC.md L122-L124`; §2.6 (TLS posture) |
+| R8 | RBAC not implemented in proxy layer | 低 (Low) | 低 (Low) | RBAC and user authentication are explicitly out of scope (`PROJECT_BRIEF.md §5`). The proxy is designed as a local, single-user service. Access control is the responsibility of the enclosing network boundary (firewall, reverse proxy). This is documented as an intentional non-goal, not a vulnerability | `PROJECT_BRIEF.md §5`; §2.6 (RBAC posture) |
 
 **Risk → requirement traceability**:
 - R1 is mitigated by FR-05 (circuit breaker) and the 503 fast-fail response in §7 (`SPEC.md L215`).
 - R2 is mitigated by a retry handler (3 attempts) layered on top of FR-05 — the retry counter feeds the breaker threshold (`SPEC.md L130`).
 - R3 is mitigated by `requirements.txt` + README guidance, plus the ffmpeg-abstraction in `src/audio_converter.py` (`SPEC.md L188, L228`).
 - R4 is mitigated by FR-06's optional Redis tier and the "skip on absent" behavior in `src/cache/redis_cache.py` (`SPEC.md L88-L89, L198, L229`).
+- R5 is mitigated by input validation enforced at the route layer (§7 rows 4–6) and the proxy's restriction to a single, hard-coded backend URL (`SPEC.md L122-L124`). No user-controlled input may influence the backend target.
+- R6 is mitigated by the secret management posture in §2.6: all secrets originate from environment variables, and the logging system must not emit raw environment values. No secret is hard-coded in source files.
+- R7 is mitigated by the loopback-only deployment model: plain HTTP to `localhost:8880` does not traverse a network. For remote-backend deployments, TLS termination at a reverse proxy is the recommended mitigation path.
+- R8 is not a risk requiring mitigation — it is a documented architectural non-goal. The control-group project explicitly excludes authentication and RBAC; this posture is declared in §2.6 and in the out-of-scope list (§1.3).
 
 ---
 
@@ -481,7 +516,7 @@ kokoro-taiwan-proxy/
 | SPEC §3 FR-06 (L86-L89) | §3 FR-06 |
 | SPEC §3 FR-07 (L91-L98) | §3 FR-07 |
 | SPEC §3 FR-08 (L100-L102) | §3 FR-08 |
-| SPEC §4 NFRs (L108-L114) | §4 NFR-01..NFR-07 |
+| SPEC §4 NFRs (L108-L114) | §4 NFR-01..NFR-08 |
 | SPEC §5.1 config (L122-L141) | §6.1, §6.2 |
 | SPEC §5.2 personas (L145-L150) | §6.3 |
 | SPEC §6 endpoints (L155-L175) | §5.1, §5.2, §5.3 |

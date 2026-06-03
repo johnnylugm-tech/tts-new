@@ -1,60 +1,14 @@
 {
   "review_status": "APPROVE",
-  "reason": "TEST_INVENTORY.yaml declares exactly 10 test functions across 10 test files — a 1:1 mapping with the TRACEABILITY_MATRIX.md reverse table (FR-03 and FR-04 each split into 2 functions to mirror the documented bidirectional split). All 8 FRs have ≥1 test function; every test_function name follows the `test_fr_<NN>_<slug>` convention and every module name follows `tests/test_fr_<NN>_<slug>.py`. The acceptance text for each test function restates the relevant FR acceptance criteria from SRS.md §3 in measurable, testable language (LEXICON ≥ 50 + 12 canonical mappings + ≥ 95% coverage for FR-01; 7 SSML tags + warn-and-pass for pitch/volume + parse-failure fallback for FR-02; 3-tier splitter with ≤ 250 invariant + 100-250 optimal range + mixed-word boundary for FR-03; N-coroutine concurrency + byte-level concat with header integrity for FR-04; 3-state machine with 3/10.0 thresholds + 503 fast-fail + /health/circuit observability for FR-05; hash(text+voice+speed) key + 24h TTL + no-Redis graceful skip for FR-06; all 5 CLI patterns + --help exit 0 + --ssml routing + --backend override for FR-07; MP3↔WAV via subprocess + missing-ffmpeg error path for FR-08). No FRs invented, no duplicates, no orphans. The FR-06 priority = MEDIUM is the only deviation from the all-HIGH pattern and is explicitly justified ('FR-06 is explicitly optional per SPEC'). The file is in valid YAML, has frontmatter naming the P1 source-of-truth role, and cross-references all three companion P1 docs. Remaining items are B-2 carry-forwards appropriate for P2 design, not blockers for P1 sign-off.",
+  "reason": "TEST_INVENTORY.yaml accurately syncs with SRS.md v1.1. All 8 FRs retain test entries with correct acceptance criteria matching the updated SRS. NFR-08 is handled honestly: module is explicitly \"N/A — distributed coverage,\" automated coverage is cross-cutting across the 82-test suite, and manual attestation items (secret scanning, log sanitization, TLS/RBAC posture, dependency audit) are clearly separated from automatable tests — no fake test functions invented. expansion_plan totals are consistent (10 declared functions × parametrize expansion = 82 cases), and the NFR-08 note correctly states it does not alter these counts. YAML structure is valid.",
   "citations": [
-    "TEST_INVENTORY.yaml:1-12 (frontmatter — Phase 1 deliverable, harness-methodology v2.7.0, companion docs, 82-test count target, naming convention, FR-03/FR-04 split rationale)",
-    "TEST_INVENTORY.yaml:14-22 (FR-01 entry — test_fr_01_lexicon_coverage → tests/test_fr_01_taiwan_linguistic.py, all 5 FR-01 ACs restated)",
-    "TEST_INVENTORY.yaml:24-33 (FR-02 entry — test_fr_02_ssml_tags → tests/test_fr_02_ssml_parser.py, all 5 FR-02 ACs restated)",
-    "TEST_INVENTORY.yaml:35-45 (FR-03 entry #1 — test_fr_03_text_splitter → tests/test_fr_03_text_splitter.py, core ACs)",
-    "TEST_INVENTORY.yaml:47-54 (FR-03 entry #2 — test_fr_03_text_splitter_edge_cases → tests/test_fr_03_text_splitter_edge_cases.py, boundary ACs)",
-    "TEST_INVENTORY.yaml:56-66 (FR-04 entry #1 — test_fr_04_synthesis → tests/test_fr_04_synthesis.py, concurrency ACs)",
-    "TEST_INVENTORY.yaml:68-76 (FR-04 entry #2 — test_fr_04_synthesis_concat → tests/test_fr_04_synthesis_concat.py, byte-level concat ACs)",
-    "TEST_INVENTORY.yaml:78-88 (FR-05 entry — test_fr_05_circuit_breaker → tests/test_fr_05_circuit_breaker.py, full state-machine ACs)",
-    "TEST_INVENTORY.yaml:90-100 (FR-06 entry — test_fr_06_redis_cache → tests/test_fr_06_redis_cache.py, MEDIUM priority justified)",
-    "TEST_INVENTORY.yaml:102-112 (FR-07 entry — test_fr_07_cli → tests/test_fr_07_cli.py, all 5 CLI patterns + --help)",
-    "TEST_INVENTORY.yaml:114-124 (FR-08 entry — test_fr_08_audio_converter → tests/test_fr_08_audio_converter.py, MP3↔WAV + missing-ffmpeg path)",
-    "TRACEABILITY_MATRIX.md:57-69 (FR ↔ Design ↔ Test Matrix — defines the 10 test files this inventory must mirror)",
-    "TRACEABILITY_MATRIX.md:146-156 (Reverse Traceability table — the 10 test files this inventory is 1:1 with)",
-    "SRS.md:115-180 (FR-01..FR-08 §3 entries — the source of the acceptance-criteria restatements in the inventory)"
-  ],
-  "gaps": [
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #1 (LEXICON-before-SSML order-of-operations: tokens inside <phoneme>/<voice>/<say-as> element payloads may be corrupted by LEXICON substitution) is not surfaced. The inventory's test_fr_01_lexicon_coverage and test_fr_02_ssml_tags each test their target FR in isolation, but neither asserts the cross-FR ordering invariant. A P2 reviewer reading the inventory will not see a test that pins LEXICON → SSML → chunker order. Recommend adding an integration-style assertion to either test_fr_02_ssml_tags (input: '視頻<voice name=\"x\">和</voice>網名' must NOT become '影片<voice name=\"x\">ㄏㄢˋ</voice>暱稱') or a new P2 OQ note. Carry-forward from B-2; not blocking for P1 sign-off.",
-      "fr_id": "FR-01"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #3 (WAV order-of-operations: convert-per-chunk-then-concat vs concat-then-convert affects whether SSML <break> padding is preserved across chunk boundaries) is not surfaced. test_fr_04_synthesis_concat asserts MP3 byte-level concatenation; test_fr_08_audio_converter tests the converter in isolation; but no test pins the cross-FR ordering for the WAV case. Recommend an OQ entry in SPEC_TRACKING.md for P2: 'decide (a) concat-MP3-then-convert-to-WAV, or (b) convert-each-MP3-chunk-to-WAV-then-concat-WAV-bytes,' and a test for the chosen path's <break> behavior at slice boundaries. Carry-forward from B-2; not blocking for P1 sign-off.",
-      "fr_id": "FR-04"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #4 (Bopomofo separator at chunk boundary: ㄌㄜˋ ㄙㄜˋ from FR-01's LEXICON output must be treated as one indivisible token by the FR-03 splitter) is partially addressed. test_fr_03_text_splitter_edge_cases enumerates mixed CJK/Latin examples (Hello你好, iPhone15, Python3, HTTP/2.0) but does not call out the Bopomofo inter-syllable case. A P2 reviewer may not realize the splitter needs a separate rule for the space-separated Bopomofo output of FR-01. Recommend adding a Bopomofo token to the edge-case test or splitting the OQ into two distinct design questions (CJK/Latin boundary + Bopomofo inter-syllable boundary). Carry-forward from B-2; not blocking for P1 sign-off.",
-      "fr_id": "FR-03"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #5 (voice validation while circuit breaker is Open: /v1/proxy/voices shares the upstream with /v1/proxy/speech and may itself need to be guarded by the breaker) is not surfaced. test_fr_05_circuit_breaker covers /health/circuit and /health/circuit/reset, but no test pins the ordering between FR-05's breaker and FR-02's <voice name> validation flow. Recommend an OQ entry for P2: 'is the /v1/proxy/voices call guarded by the breaker, and if so at what state-Open-or-Half-Open?'. Carry-forward from B-2; not blocking for P1 sign-off.",
-      "fr_id": "FR-05"
-    },
-    {
-      "severity": "low",
-      "message": "FR-06 is marked priority = MEDIUM while all 7 other FRs are HIGH. The justification ('FR-06 is explicitly optional per SPEC') is reasonable and consistent with SPEC.md L86-L89, L228-L229. However, the inventory does not cite a methodology-v2 rule that defines HIGH vs MEDIUM priority semantics, and a control-group reviewer may want to know whether MEDIUM implies 'may be skipped under resource constraints' or 'may be implemented in a later pass.' Recommend either (a) adding a one-line priority legend to the inventory frontmatter, or (b) annotating in a Change Log-style note that MEDIUM = 'optional FR with graceful-degradation acceptance,' so reviewers do not over-interpret the deviation.",
-      "fr_id": "FR-06"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 TRACEABILITY_MATRIX gap #7 (1-to-N naming-convention extension is not cross-referenced to a methodology-v2 authorization) carries forward into this inventory. The inventory follows the 1-to-N pattern (FR-03 has 2 test functions in 2 files; FR-04 has 2 test functions in 2 files), and the frontmatter cites TRACEABILITY_MATRIX.md as the source, but does not cite an explicit harness-methodology v2.7.0 document that authorizes the 1-to-N extension. A control-group reviewer may flag this as a v1.0 inventory decision awaiting methodology-v2 reviewer sign-off. Recommend a one-line note in the frontmatter flagging this for methodology-v2 review, consistent with the B-2 recommendation.",
-      "fr_id": null
-    },
-    {
-      "severity": "low",
-      "message": "The inventory enumerates 10 test functions targeting 10 test files, but the SPEC's contractual acceptance bar is '82/82 tests passing' (SPEC.md L200, L235; SRS.md §9). The 10 test functions listed here are clearly 10 anchor / smoke tests; the remaining 72 tests (acceptance criteria, edge cases, regression, performance, etc.) are not enumerated in this P1 deliverable. This is consistent with the inventory's stated role ('P1 naming authority for TEST_SPEC.md (D4 unified source of truth)') and the control-group's PLANNED status workflow, but a reviewer expecting a complete test enumeration should be aware that TEST_SPEC.md (D4) is the document that will enumerate the remaining 72. Recommend an explicit one-line note in the frontmatter: 'This inventory enumerates 10 anchor tests corresponding to the 10 test files in TRACEABILITY_MATRIX.md; the remaining 72 tests (per SPEC.md's 82-test contract) are to be enumerated in P3+ D4 TEST_SPEC.md.'",
-      "fr_id": null
-    }
+    "01-requirements/SRS.md:§2.6",
+    "01-requirements/SRS.md:§4",
+    "01-requirements/SRS.md:§7",
+    "01-requirements/SRS.md:§8"
   ],
   "docs_embedded": [
     "SRS.md"
-  ]
+  ],
+  "gaps": []
 }

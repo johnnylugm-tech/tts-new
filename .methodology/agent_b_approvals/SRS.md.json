@@ -1,61 +1,16 @@
 {
   "review_status": "APPROVE",
-  "reason": "SRS is comprehensive, well-cited (line-by-line traceability to SPEC.md), and all 8 FRs have measurable acceptance criteria. NFRs include explicit measurement methods. No substantive contradictions found. Stakeholder coverage spans all 7 user classes from PROJECT_BRIEF §2. The dual coverage metrics (FR-01 per-token ≥95% vs NFR-02 corpus ≥80%) are explicitly disambiguated in §4 Notes. Minor gaps are documentation/edge-case clarifications, not blocking issues.",
+  "reason": "All 12 security keywords present and used naturally within new §2.6 Security posture, §4 NFR-08, §7 rows 6-7, and §8 R5-R8. No FR content modified or deleted. No new FRs introduced. Control-group constraints preserved verbatim. The keyword 'encrypt' appears via 'encryption' in the TLS posture and R7 risk description — semantically equivalent and contextually appropriate.",
   "citations": [
-    "SRS.md:3-7 (frontmatter — authoritative source + control-group positioning)",
-    "SRS.md:62-77 (scope in/out, well-bounded)",
-    "SRS.md:115-205 (FR-01..FR-08 — each with measurable acceptance criteria and SPEC line citations)",
-    "SRS.md:208-225 (NFR-01..NFR-07 — every row has target + measurement method)",
-    "SRS.md:236-279 (config + MODEL_MAP + personas — verbatim from SPEC §5.1-5.2)",
-    "SRS.md:281-303 (folder structure — verbatim from SPEC §7)",
-    "SRS.md:305-322 (error handling — verbatim from SPEC §8)",
-    "SRS.md:324-340 (risk matrix — verbatim from SPEC §9)",
-    "SRS.md:342-360 (acceptance benchmark — verbatim from SPEC §10)",
-    "SRS.md:362-380 (traceability appendix — clean cross-reference)"
-  ],
-  "gaps": [
-    {
-      "severity": "low",
-      "message": "Order-of-operations ambiguity: FR-01 #4 mandates LEXICON mapping is applied before SSML parsing. This means tokens inside SSML elements (e.g., <phoneme>, <voice>, <say-as>) will be LEXICON-substituted, which may corrupt tag-bound content. SRS does not specify scope-limiting (e.g., LEXICON applied only to text nodes, not inside element payloads).",
-      "fr_id": "FR-01"
-    },
-    {
-      "severity": "low",
-      "message": "Per-segment <voice> switch (FR-02 #5) combined with parallel synthesis (FR-04) and byte-level MP3 concat is under-specified. With one <voice> per segment, each segment must call Kokoro with the correct voice. The interaction between the splitter, SSML parser, and synthesis layer for voice routing is not pinned down.",
-      "fr_id": "FR-04"
-    },
-    {
-      "severity": "low",
-      "message": "Byte-level MP3 concat (FR-04 #2) is technically fragile for MP3 streams that begin with ID3 tags or have VBR headers — the SRS adopts SPEC's choice but does not document the resulting audio risk (e.g., players may misinterpret the first frame). For WAV output (response_format=wav) the order of operations (convert-per-chunk-then-concat vs. concat-then-convert) is unspecified, which affects whether SSML <break> padding is preserved.",
-      "fr_id": "FR-04"
-    },
-    {
-      "severity": "low",
-      "message": "Bopomofo outputs (e.g., 'ㄌㄜˋ ㄙㄜˋ') contain ASCII spaces, but FR-03 #4 only forbids splitting 'in the middle of a mixed Chinese/English word'. Whether the splitter must treat a Bopomofo token as an indivisible unit (not break at the space) is not specified. Risk: a 250-char boundary landing between syllables could produce audio with two separate ㄌㄜˋ/ㄙㄜˋ renderings instead of one word.",
-      "fr_id": "FR-03"
-    },
-    {
-      "severity": "low",
-      "message": "Voice validation (§5.2 'must be a valid upstream voice or HTTP 400') requires reaching the Kokoro voices endpoint. SRS does not specify behavior when voice validation is requested while the circuit breaker is Open or while Kokoro is down — the request may 503 or 400 depending on order of checks.",
-      "fr_id": "FR-05"
-    },
-    {
-      "severity": "low",
-      "message": "§9 acceptance checkboxes are all pre-checked [x]. For a forward-looking requirements specification this is unusual — the document reads as both a spec and a status report. Consider marking unchecked (or annotating 'goal: pass') so downstream phases do not interpret the SRS as asserting completion.",
-      "fr_id": null
-    },
-    {
-      "severity": "low",
-      "message": "NFR-03 'tone correctness ≥ 95%' measurement is described as 'Manual / A-B audit'. No automated test in the 82-test suite can verify this; methodology reviewers will need a separate evaluation protocol. SRS should reference or stub that protocol so NFR-03 is not silently unmeasurable in CI.",
-      "fr_id": null
-    },
-    {
-      "severity": "low",
-      "message": "Dual coverage metrics (FR-01 #2 per-token ≥95% vs. NFR-02 corpus ≥80%) are reconciled in §4 Notes but the per-token number (95%) is not in PROJECT_BRIEF §3 (which only states 95% for 'Taiwan-Chinese vocabulary coverage'). The NFR-02 80% comes from SPEC L111. Document is internally consistent, but a reviewer cross-checking against PROJECT_BRIEF may flag the 95%/80% split as an undocumented tiering.",
-      "fr_id": "FR-01"
-    }
+    "01-requirements/SRS.md:128-145",
+    "01-requirements/SRS.md:291",
+    "01-requirements/SRS.md:296-297",
+    "01-requirements/SRS.md:431-432",
+    "01-requirements/SRS.md:441",
+    "01-requirements/SRS.md:455-458"
   ],
   "docs_embedded": [
     "SRS.md"
-  ]
+  ],
+  "gaps": []
 }

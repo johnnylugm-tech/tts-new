@@ -5,18 +5,13 @@
   ],
   "confidence": 0.95,
   "citations": [
-    "SPEC.md L32-L51 (FR-01 LEXICON)",
-    "SPEC.md L52-L65 (FR-02 SSML)",
-    "SPEC.md L67-L75 (FR-03 splitter)",
-    "SPEC.md L77-L79 (FR-04 parallel synthesis)",
-    "SPEC.md L81-L85 (FR-05 circuit breaker)",
-    "SPEC.md L86-L89 (FR-06 Redis cache)",
-    "SPEC.md L91-L98 (FR-07 CLI)",
-    "SPEC.md L100-L102 (FR-08 ffmpeg)",
-    "SPEC.md L122-L141 (config constants: LEXICON_MIN_SIZE=50, MAX_CHARS_PER_REQUEST=250, CIRCUIT_BREAKER_THRESHOLD=3, CIRCUIT_BREAKER_TIMEOUT=10.0)",
-    "SPEC.md L200, L235 (82-test target)",
-    "01-requirements/SRS.md §3 FR-01..FR-08 (acceptance criteria)",
-    "01-requirements/TRACEABILITY_MATRIX.md §\"Notes on multi-file FRs (FR-03, FR-04)\" (test-function split for FR-03/04)"
+    "SRS.md §2.6 (L129-L146) — security posture declarations",
+    "SRS.md §4 NFR-08 (L291) — security NFR definition",
+    "SRS.md §7 rows 6-7 (L431-L432) — security error-handling rows",
+    "SRS.md §8 R5-R6 (L455-L456) — SSRF and secret leakage risks",
+    "TRACEABILITY_MATRIX.md §NFR Traceability (v1.1) — NFR-08 distributed coverage, no standalone test file",
+    "TRACEABILITY_MATRIX.md change log (L298) — SRS.md §3 line shift L134-L255 → L153-L274",
+    "SPEC.md L216-L218, L167-L175 — input validation spec (unchanged)"
   ],
-  "summary": "Authored P1 deliverable TEST_INVENTORY.yaml at /Users/johnny/projects/tts-new/TEST_INVENTORY.yaml. The file declares 10 inventory entries covering all 8 FRs (FR-01..FR-08): 1 entry each for FR-01/FR-02/FR-05/FR-06/FR-07/FR-08, and 2 entries each for FR-03 (core + edge cases) and FR-04 (concurrency + concatenation) per the bidirectional split declared in TRACEABILITY_MATRIX.md. Each entry has the required fields (fr_id, test_function, module, description, acceptance, priority); test_function names use the strict test_fr_<NN>_<slug> convention; modules live under tests/; priority is HIGH for all FRs except FR-06 (MEDIUM, matching SPEC's \"optional\" status). Acceptance criteria are measurable assertions citing specific constants (LEXICON_MIN_SIZE=50, MAX_CHARS_PER_REQUEST=250, CIRCUIT_BREAKER_THRESHOLD=3, CIRCUIT_BREAKER_TIMEOUT=10.0, TTL=86400) and exact string outputs (12 canonical mappings, 5 CLI patterns, ffmpeg argv shape). Total file length is 118 lines (>= 40 target). The file uses single-quoted YAML strings for acceptance fields to safely embed CJK characters, comparison operators, parentheses, and angle brackets without escaping. Naming authority is ready to be consumed by derive_test_cases.md at P2 to produce TEST_SPEC.md."
+  "summary": "Updated TEST_INVENTORY.yaml for SRS.md v1.1 security additions. Changes: (1) Added NFR-08 inventory entry (fr_id: NFR-08, test_function: NFR-08_SECURITY_AUDIT) documenting that automated input-validation coverage is distributed across the 82-test suite, while security posture declarations (secret scanning, TLS absence, RBAC absence, log sanitization, dependency audit) require manual attestation — no standalone test_fr_NN.py file is created. (2) FR entries unchanged — their SPEC.md line citations were already correct (SPEC.md is immutable) and SRS.md section references (§3) are still valid. (3) expansion_plan: added nfr_08_security_note confirming NFR-08 does not alter declared_functions (10) or required_test_cases (82). (4) cross_refs: added links to TRACEABILITY_MATRIX.md NFR traceability section, SRS.md §2.6 security posture, and SRS.md §4 NFRs. (5) Header updated to note v1.1 sync date. No new FR test functions invented. YAML structure preserved."
 }

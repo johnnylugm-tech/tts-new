@@ -1,25 +1,45 @@
 {
   "status": "success",
   "files": [
-    "/Users/johnny/projects/tts-new/01-requirements/TRACEABILITY_MATRIX.md"
+    "01-requirements/TRACEABILITY_MATRIX.md"
   ],
   "confidence": 0.95,
   "citations": [
-    "SPEC.md L1-L4 (single source of truth declaration)",
-    "SPEC.md L32-L103 (8 immutable FRs: FR-01..FR-08)",
-    "SPEC.md L181-L205 (folder structure / design element homes)",
-    "SPEC.md L200, L235 (82-test count and acceptance benchmark)",
-    "SPEC.md L247-L254 (control-group prohibitions, §11)",
-    "SRS.md L134-L148 (FR-01)",
-    "SRS.md L150-L164 (FR-02)",
-    "SRS.md L166-L180 (FR-03)",
-    "SRS.md L182-L194 (FR-04)",
-    "SRS.md L196-L209 (FR-05)",
-    "SRS.md L211-L222 (FR-06)",
-    "SRS.md L224-L243 (FR-07)",
-    "SRS.md L245-L255 (FR-08)",
-    "01-requirements/SRS.md (P1 approved deliverable)",
-    "01-requirements/SPEC_TRACKING.md (P1 companion doc, status workflow)"
+    {
+      "change": "Updated all SRS.md §3 line citations: FR-01 L134-L148→L153-L167, FR-02 L150-L164→L169-L183, FR-03 L166-L180→L185-L199, FR-04 L182-L194→L201-L213, FR-05 L196-L209→L215-L228, FR-06 L211-L222→L230-L241, FR-07 L224-L243→L243-L262, FR-08 L245-L255→L264-L274",
+      "reason": "SRS.md grew from 496→531 lines due to §2.6 security posture (L129-L146), NFR-08 (L291), R5-R8 risk expansion (L455-L458)",
+      "source": "SRS.md v1.1; SPEC_TRACKING.md v1.1 line citations (already updated)"
+    },
+    {
+      "change": "Added §NFR Traceability (v1.1) section with NFR-08 row mapping to 3 design elements (src/routers/speech.py, src/models.py, src/config.py) and distributed test coverage",
+      "reason": "SPEC_TRACKING.md v1.1 now tracks NFR-08 in NFR Tracking Matrix (line 75); traceability matrix must reflect this",
+      "source": "SPEC_TRACKING.md L66-L75 (NFR Tracking Matrix); SRS.md L291 (NFR-08 definition), L129-L146 (§2.6)"
+    },
+    {
+      "change": "Updated Coverage Analysis: added NFR coverage table (4 metrics, 100%), combined totals table (9 items: 8 FRs + 1 NFR-08), combined bidirectional = 9/9 = 100%",
+      "reason": "Task required updating total items and % bidirectional to reflect NFR-08 addition",
+      "source": "Task constraint: 'Update Coverage Analysis — total items, % bidirectional'"
+    },
+    {
+      "change": "Added v1.1 Change Log entry documenting all updates: line-number shift, NFR-08 traceability, coverage metrics, NFR gap entries",
+      "reason": "Task required v1.1 entry documenting sync with SRS.md security update",
+      "source": "Task constraint: 'Update Change Log — v1.1 entry documenting sync with SRS.md security update'"
+    },
+    {
+      "change": "Updated document header: version v1.0→v1.1, date 2026-06-03→2026-06-04, SRS.md reference §1-L497→§1-L531",
+      "reason": "Version and date must reflect the update; SRS.md end-line changed from 497 to 531",
+      "source": "SRS.md now 531 lines (verified by Read)"
+    },
+    {
+      "change": "Updated Scope section: added 'In scope (1 NFR, v1.1)' paragraph for NFR-08; updated 'Out of scope' to clarify NFR-01..NFR-07 remain separately tracked",
+      "reason": "NFR-08 is now partially in scope for traceability; scope statement must reflect this",
+      "source": "SRS.md v1.1 §2.6, §4 NFR-08, §8 R5-R8"
+    },
+    {
+      "change": "Bidirectional consistency verified: all 8 FRs retain ≥1 design element + ≥1 test file; NFR-08 has 3 design elements + distributed test coverage; no FRs added, removed, or orphaned",
+      "reason": "Task required verifying bidirectional consistency as a constraint",
+      "source": "Task constraint: 'Verify bidirectional consistency: every FR still has ≥1 design element AND ≥1 test file'"
+    }
   ],
-  "summary": "Authored P1 deliverable 01-requirements/TRACEABILITY_MATRIX.md (244 lines) — a bidirectional Requirements Traceability Matrix covering all 8 functional requirements (FR-01..FR-08) of the kokoro-taiwan-proxy control group. Each row links FR → SRS.md §3 section → planned design element under src/ (per SPEC.md §7) → planned test file under tests/ (using the tests/test_fr_<NN>_<slug>.py convention). Forward matrix: 8/8 FRs mapped (100%). Reverse traceability: 10 test files planned, all reachable from their FRs (FR-03 and FR-04 each have a proposed second test file to keep fixtures focused; 1-to-N FR→test is allowed by the naming convention). Bidirectional coverage: 8/8 FRs reachable from at least one test (100%); 10/10 test files reachable from an FR (100%). Includes ASPICE SWE.3/SYS.4 compliance note, per-FR forward-link detail, reverse-link summary, coverage analysis with gaps & known unknowns (cross-referenced to SPEC_TRACKING.md open questions), and a v1.0 change log."
+  "summary": "Updated TRACEABILITY_MATRIX.md to v1.1, syncing with SRS.md security update. Changes: (1) All 8 FR SRS.md §3 line citations updated from old range L134-L255 to new range L153-L274 (496→531 line shift). (2) Added NFR Traceability section with NFR-08 row linking to 3 design elements (routers/speech.py, models.py, config.py) and distributed test coverage. (3) Coverage Analysis expanded with NFR coverage table and combined totals (9 items: 8 FRs + 1 NFR-08, 9/9 = 100% bidirectional). (4) Change Log v1.1 entry added. (5) Bidirectional consistency confirmed: all 8 FRs have ≥1 design element + ≥1 test file; NFR-08 has forward and reverse links. No new FRs invented. Existing table structure preserved."
 }

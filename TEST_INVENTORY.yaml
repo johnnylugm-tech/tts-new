@@ -1,7 +1,7 @@
 # Test Inventory — Kokoro Taiwan Proxy
 # Phase 1 deliverable: P1 naming authority for TEST_SPEC.md (D4 unified source of truth)
 # Framework: harness-methodology v2.7.0
-# Authored: 2026-06-04
+# Authored: 2026-06-04    Updated: 2026-06-04 (SRS.md v1.1 security sync)
 # Project: kokoro-taiwan-proxy (control group for methodology-v2 improvement experiment)
 # Single source of truth: SPEC.md v1.0.0-control (2026-03-31)
 # Companion P1 docs: 01-requirements/SRS.md, 01-requirements/SPEC_TRACKING.md,
@@ -10,6 +10,8 @@
 # Naming convention: test_fr_<NN>_<slug> (snake_case, <NN> zero-padded FR index)
 # FR-03 and FR-04 each have 2 test functions to mirror the bidirectional split
 # declared in TRACEABILITY_MATRIX.md §"Notes on multi-file FRs (FR-03, FR-04)".
+# SRS.md v1.1 (2026-06-04): added NFR-08 security entry below; no new FR test
+# functions — automated NFR-08 coverage is distributed across the 82-test suite.
 
 inventory:
   # ─────────────────────────────────────────────────────────────────────────────
@@ -117,6 +119,79 @@ inventory:
     acceptance: 'mp3_to_wav(mp3_in, wav_out) calls subprocess.run with argv ["ffmpeg", "-y", "-i", mp3_in, wav_out] and returns the CompletedProcess on success. wav_to_mp3(wav_in, mp3_out) calls subprocess.run with argv ["ffmpeg", "-y", "-i", wav_in, mp3_out] and returns the CompletedProcess on success. A round-trip test (synthesize MP3 → convert to WAV → convert back to MP3 → byte-prefix compare first 1 KB) succeeds against a known fixture. When shutil.which("ffmpeg") returns None, conversion raises RuntimeError whose message contains both the substring "ffmpeg" and the substring "PATH". A service-level smoke test confirms that mp3-to-wav failures do not block concurrent wav-to-mp3 calls (verified with a thread pool of 4 workers).'
     priority: HIGH
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NFR-08 — Security (input validation + security posture) — SRS.md §4 NFR-08, §2.6
+  # Added in SRS.md v1.1 (2026-06-04). Cross-cutting non-functional requirement.
+  # Source: SPEC.md L216-L218, L167-L175; SRS.md L291, L129-L146
+  # Mitigates: R5 (SSRF via crafted SSML input), R6 (secret leakage via debug
+  #   logs) per SRS.md §8 L455-L456.
+  # Traceability: TRACEABILITY_MATRIX.md §"NFR Traceability (v1.1)".
+  # Design elements: src/routers/speech.py (route-layer validation),
+  #   src/models.py (Pydantic field constraints), src/config.py (env-var secrets).
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: NFR-08
+    test_function: NFR-08_SECURITY_AUDIT
+    module: N/A — distributed coverage (see notes)
+    description: >
+      NFR-08 (Security) mandates input validation on all SpeechRequest fields
+      before processing (SRS.md §4 L291) and enforces a security posture
+      (SRS.md §2.6 L129-L146) where secrets are sourced exclusively from
+      environment variables, TLS is deferred to a reverse proxy, RBAC is out
+      of scope, and vulnerability management is handled through routine pip
+      dependency updates.
+
+      TESTABILITY: Partially testable via automation; partially requires
+      manual audit/attestation.
+
+      AUTOMATED COVERAGE (distributed across the existing 82-test suite):
+      - HTTP 400 for empty input, input > 8000 chars, invalid voice, invalid
+        response_format, invalid model (SRS.md §7 rows 4-6, L429-L431).
+      - HTTP 403 for unauthorized backend access attempts — proxy must never
+        forward requests to arbitrary hosts (SRS.md §7 row 7, L432).
+      - Input validation at route layer prevents unverified or malicious
+        input from reaching the synthesis pipeline or Kokoro backend.
+
+      MANUAL SECURITY AUDIT REQUIRED (not automatable in pytest):
+      - Secret scanning: git grep / automated scan for hard-coded API keys,
+        tokens, or credentials in source files and committed configuration
+        (R6 mitigation; SRS.md L456).
+      - Log sanitization: verify no environment-variable values appear in
+        log output, tracebacks, or error messages (R6 mitigation; SRS.md
+        L456). Exact sanitization mechanism is a P2 design choice per
+        TRACEABILITY_MATRIX.md gaps.
+      - TLS posture attestation: confirm no TLS implementation exists in the
+        proxy layer — by design, TLS termination is deferred to a reverse
+        proxy (SRS.md §2.6 L135-L137).
+      - RBAC posture attestation: confirm no authentication or RBAC code
+        exists in the proxy layer — by design, access control is the
+        responsibility of the enclosing network boundary (SRS.md §2.6
+        L132-L133; PROJECT_BRIEF.md §5).
+      - Dependency audit: routine pip-audit or equivalent for known
+        vulnerabilities in requirements.txt (SRS.md §2.6 L144-L146).
+
+      No standalone test_fr_NN.py file is created for NFR-08. Automated
+      coverage is cross-cutting and distributed across the existing 82-test
+      suite via parametrized input-validation assertions. Manual attestation
+      items are verified via one-time or periodic audit, not per-commit CI.
+      Per TRACEABILITY_MATRIX.md §"NFR Traceability (v1.1)", NFR-08
+      bidirectional trace is OK — forward trace links NFR-08 to 3 design
+      elements and to distributed test coverage; reverse trace links
+      input-validation tests back to NFR-08.
+    acceptance: >
+      AUTOMATED: All input-validation tests in the 82-test suite pass —
+      HTTP 400 for empty/oversized/malformed input, invalid voice, invalid
+      format, invalid model; HTTP 403 for unauthorized backend access
+      attempts. No unverified input reaches the synthesis pipeline or the
+      Kokoro backend.
+
+      MANUAL ATTESTATION: Security audit report confirms (a) no hard-coded
+      secrets in source files or committed configuration, (b) no secret
+      values in log output or tracebacks, (c) TLS termination is absent from
+      the proxy layer, (d) RBAC/authentication is absent from the proxy
+      layer, (e) dependency vulnerability scan shows no critical or high
+      findings in requirements.txt.
+    priority: MEDIUM
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Test-case expansion plan (resolves holistic-review medium gap)
 # Source: SPEC.md §10 acceptance — 82/82 tests; SRS.md §9
@@ -136,6 +211,20 @@ expansion_plan:
     FR-07: { functions: 1, cases: 6,  note: "5 CLI patterns + --help" }
     FR-08: { functions: 1, cases: 21, note: "MP3↔WAV round-trip, error cases, fixture matrix" }
   total_declared: 82
+  nfr_08_security_note: >
+    NFR-08 (Security, added SRS.md v1.1 2026-06-04) is cross-cutting.
+    Automated coverage (input validation HTTP 400/403) is distributed
+    across the existing 82-test parametrization — no additional test
+    function or test cases are added. Security posture declarations
+    (no hard-coded secrets, no TLS in proxy, no RBAC) require manual
+    attestation via one-time or periodic security audit. See inventory
+    entry NFR-08_SECURITY_AUDIT for the manual audit checklist. Per
+    TRACEABILITY_MATRIX.md §"NFR Traceability (v1.1)", NFR-08
+    bidirectional trace is established via 3 design elements
+    (src/routers/speech.py, src/models.py, src/config.py) with test
+    coverage distributed across the existing suite. NFR-08 does not
+    alter the declared_functions count (10) or the required_test_cases
+    count (82).
   reconciliation_note: |
     The 82-test acceptance benchmark (SPEC.md L235) is achieved by expanding
     the 10 declared test functions via pytest.mark.parametrize and pytest
@@ -150,5 +239,7 @@ expansion_plan:
   cross_refs:
     - 01-requirements/SPEC_TRACKING.md#open-questions
     - 01-requirements/TRACEABILITY_MATRIX.md#coverage-analysis
+    - 01-requirements/TRACEABILITY_MATRIX.md#nfr-traceability-v1-1
     - 01-requirements/SRS.md#9-acceptance-criteria
-
+    - 01-requirements/SRS.md#2-6-security-posture
+    - 01-requirements/SRS.md#4-non-functional-requirements

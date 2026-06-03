@@ -1,53 +1,34 @@
 {
   "review_status": "APPROVE",
-  "reason": "SPEC_TRACKING.md is well-structured and complete for a P1 deliverable: all 8 FRs from SRS.md §3 are tracked (FR-01..FR-08) with no duplicates, no orphans, and no invented FRs (8/8 SPEC ↔ 8/8 SRS ↔ 8/8 matrix). Each row populates all 7 required columns (FR ID, Description, Status, Owner, Acceptance State, SRS Section, Source Citation). The matrix uses a sensible 4-state status vocabulary (DRAFT/READY-FOR-P2/IN-P2/IN-P3/IMPLEMENTED/VERIFIED/BLOCKED) and a 4-state acceptance vocabulary (PENDING/PARTIAL/MET/WAIVED) that maps cleanly to the methodology's phase progression. Coverage Statistics explicitly verifies the 4 control-group invariants (FR coverage 8/8, no duplicates, no invented FRs, all columns populated, orphan check). The 10-item Open Questions section carries forward several B-2 SRS caveats (Bopomofo separator, mixed-word boundary, hash function, CLI blank-line policy, ffmpeg degradation mode, 82-test-count policy). The 'unassigned' owner field is internally justified as a control-group P1 convention. Minor improvements suggested but nothing blocking.",
+  "reason": "SPEC_TRACKING.md v1.1 is correctly synchronized with SRS.md v1.1. All 8 FR rows preserve original descriptions (only SRS line ranges updated). NFR Tracking Matrix added with full 8-row coverage including NFR-08 (Security). Change Log documents the v1.1 update with specific change details (line-number shift, new NFR matrix, expanded open questions, R5-R8 references). Coverage statistics updated to combined FR+NFR totals (16 items) with per-dimension breakdowns. All 9 coverage-check invariants pass. Line citations are internally sequential and consistent with SRS structure. Security content (NFR-08, S2.6, R5-R8, error rows 6-7) is properly cited and linked to SPEC source lines per control-group no-new-requirements rule. No FR descriptions incorrectly changed.",
   "citations": [
-    "SPEC_TRACKING.md frontmatter (Project Info table — links to SPEC.md v1.0.0-control, SRS.md §3, harness-methodology v2.7.0)",
-    "SPEC_TRACKING.md Tracking Matrix (8 rows: FR-01..FR-08, each with all 7 columns populated; Description, Status=DRAFT, Owner=unassigned, Acceptance State=PENDING, SRS Section, Source Citation)",
-    "SPEC_TRACKING.md Matrix key (defines Status 4-state, Owner convention for control group, Acceptance State 4-state, and citation convention)",
-    "SPEC_TRACKING.md Coverage Statistics (3 sub-tables: count by status, count by owner, count by acceptance state — all 8 FRs, 0 in any other state)",
-    "SPEC_TRACKING.md Coverage checks (4 control-group invariants all green: FR coverage 8/8, no duplicates, no invented FRs, all columns populated, orphan check = 0)",
-    "SPEC_TRACKING.md Open Questions (10 items, several directly carry forward B-2 SRS review concerns: FR-01 corpus choice, FR-01 Bopomofo separator, FR-02 emphasis levels, FR-03 mixed-word boundary, FR-04 partial-success, FR-06 hash function, FR-07 blank-line policy, FR-08 ffmpeg degradation, cross-cutting refactor policy, cross-cutting 82-test-count policy)",
-    "SPEC_TRACKING.md Change Log (v1.0, 2026-06-03, REQUIREMENTS_ENGINEER Agent A, initial creation)"
+    "01-requirements/SPEC_TRACKING.md:1",
+    "01-requirements/SPEC_TRACKING.md:50",
+    "01-requirements/SPEC_TRACKING.md:70",
+    "01-requirements/SPEC_TRACKING.md:90",
+    "01-requirements/SPEC_TRACKING.md:120",
+    "01-requirements/SPEC_TRACKING.md:140",
+    "01-requirements/SPEC_TRACKING.md:180",
+    "01-requirements/SPEC_TRACKING.md:210"
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ],
   "gaps": [
     {
       "severity": "low",
-      "message": "B-2 SRS gap #1 (LEXICON-before-SSML order-of-operations: tokens inside <phoneme>/<voice>/<say-as> element payloads may be corrupted by LEXICON substitution) is not surfaced in Open Questions. The FR-01 row tracks the FR but the row-level Description does not flag the scope-limiting ambiguity. Recommend adding an OQ for P2 architecture: 'LEXICON must be applied only to text nodes, not to text content inside <phoneme>/<voice>/<say-as> element payloads'.",
-      "fr_id": "FR-01"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #5 (voice validation while circuit breaker is Open or Kokoro is down — the voices-list endpoint is itself subject to FR-05 fault isolation, but the SRS does not pin down ordering) is not in Open Questions. The FR-05 row covers the breaker but the row Description does not call out the cross-FR dependency that /v1/proxy/voices shares the upstream with /v1/proxy/speech.",
-      "fr_id": "FR-05"
-    },
-    {
-      "severity": "low",
-      "message": "B-2 SRS gap #3 (WAV output order-of-operations: convert-per-chunk-then-concat vs concat-then-convert affects whether SSML <break> padding is preserved) is not in Open Questions. FR-04 AC2 mandates byte-level MP3 concat but the WAV path's interaction with ffmpeg and break-padding is unspecified. Recommend an OQ for the architecture phase to decide one of: (a) concat-MP3-then-convert-to-WAV, or (b) convert-each-MP3-chunk-to-WAV-then-concat-WAV-bytes.",
-      "fr_id": "FR-04"
-    },
-    {
-      "severity": "low",
-      "message": "Owner field is 'unassigned' for all 8 FRs. The document explicitly justifies this as a control-group P1 convention (no per-FR owner designated in P1; ownership assigned in later phases 'if methodology requires it'). Internally consistent and defensible, but the review checklist asks 'Owner assigned per FR?' and the literal answer is no. A methodology-v2 reviewer sign-off confirming 'unassigned' is the expected P1 state would close this gap; otherwise, downstream phases (P3+) may be uncertain about who carries each FR to IMPLEMENTED/VERIFIED.",
+      "message": "Cannot independently verify every SRS.md line-number citation (text provided without line numbers); citations are internally consistent and sequential but absolute accuracy unverifiable in this review context.",
       "fr_id": null
     },
     {
       "severity": "low",
-      "message": "NFRs are not tracked. The deliverable name is SPEC_TRACKING and scope is explicitly FR-01..FR-08, but B-2 SRS gap #7 flagged that NFR-03 (tone correctness ≥ 95%, measured 'Manual / A-B audit') has no automated test in the 82-test suite. SPEC_TRACKING is the natural place to surface this gap or at minimum cross-reference it. Consider adding either (a) an NFR coverage section, or (b) a note stating NFR measurement is out of scope for FR-only tracking and requires a separate NFR_TRACKING or methodology-v2 evaluation protocol.",
-      "fr_id": null
+      "message": "Open Questions section flags 14 items for downstream clarification -- none block P1 sign-off, but the NFR-08 questions about security posture measurability and adversarial test coverage may need P2 design resolution.",
+      "fr_id": "NFR-08"
     },
     {
       "severity": "low",
-      "message": "Source Citation column cites SRS.md line ranges (e.g., 'L134-L148' for FR-01) but the SRS.md provided in DOC 2 has FR-01 starting at line 115 (the section header) with AC items spanning L122-L148. The L134-L148 range appears to target the AC items only, but this should be verified — imprecise citations can break downstream traceability. Recommend re-anchoring each row's SRS.md line range to the FR's full section, not just the ACs.",
-      "fr_id": "FR-01"
-    },
-    {
-      "severity": "low",
-      "message": "Matrix has no 'Last Updated' column. The Change Log captures v1.0 = 2026-06-03, but downstream phases (P2 architecture, P3 implementation, P5 testing) will mutate the matrix as FRs move DRAFT → READY-FOR-P2 → IN-P2 → IMPLEMENTED → VERIFIED. A per-row 'Last Updated' timestamp would make the file's freshness visible at a glance during methodology-v2 review passes; otherwise reviewers must re-read the Change Log to gauge staleness.",
+      "message": "Coverage checks cite NFR section as SRS.md L278-L298 but individual NFR row citations span L284-L291 -- does L278-L298 include the trailing notes paragraph? Minor ambiguity in section-vs-row scope.",
       "fr_id": null
     }
-  ],
-  "docs_embedded": [
-    "SRS.md"
   ]
 }

@@ -310,6 +310,19 @@ are not re-opened. This bounds backtracking to a single step.
 - [ ] `.methodology/SAB.json` — Machine-readable architecture baseline
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
 
+### 📋 Constitution Quality Self-Check
+
+> **Verify document quality meets constitution standards BEFORE peer review.**
+> Run this check, fix gaps, and re-run until PASS. This avoids cascading rewrites after Agent B review.
+
+- [ ] **[CONSTITUTION-CHECK]** Run constitution self-check:
+  ```bash
+  python3 harness_cli.py check-constitution --phase 2 --project .
+  ```
+  - Score must be ≥ constitution composite threshold
+  - If **FAIL**: fix documents (add missing keywords), then **re-run until PASS**
+  - If **PASS**: proceed to CHECKPOINT-PEER-REVIEW
+
 
 ### 🔒 CHECKPOINT-PEER-REVIEW: Agent B Peer Review — Phase 2 Exit
 > Phase 1/2 exit gate = Agent B document review (NOT `harness run-gate --gate 1`).

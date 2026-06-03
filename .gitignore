@@ -103,3 +103,10 @@ pip-debug.log*
 .sessi-work/
 .methodology/last_block.md
 .methodology/steering_history.json
+
+# ===== harness-methodology runtime (local only — should not be in VCS) =====
+.harness/
+.methodology/.state.lock
+.methodology/agent_a_outputs/
+.methodology/fr_progress.json
+.shims/

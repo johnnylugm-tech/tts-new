@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "files": [
+    "/Users/johnny/projects/tts-new/01-requirements/TRACEABILITY_MATRIX.md"
+  ],
+  "confidence": 0.95,
+  "citations": [
+    "SPEC.md L1-L4 (single source of truth declaration)",
+    "SPEC.md L32-L103 (8 immutable FRs: FR-01..FR-08)",
+    "SPEC.md L181-L205 (folder structure / design element homes)",
+    "SPEC.md L200, L235 (82-test count and acceptance benchmark)",
+    "SPEC.md L247-L254 (control-group prohibitions, §11)",
+    "SRS.md L134-L148 (FR-01)",
+    "SRS.md L150-L164 (FR-02)",
+    "SRS.md L166-L180 (FR-03)",
+    "SRS.md L182-L194 (FR-04)",
+    "SRS.md L196-L209 (FR-05)",
+    "SRS.md L211-L222 (FR-06)",
+    "SRS.md L224-L243 (FR-07)",
+    "SRS.md L245-L255 (FR-08)",
+    "01-requirements/SRS.md (P1 approved deliverable)",
+    "01-requirements/SPEC_TRACKING.md (P1 companion doc, status workflow)"
+  ],
+  "summary": "Authored P1 deliverable 01-requirements/TRACEABILITY_MATRIX.md (244 lines) — a bidirectional Requirements Traceability Matrix covering all 8 functional requirements (FR-01..FR-08) of the kokoro-taiwan-proxy control group. Each row links FR → SRS.md §3 section → planned design element under src/ (per SPEC.md §7) → planned test file under tests/ (using the tests/test_fr_<NN>_<slug>.py convention). Forward matrix: 8/8 FRs mapped (100%). Reverse traceability: 10 test files planned, all reachable from their FRs (FR-03 and FR-04 each have a proposed second test file to keep fixtures focused; 1-to-N FR→test is allowed by the naming convention). Bidirectional coverage: 8/8 FRs reachable from at least one test (100%); 10/10 test files reachable from an FR (100%). Includes ASPICE SWE.3/SYS.4 compliance note, per-FR forward-link detail, reverse-link summary, coverage analysis with gaps & known unknowns (cross-referenced to SPEC_TRACKING.md open questions), and a v1.0 change log."
+}

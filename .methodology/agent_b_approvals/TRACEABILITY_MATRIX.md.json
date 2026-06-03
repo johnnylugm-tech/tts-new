@@ -1,0 +1,62 @@
+{
+  "review_status": "APPROVE",
+  "reason": "TRACEABILITY_MATRIX.md establishes complete bidirectional traceability for all 8 FRs (FR-01..FR-08) with 100% forward + reverse coverage. The forward matrix links each FR to its SRS.md §3 section, a planned src/ design element per SPEC.md §7, and a planned tests/ file. The reverse traceability table covers 10 test files (FR-03 and FR-04 each have two, explicitly justified) and confirms 8/8 FRs reachable from a test. ASPICE SWE.3/SYS.4 mapping is declared (MAPPING DECLARED). The 'Gaps and known unknowns' section appropriately defers four content-level design questions (FR-04 partial-success, FR-08 ffmpeg policy, FR-06 hash function, FR-03 mixed-language boundary) to P2 and cross-references SPEC_TRACKING.md's Open Questions. Control-group invariants are honored: 0 invented FRs, 0 duplicates, 0 orphans, 1 test file naming convention honored (with 1-to-N extension justified in prose). Remaining caveats are low-severity carry-forwards from B-2 and structural items that need methodology-v2 sign-off, not blocking issues.",
+  "citations": [
+    "TRACEABILITY_MATRIX.md:7-15 (frontmatter — author, methodology framework, single source of truth, FR list, companion documents)",
+    "TRACEABILITY_MATRIX.md:17-31 (Overview — purpose, in/out of scope, explicit NFRs-out-of-scope statement)",
+    "TRACEABILITY_MATRIX.md:33-49 (Methodology & framework conformance + ASPICE SWE.3/SYS.4 mapping table with reference per capability)",
+    "TRACEABILITY_MATRIX.md:55-77 (FR ↔ Design ↔ Test Matrix — 8 rows, every column populated; FR-03 and FR-04 each with 2 test files; Status=PLANNED; Bidirectional Check=OK for all)",
+    "TRACEABILITY_MATRIX.md:79-103 (Notes on multi-file FRs — explicit justification for FR-03 and FR-04 dual test files, naming convention preserved, 1-to-N relationship explained)",
+    "TRACEABILITY_MATRIX.md:107-140 (Per-FR forward link detail — restates FR→SRS→src→tests chain in plain text for every FR)",
+    "TRACEABILITY_MATRIX.md:144-159 (Reverse Traceability — 10 test files, all mapped to a unique FR; reverse-link summary 8/8 FRs reachable, 10/10 test files reachable)",
+    "TRACEABILITY_MATRIX.md:161-191 (Coverage Analysis — 100% FR coverage, 100% bidirectional, 0 invented/duplicate/orphan; Gaps and known unknowns defers 4 items to P2 with SPEC_TRACKING cross-references)",
+    "TRACEABILITY_MATRIX.md:193-197 (Change Log — v1.0 initial creation, dated 2026-06-03, REQUIREMENTS_ENGINEER Agent A)"
+  ],
+  "gaps": [
+    {
+      "severity": "low",
+      "message": "B-2 SPEC_TRACKING gap #6 (SRS.md line range imprecision) carries forward into this matrix: rows cite 'L134-L148' for FR-01, 'L150-L164' for FR-02, 'L166-L180' for FR-03, 'L182-L194' for FR-04, 'L196-L209' for FR-05, 'L211-L222' for FR-06, 'L224-L243' for FR-07, 'L245-L255' for FR-08. These ranges target the AC items only, not the full FR section (the section header '## FR-01' sits at L115 in the supplied SRS). The same imprecise ranges are repeated in the Reverse Traceability table. Imprecise citations can break automated traceability checks downstream; recommend re-anchoring each row to the full FR section.",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "B-2 SRS gap #1 (LEXICON-before-SSML order-of-operations: tokens inside <phoneme>/<voice>/<say-as> element payloads may be corrupted by LEXICON substitution) is not surfaced. The matrix maps FR-01 to taiwan_linguistic.py and FR-02 to ssml_parser.py, but the dependency / order-of-operations between them is not flagged. A P2 architecture reviewer reading this matrix has no signal that the two files have a non-trivial interaction. Recommend adding a P2 Gaps entry: 'LEXICON must be applied only to text nodes, not to text content inside <phoneme>/<voice>/<say-as> element payloads.'",
+      "fr_id": "FR-01"
+    },
+    {
+      "severity": "low",
+      "message": "B-2 SRS gap #3 (WAV order-of-operations: convert-per-chunk-then-concat vs concat-then-convert affects whether SSML <break> padding is preserved) is not surfaced. FR-04's row maps to synthesis.py and the matrix's 'Gaps' section defers only the MP3 partial-success question, not the WAV order-of-operations question. Recommend an explicit OQ entry for P2: 'decide one of (a) concat-MP3-then-convert-to-WAV, or (b) convert-each-MP3-chunk-to-WAV-then-concat-WAV-bytes,' or scope FR-04 to MP3 only at the test file level.",
+      "fr_id": "FR-04"
+    },
+    {
+      "severity": "low",
+      "message": "B-2 SRS gap #5 (voice validation while circuit breaker is Open / Kokoro is down: /v1/proxy/voices shares the upstream with /v1/proxy/speech and is itself subject to FR-05 fault isolation, but the ordering of checks is not pinned) is not surfaced. FR-05 maps to circuit_breaker.py and FR-02's <voice name> validation flows through ssml_parser.py, but the matrix does not flag that the voice-list call may need to be guarded by the breaker. A P2 reviewer could miss this cross-FR dependency.",
+      "fr_id": "FR-05"
+    },
+    {
+      "severity": "low",
+      "message": "B-2 SPEC_TRACKING gap #7 (no per-row Last Updated timestamp) carries forward: the matrix has no per-row freshness column. The Change Log captures v1.0 = 2026-06-03, but P3+ implementation will mutate the matrix on a per-FR basis (PLANNED → IMPLEMENTED → VERIFIED). Without a per-row timestamp, reviewers cannot gauge which rows have been recently touched without re-reading the Change Log. Recommend a per-row 'Last Updated' column for parity with SPEC_TRACKING.md gap closure.",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "B-2 SRS gap #4 (Bopomofo separator at chunk boundary: the splitter must treat a Bopomofo token like ㄌㄜˋ ㄙㄜˋ as an indivisible unit, but SPEC is silent) is partially addressed. The matrix's 'Gaps' section defers the 'mixed-language boundary rule' to P2 design but does not call out the Bopomofo-specific case. The Bopomofo edge case has different boundary semantics (space-separated syllables inside a single LEXICON output) than the Hello你好 CJK/Latin case, and a P2 reviewer may not realize both need separate rules. Recommend splitting the FR-03 OQ into 'CJK/Latin mixed-word boundary' and 'Bopomofo inter-syllable boundary' as two distinct design questions.",
+      "fr_id": "FR-03"
+    },
+    {
+      "severity": "low",
+      "message": "The proposed split of FR-03 and FR-04 into two test files each is well-justified in prose but is a 1-to-N extension of the 'tests/test_fr_<NN>_<slug>.py' naming convention. The matrix states 1-to-N is 'allowed by the test-file naming convention' but does not cite a methodology-v2 document that explicitly authorizes it. A control-group reviewer may want a sign-off on this convention expansion. Recommend either (a) cross-referencing an explicit convention statement in harness-methodology v2.7.0, or (b) annotating in the Change Log that the 1-to-N extension is a v1.0 matrix decision and is open for methodology-v2 reviewer approval.",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "Change Log cites 'SRS.md §1-L497' as the P1 deliverable line range, but the SRS as supplied appears to end well before L497 (the closing line is '*End of SRS — Kokoro Taiwan Proxy — v1.0 derived from SPEC.md v1.0.0-control (2026-03-31).*'). If 'L497' is an inflated or placeholder number, replace with the actual line count of the approved SRS to keep the citation auditable. If the number was taken from a different SRS version, the matrix should cite that version's date explicitly to avoid traceability drift.",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "ASPICE compliance note (SWE.3 / SYS.4 mapping) is a value-add for traceability evidence, but the project scope (control group for a methodology-v2 improvement experiment per PROJECT_BRIEF.md §2 and SPEC.md L14) does not explicitly call out ASPICE as a contractual requirement. If ASPICE compliance is in scope, this should be cross-referenced in CONTROL_GROUP.md or the PROJECT_BRIEF; if it is aspirational / non-binding, consider downgrading 'MAPPING DECLARED' to 'MAPPING PROPOSED' or 'STRUCTURAL PREREQUISITE (non-binding)' so methodology-v2 reviewers do not over-interpret the matrix as a contractual ASPICE artifact.",
+      "fr_id": null
+    }
+  ]
+}

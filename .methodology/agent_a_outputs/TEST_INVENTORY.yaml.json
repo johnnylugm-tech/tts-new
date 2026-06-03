@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "files": [
+    "/Users/johnny/projects/tts-new/TEST_INVENTORY.yaml"
+  ],
+  "confidence": 0.95,
+  "citations": [
+    "SPEC.md L32-L51 (FR-01 LEXICON)",
+    "SPEC.md L52-L65 (FR-02 SSML)",
+    "SPEC.md L67-L75 (FR-03 splitter)",
+    "SPEC.md L77-L79 (FR-04 parallel synthesis)",
+    "SPEC.md L81-L85 (FR-05 circuit breaker)",
+    "SPEC.md L86-L89 (FR-06 Redis cache)",
+    "SPEC.md L91-L98 (FR-07 CLI)",
+    "SPEC.md L100-L102 (FR-08 ffmpeg)",
+    "SPEC.md L122-L141 (config constants: LEXICON_MIN_SIZE=50, MAX_CHARS_PER_REQUEST=250, CIRCUIT_BREAKER_THRESHOLD=3, CIRCUIT_BREAKER_TIMEOUT=10.0)",
+    "SPEC.md L200, L235 (82-test target)",
+    "01-requirements/SRS.md §3 FR-01..FR-08 (acceptance criteria)",
+    "01-requirements/TRACEABILITY_MATRIX.md §\"Notes on multi-file FRs (FR-03, FR-04)\" (test-function split for FR-03/04)"
+  ],
+  "summary": "Authored P1 deliverable TEST_INVENTORY.yaml at /Users/johnny/projects/tts-new/TEST_INVENTORY.yaml. The file declares 10 inventory entries covering all 8 FRs (FR-01..FR-08): 1 entry each for FR-01/FR-02/FR-05/FR-06/FR-07/FR-08, and 2 entries each for FR-03 (core + edge cases) and FR-04 (concurrency + concatenation) per the bidirectional split declared in TRACEABILITY_MATRIX.md. Each entry has the required fields (fr_id, test_function, module, description, acceptance, priority); test_function names use the strict test_fr_<NN>_<slug> convention; modules live under tests/; priority is HIGH for all FRs except FR-06 (MEDIUM, matching SPEC's \"optional\" status). Acceptance criteria are measurable assertions citing specific constants (LEXICON_MIN_SIZE=50, MAX_CHARS_PER_REQUEST=250, CIRCUIT_BREAKER_THRESHOLD=3, CIRCUIT_BREAKER_TIMEOUT=10.0, TTL=86400) and exact string outputs (12 canonical mappings, 5 CLI patterns, ffmpeg argv shape). Total file length is 118 lines (>= 40 target). The file uses single-quoted YAML strings for acceptance fields to safely embed CJK characters, comparison operators, parentheses, and angle brackets without escaping. Naming authority is ready to be consumed by derive_test_cases.md at P2 to produce TEST_SPEC.md."
+}

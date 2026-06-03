@@ -1,0 +1,36 @@
+{
+  "status": "success",
+  "files": [
+    "/Users/johnny/projects/tts-new/01-requirements/SPEC_TRACKING.md"
+  ],
+  "confidence": 0.95,
+  "citations": [
+    "SRS.md L134-L148",
+    "SRS.md L150-L164",
+    "SRS.md L166-L180",
+    "SRS.md L182-L194",
+    "SRS.md L196-L209",
+    "SRS.md L211-L222",
+    "SRS.md L224-L243",
+    "SRS.md L245-L255",
+    "SRS.md L141",
+    "SRS.md L146",
+    "SRS.md L177",
+    "SRS.md L192",
+    "SRS.md L239",
+    "SRS.md L252",
+    "SRS.md L457",
+    "SPEC.md L32-L51",
+    "SPEC.md L52-L65",
+    "SPEC.md L67-L75",
+    "SPEC.md L77-L79",
+    "SPEC.md L81-L85",
+    "SPEC.md L86-L89",
+    "SPEC.md L91-L98",
+    "SPEC.md L100-L102",
+    "SPEC.md L200",
+    "SPEC.md L235",
+    "SPEC.md L247-L254"
+  ],
+  "summary": "Authored P1 deliverable SPEC_TRACKING.md as a per-FR tracking matrix covering all 8 pre-defined FRs (FR-01..FR-08) with DRAFT status, unassigned owner, PENDING acceptance state, and line-precise citations to both SPEC.md (authoritative) and SRS.md §3 (P1 deliverable); included coverage statistics, 10 open questions, and a v1.0 change-log entry dated 2026-06-03 under harness-methodology v2.7.0."
+}

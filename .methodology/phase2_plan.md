@@ -2,7 +2,7 @@
 
 > **Version**: v2.7.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-03
+> **Date**: 2026-06-04
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 2 - Architecture Design
 > **Status**: Full version (including Phase 2 detailed tasks)
@@ -123,6 +123,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
+   "docs_embedded":["SRS.md", "SAD.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -194,6 +195,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
+   "docs_embedded":["SRS.md", "SAD.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -270,6 +272,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
+   "docs_embedded":["SRS.md", "SAD.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -351,6 +354,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
+   "docs_embedded":["SRS.md", "SAD.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 

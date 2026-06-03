@@ -1,0 +1,56 @@
+{
+  "review_status": "APPROVE",
+  "reason": "The round-1 MEDIUM gap (82-test acceptance gate vs 10 declared functions) is now MITIGATED — TEST_INVENTORY.yaml expansion_plan adds a per-FR test-case breakdown (12+9+10+9+8+7+6+21=82) reconciled via parametrize/sub-test expansion, with explicit cross-refs to SPEC_TRACKING.md open-questions and SRS.md §9. All 8 FRs remain covered across SRS.md, SPEC_TRACKING.md, TRACEABILITY_MATRIX.md, and TEST_INVENTORY.yaml with full bidirectional traceability; configuration constants (MAX_CHARS_PER_REQUEST=250, LEXICON_MIN_SIZE=50, REQUEST_TIMEOUT=30.0, CIRCUIT_BREAKER_THRESHOLD=3, CIRCUIT_BREAKER_TIMEOUT=10.0, WARMUP_*=True/'你好，測試中', DEFAULT_VOICE='zf_xiaoxiao', DEFAULT_SPEED=1.0), MODEL_MAP, the 4 Persona recipes, the 12 canonical mappings (視頻→影片, 地鐵→捷運, 垃圾→ㄌㄜˋ ㄙㄜˋ, 菠蘿→鳳梨, 程序員→工程師, 軟件→軟體, 硬件→硬體, 和→ㄏㄢˋ, 吧→啦, 互聯網→網際網路, 博客→部落格, 網名→暱稱), the Bopomofo space-separated form, the SSML tag subset, the chunk-tier precedence (。？！!? then ；: then ，), the FR-04 byte-level concat (no re-encode), and the FR-05 503-while-Open behavior are identical across all four documents. The folder structure (src/main.py, src/config.py, src/models.py, src/cli.py, src/audio_converter.py, src/routers/speech.py, src/engines/{taiwan_linguistic,ssml_parser,text_splitter,synthesis}.py, src/middleware/circuit_breaker.py, src/cache/redis_cache.py) is preserved. ASPICE SWE.3/SYS.4 mapping remains correctly declared at MAPPING DECLARED / PLANNED status for P1. No new FRs invented; no SPEC.md §11 prohibitions violated. The expansion_plan stays within the 'feature freeze: only bug fixes' constraint by committing to a planning-level test count that P3+ implementation must materialize via parametrize — it does not add new functionality. All other 7 LOW gaps from round 1 (FR-01 corpus, FR-02 emphasis levels, FR-03 mixed-word rule, FR-04 partial-success, FR-06 hash function, FR-08 ffmpeg-missing policy, 82-test count vs feature-freeze) remain open and explicitly flagged in SPEC_TRACKING.md as P2/P3 candidates — non-blocking for P1 sign-off.",
+  "citations": [
+    "TEST_INVENTORY.yaml:178-202 (expansion_plan: declared_functions=10, required_test_cases=82, mechanism=parametrize + sub-test expansion, ratio=1→8.2)",
+    "TEST_INVENTORY.yaml:185-194 (per_fr_breakdown: FR-01=12, FR-02=9, FR-03=10, FR-04=9, FR-05=8, FR-06=7, FR-07=6, FR-08=21, sum=82)",
+    "TEST_INVENTORY.yaml:195-197 (total_declared=82 arithmetic check)",
+    "TEST_INVENTORY.yaml:198-203 (reconciliation_note: parametrize mechanism, planning-level commitment)",
+    "TEST_INVENTORY.yaml:204-208 (open_question: 82-test enumeration finalized at P3)",
+    "TEST_INVENTORY.yaml:209-213 (cross_refs: SPEC_TRACKING.md#open-questions, TRACEABILITY_MATRIX.md#coverage-analysis, SRS.md#9-acceptance-criteria)",
+    "01-requirements/SPEC_TRACKING.md:91-110 (open questions: 7 LOW gaps enumerated, all P2/P3 candidates)",
+    "01-requirements/TRACEABILITY_MATRIX.md:107-120 (reverse traceability, 10/10 test files reachable)",
+    "01-requirements/TRACEABILITY_MATRIX.md:125-135 (bidirectional 100% check)",
+    "01-requirements/SRS.md:134-148 (FR-01: 12 canonical mappings verbatim)",
+    "01-requirements/SRS.md:316-328 (config constants verbatim)",
+    "01-requirements/SRS.md:342-349 (Persona presets verbatim)",
+    "01-requirements/SRS.md:409-421 (acceptance criteria 82/82 hard gate)"
+  ],
+  "gaps": [
+    {
+      "severity": "low",
+      "message": "Round-1 MEDIUM gap (82 vs 10) is MITIGATED but not CLOSED. The expansion_plan provides a planning-level reconciliation: per-FR breakdown sums to 82, the parametrize mechanism is named, and the open_question flag acknowledges that the precise 82-case enumeration is finalized at P3 implementation. A P1 reviewer can audit the *commitment* (10 functions × parametrize cases = 82) but cannot audit the *enumeration* (the exact 82 parametrize tuples). The orchestrator should consider whether P3 implementation must report a delta vs the expansion_plan (added/replaced parametrize cases) so the audit trail is preserved. Non-blocking for P1 sign-off.",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "expansion_plan allocates 21 test cases to FR-08 (audio_converter) — the highest single-FR allocation (25.6% of the 82 budget). This is defensible because FR-08 has the most variable input space (MP3/WAV directions, ffmpeg options, file sizes, error modes, thread-pool concurrent safety), but the 21× expansion factor for a single function is an outlier vs the average 8.2×. P3 implementation should report whether 21 is realized via parametrize or whether cases migrate to/from other FRs; either outcome is acceptable, but the 21 should not silently become a different number.",
+      "fr_id": "FR-08"
+    },
+    {
+      "severity": "low",
+      "message": "expansion_plan allocates 12 test cases to FR-01, but FR-01 AC1 requires len(LEXICON) >= 50 and the planning note says 'parametrize over LEXICON entries (≥50)'. 12 < 50, so the parametrize must either (a) sample 12 of the 50+ entries and assert the others structurally, or (b) sub-set to the 12 canonical mappings + a corpus-coverage spot check. The acceptance criterion in TEST_INVENTORY.yaml L11-21 says '12 canonical mappings each produce exactly the expected output string' — this matches option (b). P3 should confirm the chosen interpretation and not let 12 silently mean 'all 50+ via parametrize'.",
+      "fr_id": "FR-01"
+    },
+    {
+      "severity": "low",
+      "message": "FR-01 ≥ 95% corpus coverage target (SRS.md L141) still lacks a named reference corpus. expansion_plan references 'a labeled Taiwan-leaning Chinese corpus' but does not name it. The open_question in SPEC_TRACKING.md L91-95 still applies. Methodology-v2 reviewer must fix a corpus (e.g., 中央社 sample set) before FR-01 acceptance can move to MET. Non-blocking for P1.",
+      "fr_id": "FR-01"
+    },
+    {
+      "severity": "low",
+      "message": "FR-03 mixed CJK/Latin word boundary rule (SPEC.md L75) is described in expansion_plan FR-03 acceptance as 'boundaries land only on whitespace or punctuation' but the test-fr-03 edge-cases acceptance criterion in TEST_INVENTORY.yaml L52-62 already asserts the same rule. The two phrasings are consistent; the design-time decision is now implicitly bound by the test acceptance. P2 architecture reviewer should ratify the whitespace-or-punctuation rule as the canonical boundary detector. Non-blocking for P1.",
+      "fr_id": "FR-03"
+    },
+    {
+      "severity": "low",
+      "message": "FR-06 cache key form `hash(text + voice + speed)` (SPEC.md L87) and FR-02 <emphasis> levels none/reduced (SPEC.md L59) remain unspecified at the design level. expansion_plan FR-06 acceptance asserts 'cache_key is exactly hash(text + voice + speed) with the same string equality for identical inputs' but does not name the hash function — same gap as round 1. Non-blocking for P1; required for P2.",
+      "fr_id": "FR-06"
+    },
+    {
+      "severity": "low",
+      "message": "FR-08 ffmpeg-missing policy (per-call vs global disable) and FR-04 partial-success/best-effort mode (recommended WAIVE) remain unresolved. expansion_plan FR-08 acceptance describes the missing-ffmpeg error path but not the policy for concurrent calls. SPEC_TRACKING.md open questions still apply. Recommend methodology-v2 reviewer formally WAIVE FR-04 partial-success in P2 to lock the control-group scope.",
+      "fr_id": "FR-08"
+    }
+  ]
+}

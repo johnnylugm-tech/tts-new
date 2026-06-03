@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "files": [
+    "/Users/johnny/projects/tts-new/01-requirements/SRS.md"
+  ],
+  "confidence": 0.95,
+  "citations": [
+    "SPEC.md L1-L4",
+    "SPEC.md L7-L14",
+    "SPEC.md L18-L26",
+    "SPEC.md L32-L51",
+    "SPEC.md L52-L65",
+    "SPEC.md L67-L75",
+    "SPEC.md L77-L79",
+    "SPEC.md L81-L85",
+    "SPEC.md L86-L89",
+    "SPEC.md L91-L98",
+    "SPEC.md L100-L102",
+    "SPEC.md L108-L114",
+    "SPEC.md L122-L141",
+    "SPEC.md L145-L150",
+    "SPEC.md L155-L175",
+    "SPEC.md L181-L205",
+    "SPEC.md L210-L219",
+    "SPEC.md L222-L229",
+    "SPEC.md L233-L243",
+    "SPEC.md L247-L254"
+  ],
+  "summary": "Authored P1 deliverable SRS.md (496 lines) with all 9 required sections, 8 immutable FRs (FR-01..FR-08) each carrying multiple testable/measurable acceptance criteria, verbatim reproduction of SPEC §11 constraints, §8 errors, §9 risks, §10 acceptance, 151 SPEC.md line citations, and zero TODO/TBD placeholders."
+}

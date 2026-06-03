@@ -1,0 +1,100 @@
+# ===== 作業系統 =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# macOS Finder metadata
+.fseventsd
+.localized
+
+# ===== 環境變數與密鑰（絕不進版控） =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.tox/
+.venv/
+venv/
+env/
+ENV/
+
+# FastAPI / uvicorn
+*.log
+
+# ===== Node / Frontend（備援） =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+.next/
+.nuxt/
+dist/
+.cache/
+
+# ===== Docker =====
+docker-compose.override.yml
+
+# ===== IDE =====
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# ===== TTS 專案特有 =====
+# 音訊快取（可能由代理層或快取層產生）
+audio_cache/
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.m4a
+
+# 模型權重（不應進版控）
+*.onnx
+*.pt
+*.pth
+*.bin
+*.safetensors
+models/
+checkpoints/
+
+# ffmpeg / 媒體暫存
+*.tmp
+*.temp
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+pip-debug.log*

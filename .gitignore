@@ -98,3 +98,8 @@ logs/
 *.log
 npm-debug.log*
 pip-debug.log*
+
+# harness-methodology runtime (auto-added by git_strategy)
+.sessi-work/
+.methodology/last_block.md
+.methodology/steering_history.json

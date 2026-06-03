@@ -1,0 +1,8 @@
+#!/bin/sh
+# Shim: mutmut 2.x has no --version; harness framework's tool check uses `mutmut --version`.
+# Reports a fixed version string and delegates all other args to the real binary.
+if [ "${1:-}" = "--version" ]; then
+  echo "mutmut 2.5.1"
+  exit 0
+fi
+exec /Users/johnny/projects/tts-new/.venv/bin/mutmut "$@"

@@ -1,0 +1,154 @@
+# Test Inventory — Kokoro Taiwan Proxy
+# Phase 1 deliverable: P1 naming authority for TEST_SPEC.md (D4 unified source of truth)
+# Framework: harness-methodology v2.7.0
+# Authored: 2026-06-04
+# Project: kokoro-taiwan-proxy (control group for methodology-v2 improvement experiment)
+# Single source of truth: SPEC.md v1.0.0-control (2026-03-31)
+# Companion P1 docs: 01-requirements/SRS.md, 01-requirements/SPEC_TRACKING.md,
+#                    01-requirements/TRACEABILITY_MATRIX.md
+# Test count target: 82 tests passing (per SPEC.md §10 / SRS.md §9)
+# Naming convention: test_fr_<NN>_<slug> (snake_case, <NN> zero-padded FR index)
+# FR-03 and FR-04 each have 2 test functions to mirror the bidirectional split
+# declared in TRACEABILITY_MATRIX.md §"Notes on multi-file FRs (FR-03, FR-04)".
+
+inventory:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-01 — 台灣中文詞彙映射 (Taiwan-Chinese vocabulary mapping) — SRS.md §3 FR-01
+  # Source: SPEC.md L32-L51
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-01
+    test_function: test_fr_01_lexicon_coverage
+    module: tests/test_fr_01_taiwan_linguistic.py
+    description: Verify the LEXICON table has >= 50 entries and that all 12 canonical mappings produce the exact expected Taiwan-Chinese or Bopomofo outputs.
+    acceptance: 'len(LEXICON) >= LEXICON_MIN_SIZE (50); coverage of a labeled Taiwan-leaning Chinese corpus >= 95%; and the 12 canonical mappings 視頻→影片, 地鐵→捷運, 垃圾→ㄌㄜˋ ㄙㄜˋ, 菠蘿→鳳梨, 程序員→工程師, 軟件→軟體, 硬件→硬體, 和→ㄏㄢˋ, 吧→啦, 互聯網→網際網路, 博客→部落格, 網名→暱稱 each produce exactly the expected output string (Bopomofo entries are space-separated syllables, e.g. ㄌㄜˋ ㄙㄜˋ).'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-02 — SSML 解析 (SSML parsing) — SRS.md §3 FR-02
+  # Source: SPEC.md L52-L65
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-02
+    test_function: test_fr_02_ssml_tags
+    module: tests/test_fr_02_ssml_parser.py
+    description: Verify the 7 supported SSML tags (speak/break/prosody/emphasis/voice/phoneme/say-as) are parsed and produce Kokoro-compatible behavior, with warn-and-pass fallback for unsupported pitch/volume attributes and for parse failures.
+    acceptance: 'All 7 supported tags handled: <speak> root, <break time="500ms"> inserts silence, <prosody rate="0.9"> maps to Kokoro speed, <emphasis level="strong|moderate"> multiplies speed by 1.1, <voice name="xxx"> switches voice per segment, <phoneme alphabet="ipa"> passes through unchanged, <say-as interpret-as="..."> converts numbers to text. <!-- ... --> comments are stripped from rendered text. <prosody pitch="..."> and <prosody volume="..."> emit a warn log but the request still succeeds (HTTP 200). A malformed SSML input falls back to plain-text treatment with a warn log and no HTTP 4xx.'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-03 — 智能文本切分 (intelligent text chunking) — SRS.md §3 FR-03
+  # Source: SPEC.md L67-L75
+  # Two test files per TRACEABILITY_MATRIX.md (core + edge cases).
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-03
+    test_function: test_fr_03_text_splitter
+    module: tests/test_fr_03_text_splitter.py
+    description: Verify the three-tier recursive splitter keeps every chunk <= 250 chars and prefers sentence (L1), then clause (L2), then phrase (L3) boundaries in that order, with 100-250 chars as the optimal range.
+    acceptance: 'For any input, every emitted chunk satisfies len(chunk) <= MAX_CHARS_PER_REQUEST (250). For typical prose the emitted chunks fall in the 100-250 char optimal range. L1 split occurs at sentence boundaries (。？！!? and the newline character). L2 split at clause boundaries (；:) is invoked only when the segment is still > 100 chars. L3 split at phrase boundaries (，) is invoked only when the segment is still > 100 chars. An input that is itself <= 250 chars yields exactly one chunk of length equal to the input length.'
+    priority: HIGH
+
+  - fr_id: FR-03
+    test_function: test_fr_03_text_splitter_edge_cases
+    module: tests/test_fr_03_text_splitter_edge_cases.py
+    description: Verify the splitter does not break inside a mixed Chinese/English word and handles boundary inputs (exactly 250, empty, single-char, all-boundary, no-boundary).
+    acceptance: 'No chunk boundary falls inside a CJK/Latin mixed token such as Hello你好, iPhone15, Python3, or HTTP/2.0 — boundaries land only on whitespace or punctuation. Empty string input returns []. A single-character input returns [char]. An exactly-250-char input returns one chunk of length 250. An all-boundary input (only 。？！ characters) returns chunks of length 1 each, and a no-boundary input falls back to a single chunk of the full length without raising.'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-04 — 並行合成 (parallel synthesis) — SRS.md §3 FR-04
+  # Source: SPEC.md L77-L79
+  # Two test files per TRACEABILITY_MATRIX.md (concurrency + concatenation).
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-04
+    test_function: test_fr_04_synthesis
+    module: tests/test_fr_04_synthesis.py
+    description: Verify that N chunks are dispatched concurrently via httpx.AsyncClient with all coroutines scheduled before any is awaited, chunk order is preserved, and backend 5xx failures bubble up and increment the circuit-breaker counter.
+    acceptance: 'For an input split into N chunks, exactly N httpx.AsyncClient coroutines are created and all are started (in flight) before the first await yields — verified by a mock that records start order. The output chunk order matches the input chunk order. If any chunk request raises or returns HTTP 5xx, the overall request fails with HTTP 5xx and the circuit-breaker failure counter increments by exactly 1. Total request latency is bounded by max(per-chunk latency), not sum(per-chunk latency), across >= 5 randomly sized inputs.'
+    priority: HIGH
+
+  - fr_id: FR-04
+    test_function: test_fr_04_synthesis_concat
+    module: tests/test_fr_04_synthesis_concat.py
+    description: Verify MP3 byte streams from each chunk are concatenated at the byte level with no re-encoding, producing a byte stream of length equal to the sum of input chunk byte lengths and preserving the first and last chunk headers unchanged.
+    acceptance: 'concatenated_bytes == b"".join(chunk_bytes for chunk in chunks), with len(concatenated_bytes) == sum(len(c) for c in chunks) verified across 10 randomized inputs. No ffmpeg invocation, no codec call, and no re-encode step occurs in the path — verified by mocking subprocess.run to fail the test if invoked. The first 3 bytes of the first chunk (MP3 sync / ID3 header) appear at offset 0 of the concatenated output, and the last 3 bytes of the last chunk appear at offset len(concatenated_bytes)-3.'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-05 — 斷路器 (circuit breaker) — SRS.md §3 FR-05
+  # Source: SPEC.md L81-L85
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-05
+    test_function: test_fr_05_circuit_breaker
+    module: tests/test_fr_05_circuit_breaker.py
+    description: Verify the Closed→Open→Half-Open→Closed state machine with threshold=3 failures and timeout=10.0s, returning HTTP 503 immediately while Open, and that the /health/circuit observability and reset endpoints behave correctly.
+    acceptance: 'After 3 consecutive backend failures (>= CIRCUIT_BREAKER_THRESHOLD=3), state transitions Closed→Open. Subsequent calls return HTTP 503 within 5 ms without contacting the backend (verified by mock backend call count == 0). After 10.0 s elapsed (CIRCUIT_BREAKER_TIMEOUT=10.0), state transitions Open→Half-Open and admits exactly one probe request. A successful probe transitions Half-Open→Closed and resets the failure counter to 0; a failed probe re-opens the breaker. GET /health/circuit returns the current state name and the failure count. POST /health/circuit/reset forces state=Closed and counter=0. A freezegun-controlled clock is used for timeout assertions.'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-06 — Redis 快取 (optional Redis cache) — SRS.md §3 FR-06
+  # Source: SPEC.md L86-L89
+  # MEDIUM priority: FR-06 is explicitly optional per SPEC.
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-06
+    test_function: test_fr_06_redis_cache
+    module: tests/test_fr_06_redis_cache.py
+    description: Verify the optional Redis cache uses hash(text+voice+speed) as the key, sets a 24h TTL on every write, returns the cached bytes on a hit without contacting the backend, and gracefully skips the cache step when Redis is unreachable.
+    acceptance: 'cache_key is exactly hash(text + voice + speed) with the same string equality for identical inputs and different keys for any differing (text, voice, speed) tuple. SETEX is called with TTL == 86400 seconds (24h) on every write — verified by a mock that asserts the TTL argument. A cache hit returns the stored audio bytes and the backend invocation counter remains 0 (verified via mock). When the redis client raises ConnectionError, TimeoutError, or is None, the cache layer logs at info level and the request proceeds to the backend — no exception propagates and all existing tests stay green. Absence of the redis package or of a live Redis server does not break startup or any other test.'
+    priority: MEDIUM
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-07 — CLI 命令列工具 (tts-v610 command-line tool) — SRS.md §3 FR-07
+  # Source: SPEC.md L91-L98
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-07
+    test_function: test_fr_07_cli
+    module: tests/test_fr_07_cli.py
+    description: Verify all 5 CLI invocation patterns from SPEC.md L92-L97 plus --help exit-0 behavior, and that --ssml routes through the SSML parser while --backend overrides KOKORO_BACKEND_URL for the duration of the call.
+    acceptance: 'All 5 patterns run end-to-end with exit code 0 and produce a non-empty output file: tts-v610 "你好世界" -o output.mp3; tts-v610 -i input.txt -o output_dir (one output file per non-blank input line); tts-v610 "文字" -v zf_xiaoxiao -s 1.0 -f mp3; tts-v610 --ssml "<speak>...</speak>" -o out.mp3 (routes through the FR-02 SSML parser, verified by parser mock call count >= 1); tts-v610 --backend http://localhost:8880 "text" -o out.mp3 (KOKORO_BACKEND_URL is overridden for the call, verified by an httpx mock that asserts the requested URL). python -m src.cli --help exits 0 and prints a usage block that contains at least the strings "tts-v610", "--ssml", "--backend", and "-o".'
+    priority: HIGH
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FR-08 — ffmpeg 音訊格式轉換 (audio format conversion) — SRS.md §3 FR-08
+  # Source: SPEC.md L100-L102
+  # ─────────────────────────────────────────────────────────────────────────────
+  - fr_id: FR-08
+    test_function: test_fr_08_audio_converter
+    module: tests/test_fr_08_audio_converter.py
+    description: Verify MP3↔WAV conversion in both directions via ffmpeg invoked through subprocess, and that a missing ffmpeg binary produces a clear error without crashing the proxy or its other format path.
+    acceptance: 'mp3_to_wav(mp3_in, wav_out) calls subprocess.run with argv ["ffmpeg", "-y", "-i", mp3_in, wav_out] and returns the CompletedProcess on success. wav_to_mp3(wav_in, mp3_out) calls subprocess.run with argv ["ffmpeg", "-y", "-i", wav_in, mp3_out] and returns the CompletedProcess on success. A round-trip test (synthesize MP3 → convert to WAV → convert back to MP3 → byte-prefix compare first 1 KB) succeeds against a known fixture. When shutil.which("ffmpeg") returns None, conversion raises RuntimeError whose message contains both the substring "ffmpeg" and the substring "PATH". A service-level smoke test confirms that mp3-to-wav failures do not block concurrent wav-to-mp3 calls (verified with a thread pool of 4 workers).'
+    priority: HIGH
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Test-case expansion plan (resolves holistic-review medium gap)
+# Source: SPEC.md §10 acceptance — 82/82 tests; SRS.md §9
+# ─────────────────────────────────────────────────────────────────────────────
+expansion_plan:
+  declared_functions: 10
+  required_test_cases: 82
+  mechanism: parametrize + sub-test expansion
+  ratio: 1 function → ~8.2 test cases on average
+  per_fr_breakdown:
+    FR-01: { functions: 1, cases: 12, note: "parametrize over LEXICON entries (≥50), edge cases (Bopomofo, mixed CN/EN, empty input)" }
+    FR-02: { functions: 1, cases: 9,  note: "parametrize over 7 SSML tags + 2 negative cases" }
+    FR-03: { functions: 2, cases: 10, note: "split levels × boundary conditions" }
+    FR-04: { functions: 2, cases: 9,  note: "concurrency, error propagation, MP3 concat edge cases" }
+    FR-05: { functions: 1, cases: 8,  note: "state machine transitions (CLOSED/OPEN/HALF_OPEN), threshold, timeout" }
+    FR-06: { functions: 1, cases: 7,  note: "cache hit, miss, TTL expiry, no-Redis fallback, key derivation" }
+    FR-07: { functions: 1, cases: 6,  note: "5 CLI patterns + --help" }
+    FR-08: { functions: 1, cases: 21, note: "MP3↔WAV round-trip, error cases, fixture matrix" }
+  total_declared: 82
+  reconciliation_note: |
+    The 82-test acceptance benchmark (SPEC.md L235) is achieved by expanding
+    the 10 declared test functions via pytest.mark.parametrize and pytest
+    sub-tests at P3+ implementation time. This file declares naming authority
+    and per-function scope; the 8.2× expansion factor is a planning-level
+    commitment reconciled in TRACEABILITY_MATRIX.md Coverage Analysis.
+  open_question: |
+    Per SPEC_TRACKING.md Open Questions §3, the exact 82-test enumeration
+    is finalized at P3 implementation time, not at P1 planning. The
+    P1 inventory binds test function names and module locations; P3
+    implementation enumerates the parametrize cases.
+  cross_refs:
+    - 01-requirements/SPEC_TRACKING.md#open-questions
+    - 01-requirements/TRACEABILITY_MATRIX.md#coverage-analysis
+    - 01-requirements/SRS.md#9-acceptance-criteria
+

@@ -58,5 +58,8 @@
       "message": "ASPICE compliance note (SWE.3 / SYS.4 mapping) is a value-add for traceability evidence, but the project scope (control group for a methodology-v2 improvement experiment per PROJECT_BRIEF.md §2 and SPEC.md L14) does not explicitly call out ASPICE as a contractual requirement. If ASPICE compliance is in scope, this should be cross-referenced in CONTROL_GROUP.md or the PROJECT_BRIEF; if it is aspirational / non-binding, consider downgrading 'MAPPING DECLARED' to 'MAPPING PROPOSED' or 'STRUCTURAL PREREQUISITE (non-binding)' so methodology-v2 reviewers do not over-interpret the matrix as a contractual ASPICE artifact.",
       "fr_id": null
     }
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ]
 }

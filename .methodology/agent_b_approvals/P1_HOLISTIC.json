@@ -52,5 +52,8 @@
       "message": "FR-08 ffmpeg-missing policy (per-call vs global disable) and FR-04 partial-success/best-effort mode (recommended WAIVE) remain unresolved. expansion_plan FR-08 acceptance describes the missing-ffmpeg error path but not the policy for concurrent calls. SPEC_TRACKING.md open questions still apply. Recommend methodology-v2 reviewer formally WAIVE FR-04 partial-success in P2 to lock the control-group scope.",
       "fr_id": "FR-08"
     }
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ]
 }

@@ -46,5 +46,8 @@
       "message": "Matrix has no 'Last Updated' column. The Change Log captures v1.0 = 2026-06-03, but downstream phases (P2 architecture, P3 implementation, P5 testing) will mutate the matrix as FRs move DRAFT → READY-FOR-P2 → IN-P2 → IMPLEMENTED → VERIFIED. A per-row 'Last Updated' timestamp would make the file's freshness visible at a glance during methodology-v2 review passes; otherwise reviewers must re-read the Change Log to gauge staleness.",
       "fr_id": null
     }
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ]
 }

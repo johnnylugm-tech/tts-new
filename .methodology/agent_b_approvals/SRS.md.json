@@ -54,5 +54,8 @@
       "message": "Dual coverage metrics (FR-01 #2 per-token ≥95% vs. NFR-02 corpus ≥80%) are reconciled in §4 Notes but the per-token number (95%) is not in PROJECT_BRIEF §3 (which only states 95% for 'Taiwan-Chinese vocabulary coverage'). The NFR-02 80% comes from SPEC L111. Document is internally consistent, but a reviewer cross-checking against PROJECT_BRIEF may flag the 95%/80% split as an undocumented tiering.",
       "fr_id": "FR-01"
     }
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ]
 }

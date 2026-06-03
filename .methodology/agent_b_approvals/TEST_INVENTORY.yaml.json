@@ -53,5 +53,8 @@
       "message": "The inventory enumerates 10 test functions targeting 10 test files, but the SPEC's contractual acceptance bar is '82/82 tests passing' (SPEC.md L200, L235; SRS.md §9). The 10 test functions listed here are clearly 10 anchor / smoke tests; the remaining 72 tests (acceptance criteria, edge cases, regression, performance, etc.) are not enumerated in this P1 deliverable. This is consistent with the inventory's stated role ('P1 naming authority for TEST_SPEC.md (D4 unified source of truth)') and the control-group's PLANNED status workflow, but a reviewer expecting a complete test enumeration should be aware that TEST_SPEC.md (D4) is the document that will enumerate the remaining 72. Recommend an explicit one-line note in the frontmatter: 'This inventory enumerates 10 anchor tests corresponding to the 10 test files in TRACEABILITY_MATRIX.md; the remaining 72 tests (per SPEC.md's 82-test contract) are to be enumerated in P3+ D4 TEST_SPEC.md.'",
       "fr_id": null
     }
+  ],
+  "docs_embedded": [
+    "SRS.md"
   ]
 }

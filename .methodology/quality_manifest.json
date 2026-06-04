@@ -177,6 +177,9 @@
     "FR-03": [
       "03-development/src/engines/text_splitter.py"
     ],
+    "FR-04": [
+      "03-development/src/engines/synthesis.py"
+    ],
     "FR-05": [
       "03-development/src/middleware/circuit_breaker.py",
       "03-development/src/routers/health.py"

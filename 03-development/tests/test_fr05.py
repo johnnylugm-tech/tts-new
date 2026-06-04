@@ -56,7 +56,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable  # noqa: F401  # type refs in docstring comments
 
 import pytest
 

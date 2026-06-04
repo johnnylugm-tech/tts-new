@@ -1,0 +1,78 @@
+{
+  "review_status": "APPROVE",
+  "reason": "Holistic check confirms internal consistency across all 3 P2 deliverables: all 8 FRs covered (12+9+10+9+8+7+6+21=82 reconciled in TEST_SPEC §Summary), all 6 P2 design decisions reflected consistently (P2-DD-1..P2-DD-6 in SAD §3.10 + ADR §1 + TEST_SPEC per-FR sections), terminology aligned (ffmpeg_unavailable error code, SHA-256 64-char hex, MAX_CHARS=250, CIRCUIT_BREAKER_THRESHOLD=3 / TIMEOUT=10.0, HTTP 400/403/500/503 codes, 24h TTL, tts:cache: key prefix, LexiconMin=50). Round 2 fixes cross-aligned: TEST_SPEC FR-08 case 7-8 FFmpegUnavailableError rename + message-substring match SAD §3.8 P2-DD-4 + ADR-07. SAB.json + quality_manifest.json present per git status. No blocking contradictions found. Four minor LOW cross-reference gaps noted for P3 awareness only.",
+  "citations": [
+    "SAD.md:§3.1",
+    "SAD.md:§3.2",
+    "SAD.md:§3.3",
+    "SAD.md:§3.4",
+    "SAD.md:§3.5",
+    "SAD.md:§3.6",
+    "SAD.md:§3.7",
+    "SAD.md:§3.8",
+    "SAD.md:§3.10",
+    "SAD.md:§6.1",
+    "SAD.md:§6.4",
+    "SAD.md:§7",
+    "SAD.md:§8",
+    "ADR.md:§0",
+    "ADR.md:§1 P2-DD-1",
+    "ADR.md:§1 P2-DD-2",
+    "ADR.md:§1 P2-DD-3",
+    "ADR.md:§1 P2-DD-4",
+    "ADR.md:§1 P2-DD-5",
+    "ADR.md:§1 P2-DD-6",
+    "ADR.md:§3.1",
+    "ADR.md:§3.2",
+    "ADR.md:§3.3",
+    "ADR.md:§3.4",
+    "ADR.md:§3.7",
+    "ADR.md:§5 ADR-01",
+    "ADR.md:§5 ADR-02",
+    "ADR.md:§5 ADR-03",
+    "ADR.md:§5 ADR-04",
+    "ADR.md:§5 ADR-05",
+    "ADR.md:§5 ADR-06",
+    "ADR.md:§5 ADR-07",
+    "ADR.md:§5 ADR-08",
+    "TEST_SPEC.md:FR-01 section",
+    "TEST_SPEC.md:FR-02 section",
+    "TEST_SPEC.md:FR-03 section",
+    "TEST_SPEC.md:FR-04 section",
+    "TEST_SPEC.md:FR-05 section",
+    "TEST_SPEC.md:FR-06 section",
+    "TEST_SPEC.md:FR-07 section",
+    "TEST_SPEC.md:FR-08 section",
+    "TEST_SPEC.md:Cross-Cutting NFR-08",
+    "TEST_SPEC.md:NFR-02 Deferral Note",
+    "TEST_SPEC.md:§Summary Per-FR Reconciliation",
+    "TEST_SPEC.md:§Summary By Test Type"
+  ],
+  "docs_embedded": [
+    "SAD.md",
+    "ADR.md",
+    "TEST_SPEC.md"
+  ],
+  "gaps": [
+    {
+      "severity": "low",
+      "message": "ADR.md §3.4 introduces an optional REQUIRE_SIGNATURE HMAC-SHA256 verification capability (default False) and a SIGNATURE_SECRET env var that are not cross-referenced in SAD.md §6.4 (Security) or in TEST_SPEC.md. ADR §0 preamble claims ADRs 'do not introduce new functional requirements' and the default-off posture is consistent with the feature freeze, but for full cross-doc consistency SAD §6.4 should briefly acknowledge the optional HMAC capability as part of the security model, and TEST_SPEC should record it as an out-of-scope manual configuration (not in the 82-test set).",
+      "fr_id": "NFR-08"
+    },
+    {
+      "severity": "low",
+      "message": "FFmpegUnavailableError inheritance hierarchy is documented inconsistently: TEST_SPEC.md FR-08 case 7-8 sub-assertion states the exception is a subclass of both RuntimeError (for P1 TEST_INVENTORY.yaml backwards-compat) and ConversionError, whereas SAD.md §3.8 specifies only ConversionError as the parent class. Both work for the test cases (case 7 catches FFmpegUnavailableError specifically, and RuntimeError-as-parent would still satisfy the original P1 'raises RuntimeError' assertion), but the documented parent-class chain is slightly different. Recommend a one-line P3 SAD §3.8 update explicitly noting the dual-inheritance (ConversionError + RuntimeError) for backwards-compat documentation, or a TEST_SPEC update to align the assertion with ConversionError-only.",
+      "fr_id": "FR-08"
+    },
+    {
+      "severity": "low",
+      "message": "Process gates / open questions for P3 ownership are scattered: SAD.md §7 flags NFR-02 (LEXICON reference corpus selection) and NFR-03 (tone-sandhi audit rubric) as open_questions, and TEST_SPEC.md NFR-02 Deferral Note cross-references the corpus deferral — but ADR.md has no consolidated 'Open Questions' or 'P3-Owned Items' register that an index-by-ADR reviewer can read. ADR §1 P2-DD-1..6 and §5 ADR-01..08 should ideally include (or Section 2/Appendix should enumerate) the two open_questions plus NFR-04 operational-SLA ownership, so the methodology-v2 reviewer has a single ADR-side index of decisions deferred to P3.",
+      "fr_id": "NFR-02"
+    },
+    {
+      "severity": "low",
+      "message": "NFR-04 (≥ 99% API availability, 30-day rolling) is documented in SAD.md §7 as 'out-of-scope for proxy implementation; owned by methodology-v2 operational dashboard' and is correctly excluded from the 82-test set in TEST_SPEC.md, but ADR.md does not explicitly enumerate NFR-04 alongside NFR-02/NFR-03 in a 'testable-in-pytest vs operational-only' classification. ADR §3.6 (vulnerability surface) and §3.7 (keyword audit) touch on operational topics but do not call out NFR-04 specifically. Recommend a short ADR-side note that NFR-04 is operational-only and out of the proxy's test surface, mirroring the SAD §7 wording, so the methodology-v2 owner has a single source of truth for which NFRs are pytest-checked vs operationally-measured.",
+      "fr_id": "NFR-04"
+    }
+  ]
+}

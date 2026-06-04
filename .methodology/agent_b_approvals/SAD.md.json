@@ -1,0 +1,43 @@
+{
+  "review_status": "APPROVE",
+  "reason": "Round 4 closes the SAB block format issue. §9 SAB block now uses the contract-correct format: HTML markers <!-- SAB:START --> / <!-- SAB:END -->, YAML code fence, and sab: root key per core/quality_gate/sab_parser.py. The 14 SABSpec fields are all present (version, created_at, phase, project, layers, allowed_dependencies, quality_targets, nfr_dimension_mapping, nfr_traceability, advisory_only, gate_score_overrides, fr_module_traceability, architecture_constraints, high_risk_modules). The confusing prose paragraph that contained literal <!-- SAB:START --> strings has been removed, and generate_sab.py now succeeds producing .methodology/SAB.json with 12 modules across 3 layers (presentation=3, business=6, infrastructure=3). No regression in any of the 9 sections. All 6 P2 design decisions (P2-DD-1 warn-and-pass, P2-DD-2 whitespace/punctuation, P2-DD-3 SHA-256, P2-DD-4 fail-with-clear-error, P2-DD-5 logger allow-list, P2-DD-6 FR-04 WAIVED) remain intact in §3 per-FR blocks and §3.10 summary table. All 8 FR mappings (FR-01..FR-08) are in §3.1-§3.8 with implementing modules; all 8 NFR mappings (NFR-01..NFR-08) are in §7 with enforcement location and test files. The SAB YAML and generated SAB.json are consistent (12 modules, 3 layers, 8 NFRs, 8 FRs, 6 P2-DD references in architecture_constraints, 4 high_risk_modules). The 2 Round 2 LOW documentation-consistency gaps (logging field 'format_requested' vs §6.1 allow-list 'format'; 'FFMPEG_UNAVAILABLE' missing from §4.1 error-code union) remain present and remain non-blocking P3 implementation cleanup, untouched by Round 4 as expected. The version banner inconsistency (header v1.0.1 vs §1.1 v1.0.0) is also still present from Round 3 and is cosmetic P3 cleanup.",
+  "citations": [
+    "SAD.md header: 'Version: 1.0.1 (P2 architecture, derived from SPEC.md v1.0.0-control, 2026-03-31)'",
+    "SAD.md §1.1 project-info table: 'Document version | 1.0.0 (P2 architecture)' (cosmetic inconsistency carried from Round 3, non-blocking P3 cleanup)",
+    "SAD.md §9 (SAB block uses <!-- SAB:START --> and <!-- SAB:END --> HTML markers wrapping a ```yaml ... ``` code fence; first YAML key is 'sab:' as required by core/quality_gate/sab_parser.py contract)",
+    "SAD.md §9 SAB block: 14 SABSpec fields present (version, created_at, phase, project, layers, allowed_dependencies, quality_targets, nfr_dimension_mapping, nfr_traceability, advisory_only, gate_score_overrides, fr_module_traceability, architecture_constraints, high_risk_modules)",
+    "SAD.md §9 layers: presentation (src/main.py, src/routers/speech.py, src/cli.py = 3 modules); business (src/engines/taiwan_linguistic.py, src/engines/ssml_parser.py, src/engines/text_splitter.py, src/engines/synthesis.py, src/middleware/circuit_breaker.py, src/audio_converter.py = 6 modules); infrastructure (src/config.py, src/models.py, src/cache/redis_cache.py = 3 modules). Total: 12 modules across 3 layers ✓",
+    "SAD.md §3.10 P2 Design Decisions table: all 6 P2-DD intact (P2-DD-1 warn-and-pass, P2-DD-2 whitespace/punctuation, P2-DD-3 SHA-256, P2-DD-4 ffmpeg-missing fail-with-clear-error, P2-DD-5 logger allow-list, P2-DD-6 FR-04 WAIVED)",
+    "SAD.md §3.1-§3.8: all 8 FR mappings intact with implementing modules, public APIs, acceptance criteria, and dependencies (FR-01 taiwan_linguistic, FR-02 ssml_parser, FR-03 text_splitter, FR-04 synthesis, FR-05 circuit_breaker, FR-06 redis_cache, FR-07 cli, FR-08 audio_converter)",
+    "SAD.md §7 NFR Coverage Matrix: all 8 NFRs mapped to enforcement location + test file/operational gate (NFR-01..NFR-08)",
+    "SAD.md §9 SAB YAML: structure is valid YAML (proper indentation, lists/objects balanced, no syntax errors); output SAB.json validates with version 1.0.0, 12 modules, 3 layers",
+    "SAD.md §9 architecture_constraints array: contains 8 entries including 3 P2-DD references (P2-DD-4 ffmpeg-missing, P2-DD-5 log sanitization, P2-DD-6 FR-04 WAIVED) plus 5 control-group invariants",
+    "SAD.md §9 high_risk_modules: 4 modules flagged (synthesis.py, circuit_breaker.py, audio_converter.py, redis_cache.py) — all consistent with §7 NFR coverage and §8 R1-R4 risks",
+    "SAD.md §9 fr_module_traceability: all 8 FRs present with module path, SPEC.md line range, and test file path",
+    "SAD.md §3.8 ffmpeg-missing policy (P2-DD-4): structured log still emits 'format_requested' field — Round 2 LOW gap #1 still present, non-blocking P3 cleanup",
+    "SAD.md §4.1 error-code union: still lists 'VALIDATION_ERROR | CIRCUIT_OPEN | BACKEND_ERROR | SSML_FALLBACK | UNAUTHORIZED | INTERNAL' — Round 2 LOW gap #2 still present, non-blocking P3 cleanup (FFMPEG_UNAVAILABLE not added)",
+    "SAD.md §6.1 logging allow-list: 'format' is allowed but not 'format_requested' (Round 2 LOW gap #1 still present)",
+    "SAD.md §6.4 Security: permission-model non-goal paragraph and encryption-posture paragraph both intact from Round 3 (keywords 'permission' and 'encrypt'/'encryption' present in natural context)"
+  ],
+  "docs_embedded": [
+    "SRS.md",
+    "SAD.md"
+  ],
+  "gaps": [
+    {
+      "severity": "low",
+      "message": "Version banner inconsistency: top-of-document frontmatter reads 'Version: 1.0.1 (P2 architecture, ...)' but §1.1 project-info table reads 'Document version | 1.0.0 (P2 architecture)'. These two should agree. Pure documentation consistency; no architectural impact; P3 cleanup. Carried forward from Round 3 (Round 4 was scoped to the SAB block format fix and did not touch the version banner).",
+      "fr_id": null
+    },
+    {
+      "severity": "low",
+      "message": "Round 2 LOW documentation-consistency gap #1 (logging allow-list) is still open: §3.8, §5.8, §3.10 P2-DD-4, §8 R3, and §9 SAB audio_converter responsibility all emit a structured-log field named 'format_requested', but §6.1 allow-list of safe top-level keys enumerates 'format' (not 'format_requested'). Per §6.1 deny-by-default policy, 'format_requested' would be silently dropped with dropped_pii=1 counter increment, defeating the diagnostic intent. Not addressed in Round 4 (Round 4 was scoped to the SAB block format fix). Still non-blocking P3 implementation cleanup. Fix options unchanged: (a) rename the field in §3.8/§5.8/§3.10/§8 to 'format' (smallest change, no allow-list drift), or (b) add 'format_requested' to §6.1 allow-list.",
+      "fr_id": "FR-08"
+    },
+    {
+      "severity": "low",
+      "message": "Round 2 LOW documentation-consistency gap #2 (error-code union) is still open: §4.1 error-code union enumerates 'VALIDATION_ERROR | CIRCUIT_OPEN | BACKEND_ERROR | SSML_FALLBACK | UNAUTHORIZED | INTERNAL' but §3.8, §5.8, §5.9, §3.10 P2-DD-4, §8 R3, and §9 SAB audio_converter responsibility all emit a new code 'ffmpeg_unavailable' in the 500 error body. Not addressed in Round 4 (Round 4 was scoped to the SAB block format fix). Still non-blocking P3 implementation cleanup. Fix unchanged: add 'FFMPEG_UNAVAILABLE' to the §4.1 error-code union alongside the existing codes so the §3.8 example body is consistent with the declared contract surface.",
+      "fr_id": "FR-08"
+    }
+  ]
+}

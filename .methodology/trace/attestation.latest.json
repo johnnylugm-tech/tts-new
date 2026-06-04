@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "d5ae2d539a42f71dcd8aacf08e2c52fceddc03f5",
-  "content_sha256": "477ac9d5b52fad74c8fd9c87b3673f465ead0663dd3f2d0294c6638e0223e2f5",
+  "git_sha": "0dc890a36a19c7995d502dc88c68760267cea2c4",
+  "content_sha256": "170ac5452e13465e7d02c327837de999bbc8c4cc1fc0d3fbf68c5ddafbacf23e",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -9,39 +9,130 @@
     "schema_version": "harness/traceability/overlay/v1",
     "project_id": "tts-new",
     "completeness": {
-      "total_requirements": 1,
+      "total_requirements": 8,
       "srs_coverage": "100.0%",
       "code_coverage": "0.0%",
       "test_coverage": "0.0%",
       "verification_rate": "0.0%",
-      "total_links": 1,
+      "total_links": 8,
       "missing_mappings": {
         "fr_without_srs": [],
         "fr_without_code": [
-          "FR-01"
+          "FR-07",
+          "FR-03",
+          "FR-06",
+          "FR-04",
+          "FR-08",
+          "FR-05",
+          "FR-01",
+          "FR-02"
         ],
         "fr_without_test": [
-          "FR-01"
+          "FR-07",
+          "FR-03",
+          "FR-06",
+          "FR-04",
+          "FR-08",
+          "FR-05",
+          "FR-01",
+          "FR-02"
         ]
       }
     },
     "missing": {
       "fr_without_srs": [],
       "fr_without_code": [
-        "FR-01"
+        "FR-07",
+        "FR-03",
+        "FR-06",
+        "FR-04",
+        "FR-08",
+        "FR-05",
+        "FR-01",
+        "FR-02"
       ],
       "fr_without_test": [
-        "FR-01"
+        "FR-07",
+        "FR-03",
+        "FR-06",
+        "FR-04",
+        "FR-08",
+        "FR-05",
+        "FR-01",
+        "FR-02"
       ]
     },
     "requirements": {
       "FR-01": {
         "fr_id": "FR-01",
-        "status": "pending",
+        "status": "in_progress",
         "srs_section": "SAD.md",
         "code_files": [],
         "test_files": [],
-        "sad_module": "—",
+        "sad_module": "src/engines/taiwan_linguistic.py",
+        "priority": "HIGH"
+      },
+      "FR-02": {
+        "fr_id": "FR-02",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/engines/ssml_parser.py",
+        "priority": "HIGH"
+      },
+      "FR-03": {
+        "fr_id": "FR-03",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/middleware/circuit_breaker.py",
+        "priority": "HIGH"
+      },
+      "FR-04": {
+        "fr_id": "FR-04",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/engines/synthesis.py",
+        "priority": "HIGH"
+      },
+      "FR-05": {
+        "fr_id": "FR-05",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/cache/redis_cache.py",
+        "priority": "HIGH"
+      },
+      "FR-06": {
+        "fr_id": "FR-06",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/audio_converter.py",
+        "priority": "HIGH"
+      },
+      "FR-07": {
+        "fr_id": "FR-07",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/cli.py",
+        "priority": "HIGH"
+      },
+      "FR-08": {
+        "fr_id": "FR-08",
+        "status": "in_progress",
+        "srs_section": "SAD.md",
+        "code_files": [],
+        "test_files": [],
+        "sad_module": "src/audio_converter.py",
         "priority": "HIGH"
       }
     },

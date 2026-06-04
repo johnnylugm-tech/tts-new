@@ -1,9 +1,8 @@
 {
   "state": "RUNNING",
-  "current_phase": 2,
+  "current_phase": 3,
   "last_gate": null,
   "last_fr": null,
-  "last_update": "2026-06-03T17:17:43.149694+00:00",
-  "phase_truth_passed": false,
-  "test_inventory_checksum": "1dc985ba90564ecde6559196704fe61f001fecc8ce177e1b473c4acfe939add8"
+  "last_update": "2026-06-04T03:52:49.314231+00:00",
+  "phase_truth_passed": false
 }

@@ -181,6 +181,9 @@
       "03-development/src/middleware/circuit_breaker.py",
       "03-development/src/routers/health.py"
     ],
+    "FR-06": [
+      "03-development/src/cache/redis_cache.py"
+    ],
     "FR-08": [
       "03-development/src/audio_converter.py"
     ]

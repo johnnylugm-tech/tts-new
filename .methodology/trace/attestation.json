@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "069f1a11c219cd02da723aa130723b3fafc366eb",
-  "content_sha256": "0358b786c61e79641d90733fb51abf1835c8ba4070f917a662edfdbb36cc2d9f",
+  "git_sha": "dd5b42a4c87fdd64a9110a450a87d6109ceb91fa",
+  "content_sha256": "ed9e5a4209ffd2c4975fb08193c8c14db8e697c6720eb647b218bef1789854eb",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -11,22 +11,13 @@
     "completeness": {
       "total_requirements": 8,
       "srs_coverage": "100.0%",
-      "code_coverage": "0.0%",
+      "code_coverage": "100.0%",
       "test_coverage": "0.0%",
       "verification_rate": "0.0%",
-      "total_links": 8,
+      "total_links": 18,
       "missing_mappings": {
         "fr_without_srs": [],
-        "fr_without_code": [
-          "FR-01",
-          "FR-02",
-          "FR-03",
-          "FR-04",
-          "FR-05",
-          "FR-06",
-          "FR-07",
-          "FR-08"
-        ],
+        "fr_without_code": [],
         "fr_without_test": [
           "FR-01",
           "FR-02",
@@ -41,16 +32,7 @@
     },
     "missing": {
       "fr_without_srs": [],
-      "fr_without_code": [
-        "FR-01",
-        "FR-02",
-        "FR-03",
-        "FR-04",
-        "FR-05",
-        "FR-06",
-        "FR-07",
-        "FR-08"
-      ],
+      "fr_without_code": [],
       "fr_without_test": [
         "FR-01",
         "FR-02",
@@ -67,7 +49,9 @@
         "fr_id": "FR-01",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/engines/taiwan_linguistic.py"
+        ],
         "test_files": [],
         "sad_module": "src/engines/taiwan_linguistic.py",
         "priority": "HIGH"
@@ -76,7 +60,10 @@
         "fr_id": "FR-02",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/tests/test_fr02.py",
+          "03-development/src/engines/ssml_parser.py"
+        ],
         "test_files": [],
         "sad_module": "src/engines/ssml_parser.py",
         "priority": "HIGH"
@@ -85,7 +72,9 @@
         "fr_id": "FR-03",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/engines/text_splitter.py"
+        ],
         "test_files": [],
         "sad_module": "src/middleware/circuit_breaker.py",
         "priority": "HIGH"
@@ -94,7 +83,9 @@
         "fr_id": "FR-04",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/engines/synthesis.py"
+        ],
         "test_files": [],
         "sad_module": "src/engines/synthesis.py",
         "priority": "HIGH"
@@ -103,7 +94,10 @@
         "fr_id": "FR-05",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/routers/health.py",
+          "03-development/src/middleware/circuit_breaker.py"
+        ],
         "test_files": [],
         "sad_module": "src/cache/redis_cache.py",
         "priority": "HIGH"
@@ -112,7 +106,9 @@
         "fr_id": "FR-06",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/cache/redis_cache.py"
+        ],
         "test_files": [],
         "sad_module": "src/audio_converter.py",
         "priority": "HIGH"
@@ -121,7 +117,9 @@
         "fr_id": "FR-07",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/cli.py"
+        ],
         "test_files": [],
         "sad_module": "src/cli.py",
         "priority": "HIGH"
@@ -130,7 +128,9 @@
         "fr_id": "FR-08",
         "status": "in_progress",
         "srs_section": "SAD.md",
-        "code_files": [],
+        "code_files": [
+          "03-development/src/audio_converter.py"
+        ],
         "test_files": [],
         "sad_module": "src/audio_converter.py",
         "priority": "HIGH"

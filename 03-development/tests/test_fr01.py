@@ -105,12 +105,14 @@ def test_fr_01_lexicon_coverage(source, expected):
         f"{expected!r}; got {out!r}"
     )
 
-    # --- AC5 (sub-assertion, cases 3 and 8): Bopomofo entries must be
-    # emitted as space-separated syllables (SPEC.md L41, L47).
-    if source in ("垃圾", "和"):
+    # --- AC5 (sub-assertion, case 3 only): multi-syllable Bopomofo entries
+    # must be space-separated (SPEC.md L41). Single-syllable entries such as
+    # 和→ㄏㄢˋ (SPEC.md L46, TEST_INVENTORY.yaml L25) have no syllable to
+    # separate, so the space rule applies only to 垃圾 (case 3).
+    if source == "垃圾":
         assert " " in expected, (
             f"Bopomofo expected value for {source!r} must be "
-            f"space-separated (SPEC.md L41, L47); got {expected!r}"
+            f"space-separated (SPEC.md L41); got {expected!r}"
         )
         # The normalized text must contain the exact Bopomofo byte
         # sequence, including the space separator.

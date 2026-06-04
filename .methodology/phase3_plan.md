@@ -35,7 +35,7 @@ Each FR ends with a Gate 1 quality evaluation (CHECKPOINT). Phase exits via Gate
 
 - [ ] **[P2-ARTIFACTS]** Verify Phase 2 output artifacts exist:
   ```bash
-  ls -la 02-architecture/SAD.md 02-architecture/ADR.md 02-architecture/TEST_SPEC.md \
+  ls -la 02-architecture/SAD.md 02-architecture/adr/ADR.md 02-architecture/TEST_SPEC.md \
      .methodology/quality_manifest.json .methodology/SAB.json
   git log --oneline --grep="APPROVE" -1
   ```

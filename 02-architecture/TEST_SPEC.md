@@ -341,14 +341,14 @@ Per `TEST_INVENTORY.yaml L90-L100`, FR-05 has **1 declared function** expanding 
 
 | # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
 |---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_05_circuit_breaker[CLOSED_success_increments_no_counter]` | `consecutive_failures=1; backend_result=success` | happy_path, state_transition | Q1 | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 2 | `test_fr_05_circuit_breaker[CLOSED_to_OPEN_at_3_consecutive_failures]` | `consecutive_failures=3; backend_result=failure` | state_transition | Q2, Q4 (AC1) | `SRS.md §3 FR-05 AC1 L228-L230` | `TEST_INVENTORY.yaml L90-L100` |
-| 3 | `test_fr_05_circuit_breaker[OPEN_returns_503_fast_fail_within_5ms]` | `state=OPEN; backend_call_count=0; latency_ms_max=5` | state_transition, error | Q3, Q4 (AC4) | `SRS.md §3 FR-05 AC4 L238, §7 row 3 L404` | `TEST_INVENTORY.yaml L90-L100` |
-| 4 | `test_fr_05_circuit_breaker[OPEN_to_HALF_OPEN_after_10s_timeout]` | `state=OPEN; elapsed_s=10.0` (freezegun) | state_transition | Q3, Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 5 | `test_fr_05_circuit_breaker[HALF_OPEN_to_CLOSED_on_probe_success_resets_counter]` | `state=HALF_OPEN; probe_result=success; failure_count_reset=0` | state_transition, happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 6 | `test_fr_05_circuit_breaker[HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout]` | `state=HALF_OPEN; probe_result=failure` | state_transition, error | Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 7 | `test_fr_05_circuit_breaker[GET_/health/circuit_returns_state_and_counters]` | `endpoint=GET; expected_keys=[state, failure_count, opened_at, threshold, timeout, last_transition_at]` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L156` | `TEST_INVENTORY.yaml L90-L100` |
-| 8 | `test_fr_05_circuit_breaker[POST_/health/circuit/reset_forces_closed]` | `endpoint=POST; previous_state=OPEN; expected_state=closed` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L157` | `TEST_INVENTORY.yaml L90-L100` |
+| 1 | `test_fr_05_circuit_breaker[CLOSED_success_increments_no_counter]` | `case_id="CLOSED_success_increments_no_counter"` | happy_path, state_transition | Q1 | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
+| 2 | `test_fr_05_circuit_breaker[CLOSED_to_OPEN_at_3_consecutive_failures]` | `case_id="CLOSED_to_OPEN_at_3_consecutive_failures"` | state_transition | Q2, Q4 (AC1) | `SRS.md §3 FR-05 AC1 L228-L230` | `TEST_INVENTORY.yaml L90-L100` |
+| 3 | `test_fr_05_circuit_breaker[OPEN_returns_503_fast_fail_within_5ms]` | `case_id="OPEN_returns_503_fast_fail_within_5ms"` | state_transition, error | Q3, Q4 (AC4) | `SRS.md §3 FR-05 AC4 L238, §7 row 3 L404` | `TEST_INVENTORY.yaml L90-L100` |
+| 4 | `test_fr_05_circuit_breaker[OPEN_to_HALF_OPEN_after_10s_timeout]` | `case_id="OPEN_to_HALF_OPEN_after_10s_timeout"` | state_transition | Q3, Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
+| 5 | `test_fr_05_circuit_breaker[HALF_OPEN_to_CLOSED_on_probe_success_resets_counter]` | `case_id="HALF_OPEN_to_CLOSED_on_probe_success_resets_counter"` | state_transition, happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
+| 6 | `test_fr_05_circuit_breaker[HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout]` | `case_id="HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout"` | state_transition, error | Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
+| 7 | `test_fr_05_circuit_breaker[GET_/health/circuit_returns_state_and_counters]` | `case_id="GET_/health/circuit_returns_state_and_counters"` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L156` | `TEST_INVENTORY.yaml L90-L100` |
+| 8 | `test_fr_05_circuit_breaker[POST_/health/circuit/reset_forces_closed]` | `case_id="POST_/health/circuit/reset_forces_closed"` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L157` | `TEST_INVENTORY.yaml L90-L100` |
 
 **Sub-assertion table** (assertion-level mirror of `test_fr_05_circuit_breaker`'s inline checks; read by `check-test-spec-consistency`):
 

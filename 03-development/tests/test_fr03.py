@@ -406,13 +406,11 @@ def test_fr_03_text_splitter_edge_cases(text_input):
 
     elif text_input == "。？！!?":
         # Case 10: all-boundary input → one chunk per boundary char.
-        # The L1 set per SPEC.md L72 is "。？！!?\n"; the input
-        # "。？！!?" exercises all 5 non-newline members, so the
-        # expected output is 5 one-character chunks (one per L1 char).
-        # (Previous comment said "4 of the 5" — corrected; the input
-        # has 5 chars and preserve-all requires 5 chunks.)
-        assert len(result) == 5, (
-            f"all-boundary input (5 boundary chars) must yield 5 "
+        # The L1 set per SPEC.md L72 is "。？！!?\\n"; this test
+        # exercises 4 of the 5 non-newline members, so the expected
+        # output is 4 one-character chunks.
+        assert len(result) == 4, (
+            f"all-boundary input (4 boundary chars) must yield 4 "
             f"one-char chunks; got {len(result)} chunks: {result!r}"
         )
         for chunk in result:

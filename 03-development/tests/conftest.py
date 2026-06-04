@@ -29,4 +29,6 @@ with contextlib.suppress(ImportError):
     import src.middleware.circuit_breaker  # FR-05
 with contextlib.suppress(ImportError):
     import src.routers.health  # FR-05 (health endpoint integration)
-# FR-04, FR-06, FR-07, FR-08 modules to be added when implemented.
+with contextlib.suppress(ImportError):
+    import src.audio_converter  # FR-08
+# FR-04, FR-06, FR-07 modules to be added when implemented.

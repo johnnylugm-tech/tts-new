@@ -180,6 +180,9 @@
     "FR-05": [
       "03-development/src/middleware/circuit_breaker.py",
       "03-development/src/routers/health.py"
+    ],
+    "FR-08": [
+      "03-development/src/audio_converter.py"
     ]
   },
   "gate_results": {

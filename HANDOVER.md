@@ -1,8 +1,8 @@
 # Harness Methodology — Session Handover
 
-**Checkpoint**: `P3-mid-20260604`  
+**Checkpoint**: `P3-pre-gate2-20260604`  
 **Phase**: P3 — Implementation  
-**Generated**: 2026-06-04T16:34:08Z
+**Generated**: 2026-06-04T16:39:57Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 
@@ -48,11 +48,11 @@ cat .methodology/phase3_plan.md
 
 ## 任務背景
 
-P3 Implementation in progress (≥50% milestone). 8/8 FRs done.
+P3 Implementation complete. Gate 2 not yet executed.
 
 ## 目前執行狀況
 
-8/8 FRs Gate 1 PASS [FR-01,FR-02,FR-03,FR-04,FR-05,…+3]. TDD cycles complete for passing FRs.
+All 8 FR(s) Gate 1 PASS [FR-01,FR-02,FR-03,FR-04,FR-05,…+3]. Gate 2 evaluation not yet started.
 
 **A/B Session Results:**
   - SRS.md / developer: **complete**
@@ -79,6 +79,12 @@ P3 Implementation in progress (≥50% milestone). 8/8 FRs done.
   - FR-07 / developer: **complete**
 
 **Recently Committed Files:**
+  - `.methodology/gap_report.json`
+  - `03-development/run_cov.py`
+  - `03-development/run_cov_fr02.py`
+  - `03-development/run_cov_fr02.sh`
+  - `HANDOVER.md`
+  - `coverage.json`
   - `.methodology/quality_manifest.json`
   - `03-development/src/cli.py`
   - `03-development/tests/conftest.py`
@@ -92,19 +98,13 @@ P3 Implementation in progress (≥50% milestone). 8/8 FRs done.
   - `03-development/src/audio_converter.py`
   - `03-development/tests/test_fr08.py`
   - `03-development/tests/test_fr05.py`
-  - `.methodology/gap_report.json`
   - `.methodology/mutation_baseline.json`
-  - `.methodology/phase2_plan.md`
-  - `.methodology/plan_status.md`
-  - `.methodology/trace/attestation.json`
-  - `.methodology/trace/attestation.latest.json`
-  - `03-development/tests/test_fr02.py`
 
 ## 接下來的工作
 
-1. Complete remaining 0 FR(s): (all FRs Gate 1 PASS — ready for P3-pre-gate2)
-2. Ensure each FR has passing unit tests (TDD)
-3. When all FRs done → `push-milestone --type p3-pre-gate2`
+1. Run Gate 2 evaluation (target score ≥ 75)
+2. Fix any failures during evaluation
+3. On Gate 2 PASS → `finalize-gate --gate 2` handles push + HANDOVER
 
 ## 注意事項
 
@@ -114,9 +114,7 @@ P3 Implementation in progress (≥50% milestone). 8/8 FRs done.
 
 ## 附加資訊
 
-- **fr_done**: 8
-- **fr_total**: 8
-- **remaining_frs**: (all FRs Gate 1 PASS — ready for P3-pre-gate2)
+- **fr_count**: 8
 
 ---
 *由 `HandoverGenerator` 自動生成。下次 push 時此檔案將被覆寫。*

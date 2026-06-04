@@ -31,9 +31,25 @@ _OPTIMAL_THRESHOLD: Final[int] = 100
 
 def _force_split(text: str, cap: int) -> list[str]:
     """Hard-cap force-split: slice *text* into pieces of exactly *cap* chars."""
-    if not text:
-        return []
     return [text[i : i + cap] for i in range(0, len(text), cap)]
+
+
+def _simple_split(text: str, pattern: re.Pattern[str]) -> list[str]:
+    """Split *text* at every *pattern* match; no greedy merging."""
+    return [s for s in pattern.split(text) if s]
+
+
+def _apply_boundary_tier(
+    segments: list[str], pattern: re.Pattern[str], threshold: int
+) -> list[str]:
+    """Split each segment longer than *threshold* at *pattern*; pass others through."""
+    result: list[str] = []
+    for seg in segments:
+        if len(seg) > threshold:
+            result.extend(_simple_split(seg, pattern))
+        else:
+            result.append(seg)
+    return result
 
 
 def split_text(text: str) -> list[str]:
@@ -43,18 +59,10 @@ def split_text(text: str) -> list[str]:
     Algorithm (three-tier, SPEC.md L71-L74, SRS.md §3 FR-03 L190-L208):
 
       1. Empty text → [].
-      2. Split at every L1 sentence boundary (。？！!?\\n) — each boundary
-         char ends a segment. The resulting segments are never merged across
-         L1 boundaries (preserves AC3 + test case 10 semantics).
-      3. For any segment > _OPTIMAL_THRESHOLD (100 chars), split at L2
-         clause boundaries (；:), then greedy-merge within cap.
-      4. For any segment still > _OPTIMAL_THRESHOLD, split at L3 phrase
-         boundaries (，), then greedy-merge within cap.
+      2. Split at every L1 sentence boundary (。？！!?\\n).
+      3. For any segment > _OPTIMAL_THRESHOLD, split at L2 clause boundaries (；:).
+      4. For any segment still > _OPTIMAL_THRESHOLD, split at L3 phrase boundaries (，).
       5. Any segment still > MAX_CHARS_PER_REQUEST → hard-cap force-split.
-
-    AC5: inputs ≤ MAX_CHARS_PER_REQUEST with no L1 boundaries return as a
-    single chunk (case 1, 7, 8, 9 — no early-return bypass; they fall
-    through step 2 without splitting and return [text]).
 
     Citations:
       - SPEC.md L67-L75  : algorithm spec
@@ -64,49 +72,24 @@ def split_text(text: str) -> list[str]:
     if not text:
         return []
 
-    cap = MAX_CHARS_PER_REQUEST  # 250
+    cap = MAX_CHARS_PER_REQUEST
 
-    # --- Tier 1 (L1): split at every sentence boundary.
-    # Each L1 boundary char ends a segment (lookbehind keeps the char in
-    # the left segment). Segments are never merged across L1 boundaries to
-    # preserve AC3 semantics (case 10: all-boundary input → 1 chunk/char).
-    tier1_raw = [s for s in _L1_PATTERN.split(text) if s]
-    tier1_merged = tier1_raw if tier1_raw else [text]
+    # Tier 1: split at L1 sentence boundaries (lookbehind keeps boundary char
+    # in left segment; never merge across L1 to preserve case-10 semantics).
+    segments = [s for s in _L1_PATTERN.split(text) if s]
 
-    # --- Tier 2 (L2): for segments > threshold, split at clause boundaries.
-    # Use simple split (no greedy merge) so that segments > 100 chars
-    # are always reduced when L2 boundaries exist.
-    tier2: list[str] = []
-    for seg in tier1_merged:
-        if len(seg) > _OPTIMAL_THRESHOLD:
-            sub = _simple_split(seg, _L2_PATTERN)
-            tier2.extend(sub)
-        else:
-            tier2.append(seg)
+    # Tiers 2 and 3: progressively refine oversized segments.
+    segments = _apply_boundary_tier(segments, _L2_PATTERN, _OPTIMAL_THRESHOLD)
+    segments = _apply_boundary_tier(segments, _L3_PATTERN, _OPTIMAL_THRESHOLD)
 
-    # --- Tier 3 (L3): for segments > threshold, split at phrase boundaries.
-    tier3: list[str] = []
-    for seg in tier2:
-        if len(seg) > _OPTIMAL_THRESHOLD:
-            sub = _simple_split(seg, _L3_PATTERN)
-            tier3.extend(sub)
-        else:
-            tier3.append(seg)
-
-    # --- Hard-cap force-split (fallback for segments with no boundary).
+    # Hard-cap fallback for segments with no boundary at all.
     result: list[str] = []
-    for seg in tier3:
+    for seg in segments:
         if len(seg) > cap:
             result.extend(_force_split(seg, cap))
         else:
             result.append(seg)
 
     return result
-
-
-def _simple_split(text: str, pattern: re.Pattern[str]) -> list[str]:
-    """Split *text* at every *pattern* match; no greedy merging."""
-    parts = [s for s in pattern.split(text) if s]
-    return parts if parts else [text]
 
 

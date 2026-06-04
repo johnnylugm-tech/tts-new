@@ -278,12 +278,13 @@ jobs:
               print(f"INFO: Phase {phase} < 3 — spec-coverage-check not required.")
               sys.exit(0)
           result = subprocess.run(
-              ["python", "harness/harness_cli.py", "spec-coverage-check",
+              [sys.executable, "harness/harness_cli.py", "spec-coverage-check",
                "--project", ".", "--threshold", str(threshold)],
               capture_output=True, text=True
           )
           print(result.stdout)
           if result.returncode != 0:
+              print(result.stderr)
               print(f"FAIL: D4 spec-coverage < {threshold:.0f}% for phase {phase}.")
               sys.exit(1)
           print(f"OK: D4 spec-coverage >= {threshold:.0f}%")

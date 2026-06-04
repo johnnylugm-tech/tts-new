@@ -55,7 +55,7 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
     if not input_bytes:
         raise ConversionError("Empty input bytes; nothing to convert")
 
-    if shutil.which("ffmpeg") is not None:
+    if shutil.which("ffmpeg") is None:
         raise FFmpegUnavailableError()
 
     in_fd, in_path = tempfile.mkstemp()

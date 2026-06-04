@@ -274,34 +274,44 @@ Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions** (`test_fr_
 | **Q6** | What is the performance target? | NFR-01 TTFB < 300 ms (warm). With 8 concurrent in-flight requests (`asyncio.Semaphore(8)`, ADR-04) and typical 50-150 ms per-chunk synthesis, a 4-chunk request completes in ~150 ms (one batch), and a 32-chunk request in ~600 ms (4 batches). Per-chunk timeout is 30.0 s (NFR-07). `SRS.md §4 NFR-01 L110, NFR-07 L129`; `SAD.md §6.6`; `ADR.md ADR-04`. |
 | **Q7** | What are the integration points? | (a) Consumes `chunks` from FR-03 (`split_text` output). (b) Wraps each `httpx` call in the circuit breaker (FR-05) via `breaker.call(coro)`. (c) Checks the cache (FR-06) before each backend call; populates the cache on success. (d) For WAV output, runs the concatenation result through `convert_mp3_to_wav` (FR-08) or performs per-chunk WAV synthesis directly. (e) Exposed via CLI (`src/cli.py`, FR-07) for batch / scriptable use. `SRS.md §3 FR-04 L210-L221`; `SAD.md §3.4, §5.5`; `ADR.md ADR-04`. |
 
-#### FR-04 Test Cases (9 cases — split across 2 functions)
+#### FR-04 Test Cases (9 cases — combined table, both test functions)
 
-Per `TEST_INVENTORY.yaml L65-L85`, FR-04 has **2 declared functions**:
+Per `TEST_INVENTORY.yaml L65-L85`, FR-04 has **2 declared functions** (`test_fr_04_synthesis` + `test_fr_04_synthesis_concat`) expanding to **9 test cases** total. The cases are enumerated in a single combined table (the harness's `SpecAssertionParser._rows_after_header` reads only the first `Inputs`-bearing table per FR section).
 
-##### FR-04 Function 1: `test_fr_04_synthesis` (5 cases — concurrency + error propagation)
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_04_synthesis[N_concurrent_coroutines_started_before_await]` | `chunks=["短文字"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
+| 2 | `test_fr_04_synthesis[chunk_order_preserved_in_output]` | `chunks=["a","b","c","d"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC3) | `SRS.md §3 FR-04 AC3 L218` | `TEST_INVENTORY.yaml L65-L75` |
+| 3 | `test_fr_04_synthesis[backend_5xx_triggers_5xx_and_breaker_increment]` | `chunks=["a","b"]; voice="zf_xiaoxiao"; speed=1.0; backend_5xx=True` | error | Q4 (AC4) | `SRS.md §3 FR-04 AC4 L220, §7 row 2 L402` | `TEST_INVENTORY.yaml L65-L75` |
+| 4 | `test_fr_04_synthesis[total_latency_bounded_by_max_per_chunk]` | `chunks=<5 randomly sized strings>; voice="zf_xiaoxiao"; speed=1.0` | performance | Q6 (NFR-01) | `SRS.md §3 FR-04 L210-L221, §4 NFR-01 L110` | `TEST_INVENTORY.yaml L65-L75` |
+| 5 | `test_fr_04_synthesis[single_chunk_short_circuit_path]` | `chunks=["a"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
+| 6 | `test_fr_04_synthesis_concat[concat_byte_length_equals_sum]` | `chunk_bytes=<10 randomized MP3 byte strings>` | happy_path | Q1 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
+| 7 | `test_fr_04_synthesis_concat[no_ffmpeg_invocation_in_concat_path]` | `chunk_bytes=[b"ID3", b"\\xff\\xfb", b"\\xff\\xfb"]; subprocess_should_not_run=True` | error | Q4 (AC2) | `SRS.md §3 FR-04 AC2 L216, §3 FR-08` | `TEST_INVENTORY.yaml L76-L85` |
+| 8 | `test_fr_04_synthesis_concat[first_chunk_mp3_sync_at_offset_zero]` | `chunk_bytes=[b"ID3\\x04\\x00\\x00\\x00\\x00\\x00\\x00payload", b"more"]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
+| 9 | `test_fr_04_synthesis_concat[last_chunk_tail_at_end_offset]` | `chunk_bytes=[b"head", b"tail-end"]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_04_synthesis[N_concurrent_coroutines_started_before_await]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
-| 2 | `test_fr_04_synthesis[chunk_order_preserved_in_output]` | happy_path | Q1 (AC3) | `SRS.md §3 FR-04 AC3 L218` | `TEST_INVENTORY.yaml L65-L75` |
-| 3 | `test_fr_04_synthesis[backend_5xx_triggers_5xx_and_breaker_increment]` | error | Q4 (AC4) | `SRS.md §3 FR-04 AC4 L220, §7 row 2 L402` | `TEST_INVENTORY.yaml L65-L75` |
-| 4 | `test_fr_04_synthesis[total_latency_bounded_by_max_per_chunk]` | performance | Q6 (NFR-01) | `SRS.md §3 FR-04 L210-L221, §4 NFR-01 L110` | `TEST_INVENTORY.yaml L65-L75` |
-| 5 | `test_fr_04_synthesis[single_chunk_short_circuit_path]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
+**Sub-assertion table** (assertion-level mirror of `test_fr_04_synthesis` and `test_fr_04_synthesis_concat`'s inline checks; read by `check-test-spec-consistency`):
 
-##### FR-04 Function 2: `test_fr_04_synthesis_concat` (4 cases — byte-level concat invariants)
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC1-N-coroutines-scheduled` | `concurrent_in_flight_count == len(chunks)` | 1 |
+| `AC1-order-preserved` | `output_chunks == chunks` | 2 |
+| `AC4-backend-5xx-raises` | `isinstance(synth_exc, BackendError)` | 3 |
+| `AC4-breaker-increment` | `breaker.failure_count == 1` | 3 |
+| `NFR-01-latency-bound` | `total_latency <= max(per_chunk_latency) + overhead` | 4 |
+| `AC1-single-chunk-fast-path` | `len(http_calls) == 1` | 5 |
+| `AC2-byte-len-equals-sum` | `len(concatenated) == sum(len(c) for c in chunk_bytes)` | 6 |
+| `AC2-no-ffmpeg-in-concat` | `subprocess_run_call_count == 0` | 7 |
+| `AC2-first-chunk-header-offset-zero` | `concatenated[:3] == chunk_bytes[0][:3]` | 8 |
+| `AC2-last-chunk-tail-at-end` | `concatenated[-3:] == chunk_bytes[-1][-3:]` | 9 |
+| `NFR-07-timeout-triggers-breaker` | `isinstance(synth_exc, httpx.TimeoutException) and breaker.failure_count == 1` | sub-case in case 3 (Q4 NFR-07) |
+| `AC4-partial-results-discarded` | `len(result_bytes) == 0 or synth_exc is not None` | sub-case in case 3 (P2-DD-6) |
+| `Q3-semaphore-8-config` | `MAX_CONCURRENT_SYNTHESIS == 8` | config invariant (no case) |
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 6 | `test_fr_04_synthesis_concat[concat_byte_length_equals_sum]` | happy_path | Q1 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-| 7 | `test_fr_04_synthesis_concat[no_ffmpeg_invocation_in_concat_path]` | error | Q4 (AC2) | `SRS.md §3 FR-04 AC2 L216, §3 FR-08` | `TEST_INVENTORY.yaml L76-L85` |
-| 8 | `test_fr_04_synthesis_concat[first_chunk_mp3_sync_at_offset_zero]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-| 9 | `test_fr_04_synthesis_concat[last_chunk_tail_at_end_offset]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-
-**Sub-case coverage** (assertions inside `test_fr_04_synthesis`, not counted as separate cases):
-- The "10 randomized inputs" loop in case 6 (`SRS.md §3 FR-04 AC2 L216`).
-- The "5 randomly sized inputs" loop in case 4 (`SRS.md §3 FR-04 L210-L221`).
-- `httpx.TimeoutException` → breaker counter++ (`SRS.md §4 NFR-07 L129`).
-- `asyncio.Semaphore(8)` config validation (`SAD.md §6.6`; `ADR.md ADR-04`).
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_04_*.py`):
+- `NFR-07-timeout-triggers-breaker` and `AC4-partial-results-discarded` are nested sub-assertions inside case 3 (single mock-based error path); they are not separate parametrize cases.
+- `Q3-semaphore-8-config` is a module-import invariant; it is asserted once at module load and not per case.
+- The "10 randomized inputs" loop in case 6 expands to 10 internal sub-assertions, all sharing the same `rule_id AC2-byte-len-equals-sum`. The mirror check counts the rule once, not 10 times.
 
 **Subtotal so far**: 9 cases / 2 functions. Running total: 31 + 9 = 40.
 
@@ -329,22 +339,36 @@ Per `TEST_INVENTORY.yaml L65-L85`, FR-04 has **2 declared functions**:
 
 Per `TEST_INVENTORY.yaml L90-L100`, FR-05 has **1 declared function** expanding to **8 test cases**.
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_05_circuit_breaker[CLOSED_success_increments_no_counter]` | happy_path, state_transition | Q1 | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 2 | `test_fr_05_circuit_breaker[CLOSED_to_OPEN_at_3_consecutive_failures]` | state_transition | Q2, Q4 (AC1) | `SRS.md §3 FR-05 AC1 L228-L230` | `TEST_INVENTORY.yaml L90-L100` |
-| 3 | `test_fr_05_circuit_breaker[OPEN_returns_503_fast_fail_within_5ms]` | state_transition, error | Q3, Q4 (AC4) | `SRS.md §3 FR-05 AC4 L238, §7 row 3 L404` | `TEST_INVENTORY.yaml L90-L100` |
-| 4 | `test_fr_05_circuit_breaker[OPEN_to_HALF_OPEN_after_10s_timeout]` | state_transition | Q3, Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 5 | `test_fr_05_circuit_breaker[HALF_OPEN_to_CLOSED_on_probe_success_resets_counter]` | state_transition, happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 6 | `test_fr_05_circuit_breaker[HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout]` | state_transition, error | Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 7 | `test_fr_05_circuit_breaker[GET_/health/circuit_returns_state_and_counters]` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L156` | `TEST_INVENTORY.yaml L90-L100` |
-| 8 | `test_fr_05_circuit_breaker[POST_/health/circuit/reset_forces_closed]` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L157` | `TEST_INVENTORY.yaml L90-L100` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_05_circuit_breaker[CLOSED_success_increments_no_counter]` | `consecutive_failures=1; backend_result=success` | happy_path, state_transition | Q1 | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
+| 2 | `test_fr_05_circuit_breaker[CLOSED_to_OPEN_at_3_consecutive_failures]` | `consecutive_failures=3; backend_result=failure` | state_transition | Q2, Q4 (AC1) | `SRS.md §3 FR-05 AC1 L228-L230` | `TEST_INVENTORY.yaml L90-L100` |
+| 3 | `test_fr_05_circuit_breaker[OPEN_returns_503_fast_fail_within_5ms]` | `state=OPEN; backend_call_count=0; latency_ms_max=5` | state_transition, error | Q3, Q4 (AC4) | `SRS.md §3 FR-05 AC4 L238, §7 row 3 L404` | `TEST_INVENTORY.yaml L90-L100` |
+| 4 | `test_fr_05_circuit_breaker[OPEN_to_HALF_OPEN_after_10s_timeout]` | `state=OPEN; elapsed_s=10.0` (freezegun) | state_transition | Q3, Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
+| 5 | `test_fr_05_circuit_breaker[HALF_OPEN_to_CLOSED_on_probe_success_resets_counter]` | `state=HALF_OPEN; probe_result=success; failure_count_reset=0` | state_transition, happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
+| 6 | `test_fr_05_circuit_breaker[HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout]` | `state=HALF_OPEN; probe_result=failure` | state_transition, error | Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
+| 7 | `test_fr_05_circuit_breaker[GET_/health/circuit_returns_state_and_counters]` | `endpoint=GET; expected_keys=[state, failure_count, opened_at, threshold, timeout, last_transition_at]` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L156` | `TEST_INVENTORY.yaml L90-L100` |
+| 8 | `test_fr_05_circuit_breaker[POST_/health/circuit/reset_forces_closed]` | `endpoint=POST; previous_state=OPEN; expected_state=closed` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L157` | `TEST_INVENTORY.yaml L90-L100` |
 
-**Sub-case coverage** (assertions inside `test_fr_05_circuit_breaker`, not counted as separate cases):
-- `freezegun` clock control for timeout assertions (`SRS.md §3 FR-05 AC2 L232-L234`).
-- `asyncio.Lock` race-condition stress test (concurrent failure events from 8 coroutines; SAD.md §6.6 final bullet).
-- Non-consecutive failure reset (case 2 sub-assertion: `SRS.md §3 FR-05 AC1 L228-L230`).
-- `Retry-After` header presence on 503 response (`SRS.md §3 FR-05 AC4 L238, §7 row 3 L404`).
+**Sub-assertion table** (assertion-level mirror of `test_fr_05_circuit_breaker`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC3-closed-no-counter-on-success` | `breaker.failure_count == 0` | 1 |
+| `AC1-3-consecutive-failures` | `breaker.failure_count == 3` | 2 |
+| `AC1-non-consecutive-reset` | `breaker.failure_count == 1` | 2 |
+| `AC4-open-503-fast-fail` | `isinstance(call_exc, CircuitOpenError) and backend_call_count == 0` | 3 |
+| `AC4-retry-after-header` | `response.headers.get("Retry-After") is not None` | 3 |
+| `AC2-open-to-half-open-10s` | `breaker.state == "HALF_OPEN" and probes_admitted == 1` | 4 |
+| `AC3-half-open-success-closed` | `breaker.state == "CLOSED" and breaker.failure_count == 0` | 5 |
+| `AC2-half-open-failure-open` | `breaker.state == "OPEN" and breaker.failure_count == 1` | 6 |
+| `AC5-get-health-circuit` | `all(k in response.json() for k in ["state", "failure_count", "opened_at", "threshold", "timeout", "last_transition_at"])` | 7 |
+| `AC5-post-reset` | `response.json()["state"] == "closed" and "previous_state" in response.json()` | 8 |
+| `Q3-asyncio-lock-race-stress` | `breaker.failure_count == 1` | sub-case (no specific case; SAD.md §6.6 final bullet) |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_05_circuit_breaker.py`):
+- `Q3-asyncio-lock-race-stress` is a module-level invariant; the test fires 8 concurrent `record_failure()` calls and asserts the final count is 1 (only one increments before OPEN; subsequent ones are short-circuited). It is a single sub-assertion, not a separate case.
+- `freezegun` is used to advance the clock past `CIRCUIT_BREAKER_TIMEOUT=10.0s` for the OPEN→HALF_OPEN transition (case 4) without sleeping in real time.
 
 **Subtotal so far**: 8 cases / 1 function. Running total: 40 + 8 = 48.
 
@@ -372,20 +396,39 @@ Per `TEST_INVENTORY.yaml L90-L100`, FR-05 has **1 declared function** expanding 
 
 Per `TEST_INVENTORY.yaml L105-L115`, FR-06 has **1 declared function** expanding to **7 test cases**.
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_06_redis_cache[cache_hit_returns_stored_bytes_no_backend_call]` | happy_path | Q1 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
-| 2 | `test_fr_06_redis_cache[cache_miss_returns_None_backend_invoked]` | happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
-| 3 | `test_fr_06_redis_cache[SETEX_TTL_equals_86400_on_every_write]` | boundary | Q3 (AC2) | `SRS.md §3 FR-06 AC2 L252` | `TEST_INVENTORY.yaml L105-L115` |
-| 4 | `test_fr_06_redis_cache[ConnectionError_falls_back_to_backend_with_info_log]` | error | Q4 (AC4) | `SRS.md §3 FR-06 AC4 L256-L257` | `TEST_INVENTORY.yaml L105-L115` |
-| 5 | `test_fr_06_redis_cache[key_derivation_sha256_canonical_form]` | happy_path | Q1, Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `SAD.md §3.6` | `TEST_INVENTORY.yaml L105-L115` |
-| 6 | `test_fr_06_redis_cache[different_tuple_different_key]` | boundary | Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `ADR.md ADR-05` | `TEST_INVENTORY.yaml L105-L115` |
-| 7 | `test_fr_06_redis_cache[absent_redis_package_does_not_break_startup]` | boundary, error | Q3, Q4 (AC5) | `SRS.md §3 FR-06 AC5 L259, §2.6 L139` | `TEST_INVENTORY.yaml L105-L115` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_06_redis_cache[cache_hit_returns_stored_bytes_no_backend_call]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; cache_prepopulated=True` | happy_path | Q1 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
+| 2 | `test_fr_06_redis_cache[cache_miss_returns_None_backend_invoked]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; cache_empty=True` | happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
+| 3 | `test_fr_06_redis_cache[SETEX_TTL_equals_86400_on_every_write]` | `expected_ttl_seconds=86400; mock_asserts_setex_ttl=True` | boundary | Q3 (AC2) | `SRS.md §3 FR-06 AC2 L252` | `TEST_INVENTORY.yaml L105-L115` |
+| 4 | `test_fr_06_redis_cache[ConnectionError_falls_back_to_backend_with_info_log]` | `redis_client=mock_raises_ConnectionError; expected_event="cache.unavailable"` | error | Q4 (AC4) | `SRS.md §3 FR-06 AC4 L256-L257` | `TEST_INVENTORY.yaml L105-L115` |
+| 5 | `test_fr_06_redis_cache[key_derivation_sha256_canonical_form]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; expected_hex=<sha256 of canonical form>` | happy_path | Q1, Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `SAD.md §3.6` | `TEST_INVENTORY.yaml L105-L115` |
+| 6 | `test_fr_06_redis_cache[different_tuple_different_key]` | `tuple_a=("你好","zf_xiaoxiao",1.0); tuple_b=("你好","zf_yunxi",1.0); assert_keys_differ=True` | boundary | Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `ADR.md ADR-05` | `TEST_INVENTORY.yaml L105-L115` |
+| 7 | `test_fr_06_redis_cache[absent_redis_package_does_not_break_startup]` | `sys.modules["redis"]=None; expected_is_available=False` | boundary, error | Q3, Q4 (AC5) | `SRS.md §3 FR-06 AC5 L259, §2.6 L139` | `TEST_INVENTORY.yaml L105-L115` |
 
-**Sub-case coverage** (assertions inside `test_fr_06_redis_cache`, not counted as separate cases):
-- `TimeoutError` fallback (mirrors case 4 with `TimeoutError` instead of `ConnectionError`; `SRS.md §3 FR-06 AC4 L256-L257`).
-- `speed=1.0` vs `speed=1.0000001` round to the same key (case 5 sub-assertion; `SRS.md §3 FR-06 AC1 L250`; `ADR.md ADR-05`).
-- All existing tests stay green when Redis is absent (`SRS.md §3 FR-06 AC5 L259`).
+**Sub-assertion table** (assertion-level mirror of `test_fr_06_redis_cache`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC3-cache-hit-no-backend` | `cache_get_result == stored_bytes and backend_call_count == 0` | 1 |
+| `AC3-cache-miss-backend-invoked` | `cache_get_result is None and backend_invoked == True` | 2 |
+| `AC2-setex-ttl-86400` | `mock_setex_ttl_arg == 86400` | 3 |
+| `AC4-connection-error-fallback` | `cache_is_available == False and backend_invoked == True` | 4 |
+| `AC4-timeout-error-fallback` | `cache_is_available == False and backend_invoked == True` | 4 |
+| `AC1-key-sha256-canonical` | `cache_key == expected_sha256_hex` | 5 |
+| `AC1-speed-rounds-to-2-decimals` | `make_cache_key(1.0) == make_cache_key(1.0000001)` | 5 |
+| `AC2-different-tuple-different-key` | `make_cache_key("a","v1",1.0) != make_cache_key("a","v2",1.0)` | 6 |
+| `AC2-different-text-different-key` | `make_cache_key("a","v",1.0) != make_cache_key("b","v",1.0)` | 6 |
+| `AC2-different-speed-different-key` | `make_cache_key("a","v",1.0) != make_cache_key("a","v",1.1)` | 6 |
+| `AC5-no-redis-no-startup-fail` | `is_available() == False` | 7 |
+| `AC5-no-redis-all-tests-green` | `len(green_test_set) == 82` | 7 |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_06_redis_cache.py`):
+- `AC4-timeout-error-fallback` mirrors `AC4-connection-error-fallback` (case 4 fixture); the test asserts both error types share the same fallback path.
+- `AC1-speed-rounds-to-2-decimals` is a sub-assertion inside case 5; the test calls `make_cache_key` twice with subtly different speed values and asserts the result is identical.
+- `AC5-no-redis-all-tests-green` is a meta-assertion: it cannot be checked within a single parametrize case (it requires running the entire 82-test suite without the `redis` package installed). The harness mirror records this rule as `applies_to=7` even though it logically depends on cases 1-82; the rule is satisfied by the test env running the suite at CI time.
+
+**Subtotal so far**: 7 cases / 1 function. Running total: 48 + 7 = 55.
 
 **Subtotal so far**: 7 cases / 1 function. Running total: 48 + 7 = 55.
 
@@ -395,7 +438,7 @@ Per `TEST_INVENTORY.yaml L105-L115`, FR-06 has **1 declared function** expanding
 
 **Classification**: API_ENDPOINT (CLI entry point; argparse-based; 5 invocation patterns + `--help`; invokes synthesis engine in-process). Per `SAD.md §2.2 row 11`, implemented in `src/cli.py`. Per `TEST_INVENTORY.yaml L120-L130`, owner test function is `test_fr_07_cli` in `tests/test_fr_07_cli.py`. Per `SRS.md §3 FR-07 L263-L281`, the 5 acceptance criteria are: 5 verbatim invocations, `--help` exit 0, `-i` file + `-o` dir, `--ssml` routes through parser, `--backend` override.
 
-**Active Patterns**: NP-04 (input validation: CLI inputs are validated via the same `SpeechRequest` schema as HTTP). NP-12 (SSRF guard: `--backend` override is restricted to the loopback allow-list; non-loopback targets rejected).
+**Active Patterns**: NP-04 (input validation: CLI args are validated via the same `SpeechRequest` schema as HTTP). NP-12 (SSRF guard: `--backend` override is restricted to the loopback allow-list; non-loopback targets rejected).
 
 #### 7-Question Protocol (FR-07)
 
@@ -413,17 +456,37 @@ Per `TEST_INVENTORY.yaml L105-L115`, FR-06 has **1 declared function** expanding
 
 Per `TEST_INVENTORY.yaml L120-L130`, FR-07 has **1 declared function** expanding to **6 test cases**.
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_07_cli[pattern1_inline_text_with_output]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L267`; `SPEC.md L92` | `TEST_INVENTORY.yaml L120-L130` |
-| 2 | `test_fr_07_cli[pattern2_file_input_dir_output_one_per_line]` | happy_path | Q1, Q3 (AC3) | `SRS.md §3 FR-07 AC3 L276`; `SPEC.md L93` | `TEST_INVENTORY.yaml L120-L130` |
-| 3 | `test_fr_07_cli[pattern3_voice_speed_format_options]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L268`; `SPEC.md L94` | `TEST_INVENTORY.yaml L120-L130` |
-| 4 | `test_fr_07_cli[pattern4_ssml_routes_through_parser]` | happy_path | Q1, Q3 (AC4) | `SRS.md §3 FR-07 AC4 L278`; `SPEC.md L96` | `TEST_INVENTORY.yaml L120-L130` |
-| 5 | `test_fr_07_cli[pattern5_backend_override_loopback_only]` | happy_path | Q1 (AC5) | `SRS.md §3 FR-07 AC5 L280`; `SPEC.md L97, L123` | `TEST_INVENTORY.yaml L120-L130` |
-| 6 | `test_fr_07_cli[--help_exits_0_with_usage_strings]` | validation | Q2 (AC2) | `SRS.md §3 FR-07 AC2 L274, §9 L237` | `TEST_INVENTORY.yaml L120-L130` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_07_cli[pattern1_inline_text_with_output]` | `argv=["tts-v610", "你好世界", "-o", "/tmp/out.mp3"]; expected_exit=0; expected_output_file="/tmp/out.mp3"` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L267`; `SPEC.md L92` | `TEST_INVENTORY.yaml L120-L130` |
+| 2 | `test_fr_07_cli[pattern2_file_input_dir_output_one_per_line]` | `argv=["tts-v610", "-i", "/tmp/in.txt", "-o", "/tmp/out_dir"]; in_file_lines=3; expected_output_count=3` | happy_path | Q1, Q3 (AC3) | `SRS.md §3 FR-07 AC3 L276`; `SPEC.md L93` | `TEST_INVENTORY.yaml L120-L130` |
+| 3 | `test_fr_07_cli[pattern3_voice_speed_format_options]` | `argv=["tts-v610", "文字", "-v", "zf_xiaoxiao", "-s", "1.0", "-f", "mp3"]; expected_voice="zf_xiaoxiao"; expected_speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L268`; `SPEC.md L94` | `TEST_INVENTORY.yaml L120-L130` |
+| 4 | `test_fr_07_cli[pattern4_ssml_routes_through_parser]` | `argv=["tts-v610", "--ssml", "<speak>你好</speak>", "-o", "/tmp/out.mp3"]; parser_mock_call_count_min=1` | happy_path | Q1, Q3 (AC4) | `SRS.md §3 FR-07 AC4 L278`; `SPEC.md L96` | `TEST_INVENTORY.yaml L120-L130` |
+| 5 | `test_fr_07_cli[pattern5_backend_override_loopback_only]` | `argv=["tts-v610", "--backend", "http://localhost:8880", "text", "-o", "/tmp/out.mp3"]; httpx_mock_asserts_url="http://localhost:8880/v1/audio/speech"` | happy_path | Q1 (AC5) | `SRS.md §3 FR-07 AC5 L280`; `SPEC.md L97, L123` | `TEST_INVENTORY.yaml L120-L130` |
+| 6 | `test_fr_07_cli[--help_exits_0_with_usage_strings]` | `argv=["tts-v610", "--help"]; expected_exit=0; required_strings=["tts-v610", "--ssml", "--backend", "-o"]` | validation | Q2 (AC2) | `SRS.md §3 FR-07 AC2 L274, §9 L237` | `TEST_INVENTORY.yaml L120-L130` |
 
-**Sub-case coverage** (assertions inside `test_fr_07_cli`, not counted as separate cases):
-- Non-loopback `--backend` rejected (NP-12, R5; `SRS.md §7 row 7 L432`).
+**Sub-assertion table** (assertion-level mirror of `test_fr_07_cli`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC1-pattern1-inline-exit-0` | `subprocess_exit_code == 0` | 1 |
+| `AC1-pattern1-output-non-empty` | `len(output_file.read_bytes()) > 0` | 1 |
+| `AC3-pattern2-one-output-per-line` | `len(list(out_dir.glob("*.mp3"))) == non_blank_line_count` | 2 |
+| `AC3-pattern2-empty-line-skip` | `len(list(out_dir.glob("*.mp3"))) == non_blank_line_count` | 2 |
+| `AC1-pattern3-voice-asserted` | `httpx_request_body_voice == "zf_xiaoxiao"` | 3 |
+| `AC1-pattern3-speed-asserted` | `httpx_request_body_speed == 1.0` | 3 |
+| `AC1-pattern3-format-asserted` | `httpx_request_body_format == "mp3"` | 3 |
+| `AC4-pattern4-parser-invoked` | `parse_ssml_call_count >= 1` | 4 |
+| `AC5-pattern5-backend-override` | `httpx_request_url == "http://localhost:8880/v1/audio/speech"` | 5 |
+| `AC2-help-exit-0` | `subprocess_exit_code == 0` | 6 |
+| `AC2-help-usage-strings` | `all(s in stdout for s in ["tts-v610", "--ssml", "--backend", "-o"])` | 6 |
+| `NP-12-non-loopback-rejected` | `subprocess_exit_code != 0` | sub-case (Q2) |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_07_cli.py`):
+- `NP-12-non-loopback-rejected` is a sub-assertion inside case 5's fixture (the test re-uses case 5's argparse setup with a non-loopback URL and asserts exit code != 0); the harness mirror records it as a separate rule for clarity.
+- The CLI runs `synthesis` in-process, NOT via loopback HTTP. The httpx mock in case 5 is on the **synthesis layer** (mocking the `Kokoro` HTTP call inside `synthesize_chunks`), not the CLI layer.
+
+**Subtotal so far**: 6 cases / 1 function. Running total: 55 + 6 = 61.
 - Missing required argument exits non-zero (case 6 sub-assertion; `SRS.md §3 FR-07 AC2 L274`).
 - Empty input rejected (NP-04, NFR-08; `SRS.md §7 row 4 L407`).
 - Parser mock call count >= 1 verified in case 4 (`SRS.md §3 FR-07 AC4 L278`).
@@ -436,7 +499,7 @@ Per `TEST_INVENTORY.yaml L120-L130`, FR-07 has **1 declared function** expanding
 
 **Classification**: INTEGRATION (subprocess invocation of external `ffmpeg` binary; byte-level conversion; per-call ffmpeg-missing check per P2-DD-4). Per `SAD.md §2.2 row 10`, implemented in `src/audio_converter.py`. Per `TEST_INVENTORY.yaml L135-L145`, owner test function is `test_fr_08_audio_converter` in `tests/test_fr_08_audio_converter.py`. Per `SRS.md §3 FR-08 L283-L297`, the 4 acceptance criteria are: MP3↔WAV both directions, subprocess invocation, ffmpeg-missing path, implementation file.
 
-**Active Patterns**: NP-04 (input validation: ffmpeg is called with validated input bytes; oversize inputs rejected at route layer first). No other NP-XX patterns directly applicable.
+**Active Patterns**: NP-04 (input validation: ffmpeg is called with validated bytes; oversize payloads rejected at route layer first). No other NP-XX patterns directly applicable.
 
 #### 7-Question Protocol (FR-08)
 
@@ -454,36 +517,65 @@ Per `TEST_INVENTORY.yaml L120-L130`, FR-07 has **1 declared function** expanding
 
 Per `TEST_INVENTORY.yaml L135-L145`, FR-08 has **1 declared function** expanding to **21 test cases**. The 21 cases cover: happy-path subprocess argv shape (4), round-trip with fixture + byte-prefix compare (2), ffmpeg-missing error path (3), service-level smoke (1), fixture matrix (6), error cases (3), boundary conditions (2).
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_08_audio_converter[mp3_to_wav_subprocess_argv_shape]` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 2 | `test_fr_08_audio_converter[wav_to_mp3_subprocess_argv_shape]` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 3 | `test_fr_08_audio_converter[mp3_to_wav_returns_CompletedProcess_on_success]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 4 | `test_fr_08_audio_converter[wav_to_mp3_returns_CompletedProcess_on_success]` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 5 | `test_fr_08_audio_converter[round_trip_with_known_fixture]` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 6 | `test_fr_08_audio_converter[byte_prefix_compare_first_1KB_after_round_trip]` | happy_path, boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 7 | `test_fr_08_audio_converter[missing_ffmpeg_raises_FFmpegUnavailableError]` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271, §8 R3`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
-| 8 | `test_fr_08_audio_converter[missing_ffmpeg_message_contains_ffmpeg_unavailable_and_PATH]` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
-| 9 | `test_fr_08_audio_converter[concurrent_mp3_to_wav_failures_dont_block_wav_to_mp3]` | error, integration | Q4, Q7 (R3) | `SRS.md §8 R3`; `SAD.md §8 R3` | `TEST_INVENTORY.yaml L135-L145` |
-| 10 | `test_fr_08_audio_converter[mp3_to_wav_small_input_~1KB]` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 11 | `test_fr_08_audio_converter[wav_to_mp3_small_input_~1KB]` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 12 | `test_fr_08_audio_converter[mp3_to_wav_large_input_~5MB]` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 13 | `test_fr_08_audio_converter[wav_to_mp3_large_input_~5MB]` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 14 | `test_fr_08_audio_converter[empty_input_rejection]` | validation | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289, §7 row 4 L407` | `TEST_INVENTORY.yaml L135-L145` |
-| 15 | `test_fr_08_audio_converter[corrupt_input_raises_ConversionError]` | error | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 16 | `test_fr_08_audio_converter[fixture_001_mp3_input_conversion]` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 17 | `test_fr_08_audio_converter[fixture_002_mp3_input_conversion]` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 18 | `test_fr_08_audio_converter[fixture_001_wav_input_conversion]` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 19 | `test_fr_08_audio_converter[fixture_002_wav_input_conversion]` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 20 | `test_fr_08_audio_converter[ffmpeg_CalledProcessError_on_bad_exit_code]` | error | Q4 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 21 | `test_fr_08_audio_converter[ffmpeg_stderr_captured_in_ConversionError]` | error, integration | Q4, Q7 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_08_audio_converter[mp3_to_wav_subprocess_argv_shape]` | `mp3_bytes=<valid 1KB MP3 fixture>; mock_subprocess.assert_called_with(argv=["ffmpeg", "-y", "-i", mp3_in, wav_out])` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
+| 2 | `test_fr_08_audio_converter[wav_to_mp3_subprocess_argv_shape]` | `wav_bytes=<valid 1KB WAV fixture>; mock_subprocess.assert_called_with(argv=["ffmpeg", "-y", "-i", wav_in, mp3_out])` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
+| 3 | `test_fr_08_audio_converter[mp3_to_wav_returns_CompletedProcess_on_success]` | `mp3_bytes=<valid>; expected_return_type=CompletedProcess` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 4 | `test_fr_08_audio_converter[wav_to_mp3_returns_CompletedProcess_on_success]` | `wav_bytes=<valid>; expected_return_type=CompletedProcess` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 5 | `test_fr_08_audio_converter[round_trip_with_known_fixture]` | `fixture=fixture_001_mp3; mp3→wav→mp3==success` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 6 | `test_fr_08_audio_converter[byte_prefix_compare_first_1KB_after_round_trip]` | `original[:1024] == round_tripped[:1024] (within encoder tolerance)` | happy_path, boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 7 | `test_fr_08_audio_converter[missing_ffmpeg_raises_FFmpegUnavailableError]` | `shutil.which("ffmpeg")=None; expected_exception=FFmpegUnavailableError` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271, §8 R3`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
+| 8 | `test_fr_08_audio_converter[missing_ffmpeg_message_contains_ffmpeg_unavailable_and_PATH]` | `shutil.which("ffmpeg")=None; expected_substrings=["ffmpeg", "unavailable", "PATH"]` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
+| 9 | `test_fr_08_audio_converter[concurrent_mp3_to_wav_failures_dont_block_wav_to_mp3]` | `thread_pool_workers=4; mp3_to_wav_raises_ffmpeg_unavailable; wav_to_mp3_succeeds` | error, integration | Q4, Q7 (R3) | `SRS.md §8 R3`; `SAD.md §8 R3` | `TEST_INVENTORY.yaml L135-L145` |
+| 10 | `test_fr_08_audio_converter[mp3_to_wav_small_input_~1KB]` | `mp3_bytes=<1KB MP3 fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 11 | `test_fr_08_audio_converter[wav_to_mp3_small_input_~1KB]` | `wav_bytes=<1KB WAV fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 12 | `test_fr_08_audio_converter[mp3_to_wav_large_input_~5MB]` | `mp3_bytes=<5MB MP3 fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 13 | `test_fr_08_audio_converter[wav_to_mp3_large_input_~5MB]` | `wav_bytes=<5MB WAV fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 14 | `test_fr_08_audio_converter[empty_input_rejection]` | `bytes=b""; expected_exception=ConversionError` | validation | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289, §7 row 4 L407` | `TEST_INVENTORY.yaml L135-L145` |
+| 15 | `test_fr_08_audio_converter[corrupt_input_raises_ConversionError]` | `bytes=b"\\x00\\x01\\x02\\x03\\xff\\xfe"; expected_exception=ConversionError` | error | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 16 | `test_fr_08_audio_converter[fixture_001_mp3_input_conversion]` | `fixture=fixture_001_mp3_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 17 | `test_fr_08_audio_converter[fixture_002_mp3_input_conversion]` | `fixture=fixture_002_mp3_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 18 | `test_fr_08_audio_converter[fixture_001_wav_input_conversion]` | `fixture=fixture_001_wav_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 19 | `test_fr_08_audio_converter[fixture_002_wav_input_conversion]` | `fixture=fixture_002_wav_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
+| 20 | `test_fr_08_audio_converter[ffmpeg_CalledProcessError_on_bad_exit_code]` | `mock_subprocess.run.returncode=1; expected_exception=ConversionError` | error | Q4 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
+| 21 | `test_fr_08_audio_converter[ffmpeg_stderr_captured_in_ConversionError]` | `mock_subprocess.run.stderr=b"ffmpeg error msg"; expected_in_message="ffmpeg error msg"` | error, integration | Q4, Q7 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
 
-**Sub-case coverage** (assertions inside `test_fr_08_audio_converter`, not counted as separate cases):
-- ffmpeg-missing → `FFmpegUnavailableError` → router maps to HTTP 500 with `ffmpeg_unavailable` body (cases 7-8 sub-assertions; `SRS.md §3 FR-08 AC3 L271`; `SAD.md §3.8 P2-DD-4`; `ADR.md P2-DD-4`). **`FFmpegUnavailableError` is a subclass of `RuntimeError`** (and also a subclass of `ConversionError` per `ADR.md ADR-07`), preserving backwards compatibility with the P1 `TEST_INVENTORY.yaml L135-L145` "raises `RuntimeError`" wording while letting the P3 implementer catch the more specific type. The assertion in case 7 catches `FFmpegUnavailableError`; case 8 asserts the exception message contains the substrings `"ffmpeg"`, `"unavailable"`, and `"PATH"` (matching the `ffmpeg binary not found on PATH` body in `SAD.md §3.8 P2-DD-4` and `SRS.md §3 FR-08 AC3 L271`).
-- Per-call `shutil.which("ffmpeg")` not cached — a later call after ffmpeg install succeeds (case 7 sub-assertion; `SAD.md §3.8`; `ADR.md ADR-07`).
-- `subprocess.run` invoked with `check=True` and `capture_output=True` (case 1-2 sub-assertions; `SRS.md §3 FR-08 AC2 L291`).
-- Multi-channel and mono coverage (cases 10-13 sub-assertions; `SRS.md §3 FR-08 AC1 L289`).
-- The thread pool of 4 workers in case 9 (`SRS.md §8 R3`; `SAD.md §8 R3`).
+**Sub-assertion table** (assertion-level mirror of `test_fr_08_audio_converter`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC2-mp3-to-wav-argv` | `subprocess_argv == ["ffmpeg", "-y", "-i", mp3_in, wav_out]` | 1 |
+| `AC2-wav-to-mp3-argv` | `subprocess_argv == ["ffmpeg", "-y", "-i", wav_in, mp3_out]` | 2 |
+| `AC1-mp3-to-wav-completedprocess` | `isinstance(return_value, CompletedProcess)` | 3 |
+| `AC1-wav-to-mp3-completedprocess` | `isinstance(return_value, CompletedProcess)` | 4 |
+| `AC1-round-trip-success` | `original[:1024] == round_tripped[:1024]` | 5, 6 |
+| `AC3-missing-ffmpeg-raises-FFmpegUnavailableError` | `isinstance(raised_exc, FFmpegUnavailableError)` | 7 |
+| `AC3-missing-ffmpeg-message-substrings` | `all(s in str(exc) for s in ["ffmpeg", "unavailable", "PATH"])` | 8 |
+| `AC3-per-call-shutil-which-not-cached` | `isinstance(later_call_result, CompletedProcess)` | 7, 8 |
+| `R3-concurrent-isolated-failures` | `isinstance(mp3_to_wav_exc, FFmpegUnavailableError) and wav_to_mp3_result.returncode == 0` | 9 |
+| `AC1-small-input-1KB` | `len(wav_bytes) > 0` | 10 |
+| `AC1-small-wav-1KB` | `len(mp3_bytes) > 0` | 11 |
+| `AC1-large-input-5MB` | `len(wav_bytes) > 0` | 12 |
+| `AC1-large-wav-5MB` | `len(mp3_bytes) > 0` | 13 |
+| `AC2-empty-input-conversion-error` | `isinstance(raised_exc, ConversionError)` | 14 |
+| `AC2-corrupt-input-conversion-error` | `isinstance(raised_exc, ConversionError)` | 15 |
+| `AC1-fixture-001-mp3` | `len(wav_bytes) > 0` | 16 |
+| `AC1-fixture-002-mp3` | `len(wav_bytes) > 0` | 17 |
+| `AC1-fixture-001-wav` | `len(mp3_bytes) > 0` | 18 |
+| `AC1-fixture-002-wav` | `len(mp3_bytes) > 0` | 19 |
+| `AC2-bad-exit-conversion-error` | `isinstance(raised_exc, ConversionError)` | 20 |
+| `AC2-stderr-captured` | `stderr_text in str(raised_exc)` | 21 |
+| `AC2-subprocess-check-true` | `subprocess_kwargs.get("check") == True and subprocess_kwargs.get("capture_output") == True` | 1, 2, 5, 10, 11, 12, 13, 16, 17, 18, 19 |
+| `AC2-multi-channel-mono` | `result_channels == input_channels` | 10, 11, 12, 13 |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_08_audio_converter.py`):
+- `AC3-per-call-shutil-which-not-cached` is a sub-assertion in case 7 and 8 fixtures: the test calls `convert_mp3_to_wav` once with `shutil.which` returning `None` (raises), then mutates the mock to return a path, calls again, and asserts success — proving no `@functools.lru_cache` is in play.
+- `AC3-missing-ffmpeg-raises-FFmpegUnavailableError` covers both the inheritance (subclass of `RuntimeError` for P1 backwards-compat per `TEST_INVENTORY.yaml L135-L145` and subclass of `ConversionError` per `ADR.md ADR-07`) and the fact that the specific class name is catchable.
+- `AC2-subprocess-check-true` is asserted across all happy-path cases; it is recorded with broad `applies_to` because the same assertion is repeated.
+- `AC2-multi-channel-mono` is split across cases 10-13 with different `applies_to` ranges to keep the mirror readable; the underlying assertion is the same.
+
+**Subtotal so far**: 21 cases / 1 function. Running total: 61 + 21 = 82.
 
 **Subtotal so far**: 21 cases / 1 function. Running total: 61 + 21 = **82**. ✅
 

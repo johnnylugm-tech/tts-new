@@ -44,6 +44,20 @@ log = logging.getLogger(__name__)
 #: (SPEC.md L59; SAD.md §3.2 P2-DD-1).
 _EMPHASIS_SPEED_VALUES: Final[frozenset[str]] = frozenset({"strong", "moderate"})
 
+#: Speed multiplier applied by supported <emphasis> levels
+#: (SPEC.md L59; SAD.md §3.2 P2-DD-1).
+_EMPHASIS_SPEED_MULTIPLIER: Final[float] = 1.1
+
+#: Chinese digit names, indexed by the integer digit value 0-9.
+_DIGIT_NAMES: Final[tuple[str, ...]] = (
+    "零", "一", "二", "三", "四", "五", "六", "七", "八", "九",
+)
+
+#: <prosody> attributes that Kokoro does not support; each value
+#: triggers a warn-and-ignore. Keys map to the human-readable attribute
+#: name used in the warning message (SPEC.md L65).
+_PROSODY_UNSUPPORTED_ATTRS: Final[tuple[str, ...]] = ("pitch", "volume")
+
 #: Pattern for `<break time="Nms">` or `<break time="Ns">`.
 _BREAK_TIME_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>ms|s)?\s*$"
@@ -93,6 +107,16 @@ def _parse_break_time(value: str) -> int:
     return int(num)
 
 
+def _digits_to_chinese(text: str) -> str:
+    """Transliterate every digit in ``text`` to its Chinese counterpart.
+
+    Used as a fallback when the input is not a pure integer (or exceeds
+    the inline converter's range) so the raw digits are guaranteed to
+    disappear from the rendered text per SPEC.md L62.
+    """
+    return "".join(_DIGIT_NAMES[int(c)] for c in text if c.isdigit())
+
+
 def _cardinal_to_chinese(text: str) -> str:
     """Convert an integer-shaped string to Chinese cardinal form.
 
@@ -109,32 +133,28 @@ def _cardinal_to_chinese(text: str) -> str:
     except ValueError:
         # Not a pure integer — fall back to digit-by-digit transliteration
         # so at least the digits disappear from the rendered text.
-        digits = "0123456789"
-        chinese = "零一二三四五六七八九"
-        return text.translate(str.maketrans(digits, chinese))
+        return _digits_to_chinese(text)
 
     if n < 0:
         return "負" + _cardinal_to_chinese(str(-n))
     if n == 0:
         return "零"
 
-    digit_names = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
-
     def under_100(x: int) -> str:
         if x < 10:
-            return digit_names[x]
+            return _DIGIT_NAMES[x]
         if x == 10:
             return "十"
         if x < 20:
-            return "十" + digit_names[x - 10]
-        return digit_names[x // 10] + "十" + digit_names[x % 10]
+            return "十" + _DIGIT_NAMES[x - 10]
+        return _DIGIT_NAMES[x // 10] + "十" + _DIGIT_NAMES[x % 10]
 
     if n < 100:
         return under_100(n)
     if n < 1000:
         hundreds = n // 100
         rest = n % 100
-        head = digit_names[hundreds] + "百"
+        head = _DIGIT_NAMES[hundreds] + "百"
         if rest == 0:
             return head
         if rest < 10:
@@ -142,9 +162,7 @@ def _cardinal_to_chinese(text: str) -> str:
         return head + under_100(rest)
 
     # Larger numbers — fall back to digit-by-digit transliteration.
-    digits = "0123456789"
-    chinese = "零一二三四五六七八九"
-    return str(n).translate(str.maketrans(digits, chinese))
+    return _digits_to_chinese(str(n))
 
 
 def _local_tag(elem: ET.Element) -> str:
@@ -188,20 +206,14 @@ def _emit(
                 msg = f"<prosody rate={elem.attrib['rate']!r}> invalid; ignored"
                 warnings.append(msg)
                 log.warning(msg)
-        if "pitch" in elem.attrib:
-            msg = (
-                f"<prosody pitch={elem.attrib['pitch']!r}> not supported "
-                f"by Kokoro; ignored"
-            )
-            warnings.append(msg)
-            log.warning(msg)
-        if "volume" in elem.attrib:
-            msg = (
-                f"<prosody volume={elem.attrib['volume']!r}> not supported "
-                f"by Kokoro; ignored"
-            )
-            warnings.append(msg)
-            log.warning(msg)
+        for attr in _PROSODY_UNSUPPORTED_ATTRS:
+            if attr in elem.attrib:
+                msg = (
+                    f"<prosody {attr}={elem.attrib[attr]!r}> not supported "
+                    f"by Kokoro; ignored"
+                )
+                warnings.append(msg)
+                log.warning(msg)
         if elem.text:
             segments.append(Segment(elem.text, voice, new_speed, 0))
             plain_parts.append(elem.text)
@@ -215,7 +227,7 @@ def _emit(
     if tag == "emphasis":
         level = elem.attrib.get("level", "moderate")
         if level in _EMPHASIS_SPEED_VALUES:
-            new_speed = speed * 1.1
+            new_speed = speed * _EMPHASIS_SPEED_MULTIPLIER
         else:
             msg = f"<emphasis level={level!r}> not supported; ignored"
             warnings.append(msg)

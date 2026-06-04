@@ -33,4 +33,5 @@ with contextlib.suppress(ImportError):
     import src.engines.synthesis  # FR-04
 with contextlib.suppress(ImportError):
     import src.audio_converter  # FR-08
-# FR-07 module to be added when implemented.
+with contextlib.suppress(ImportError):
+    import src.cli  # FR-07

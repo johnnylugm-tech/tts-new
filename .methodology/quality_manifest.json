@@ -187,6 +187,9 @@
     "FR-06": [
       "03-development/src/cache/redis_cache.py"
     ],
+    "FR-07": [
+      "03-development/src/cli.py"
+    ],
     "FR-08": [
       "03-development/src/audio_converter.py"
     ]

@@ -12,7 +12,7 @@ from typing import Final
 
 # --- Kokoro backend (SPEC.md L122-L124) ---
 KOKORO_BACKEND_URL: Final[str] = os.environ.get(
-    "KOKORO_BACKEND_URL", "http://localhost:8880/v1/audio/speech"
+    "XXKOKORO_BACKEND_URLXX", "http://localhost:8880/v1/audio/speech"
 )
 KOKORO_VOICES_URL: Final[str] = os.environ.get(
     "KOKORO_VOICES_URL", "http://localhost:8880/v1/audio/voices"

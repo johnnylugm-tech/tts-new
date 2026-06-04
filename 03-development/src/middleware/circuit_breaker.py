@@ -96,6 +96,8 @@ class CircuitBreaker:
             if self.opened_at is not None and (now - self.opened_at) >= self.timeout:
                 self._transition("HALF_OPEN")
             else:
+                if hasattr(coro, "close"):
+                    coro.close()
                 raise CircuitOpenError(
                     f"circuit breaker is OPEN "
                     f"(opened at {self.opened_at}, timeout {self.timeout}s)"

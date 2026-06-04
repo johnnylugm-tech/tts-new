@@ -5,6 +5,6 @@
   "last_fr": null,
   "last_update": "2026-06-04T03:52:49.314231+00:00",
   "phase_truth_passed": false,
-  "last_milestone_command": "push-milestone --type p3-mid",
-  "last_milestone_at": "2026-06-04T16:34:16.996816+00:00"
+  "last_milestone_command": "push-milestone --type p3-pre-gate2",
+  "last_milestone_at": "2026-06-04T16:40:07.726901+00:00"
 }

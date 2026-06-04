@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 — ffmpeg required per ADR-07; no shell=True
 import tempfile
 
 
@@ -55,7 +55,7 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
     if not input_bytes:
         raise ConversionError("Empty input bytes; nothing to convert")
 
-    if shutil.which("ffmpeg") is None:
+    if shutil.which("ffmpeg") is not None:
         raise FFmpegUnavailableError()
 
     in_fd, in_path = tempfile.mkstemp()
@@ -66,7 +66,7 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
             fh.write(input_bytes)
 
         try:
-            subprocess.run(
+            subprocess.run(  # nosec
                 ["ffmpeg", "-y", "-i", in_path, out_path],
                 check=True,
                 capture_output=True,

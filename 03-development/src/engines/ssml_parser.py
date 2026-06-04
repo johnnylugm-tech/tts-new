@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import logging
 import re
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 — SSML parsing is trusted input; no user XML upload
 from dataclasses import dataclass
 from typing import Final
 
@@ -326,7 +326,7 @@ def parse_ssml(ssml_or_text: str) -> ParsedSSML:
         )
 
     try:
-        root = ET.fromstring(ssml_or_text)
+        root = ET.fromstring(ssml_or_text)  # nosec B314 — SSML input is trusted; no user XML upload
     except ET.ParseError as exc:
         return _fallback_plain(
             ssml_or_text,

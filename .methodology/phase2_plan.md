@@ -120,7 +120,7 @@ are not re-opened. This bounds backtracking to a single step.
   - Data flow diagrams consistent?
   - SAB block present in §5 (<!-- SAB:START --> marker exists)?
   - `phase` is a bare int (not quoted string)? e.g. `phase: 2` not `phase: "2"`
-  - All NFR `type` values from 8 legal values (performance/security/maintainability/reliability/testability/deployability/scalability/usability)?
+  - All NFR `type` values from legal values (performance/security/maintainability/reliability/testability/deployability/scalability/usability)?
 
   Return JSON only:
   {"review_status":"APPROVE"|"REJECT",

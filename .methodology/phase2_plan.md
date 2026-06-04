@@ -241,7 +241,7 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- [ ] **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply 7-Question Protocol per FR → populate cross-cutting section
+- [ ] **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply 7-Question Protocol per FR → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
   - FORBIDDEN: vague/non-testable acceptance criteria
 - [ ] **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
 - [ ] **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
@@ -283,6 +283,8 @@ are not re-opened. This bounds backtracking to a single step.
   - Upstream deliverable review caveats addressed? (check previous B-2 gaps field)
   - Every FR has ≥1 named test case?
   - 7-Question Protocol applied per FR?
+  - Every case has concrete Inputs (not just a descriptive id)?
+  - Self-consistency gate passes? (python3 harness_cli.py check-test-spec-consistency --project .)
   - Cross-cutting section complete?
   - Summary table populated?
   - All upstream deliverables consistent with each other? No contradictory decisions?

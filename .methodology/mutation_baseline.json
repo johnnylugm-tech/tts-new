@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "generated_at_phase": 3,
+  "generated_at": "2026-06-04T13:30:00Z",
+  "baseline_kill_rate": 0.0,
+  "total_mutants": 0,
+  "killed_mutants": 0,
+  "surviving_mutants": 0,
+  "note": "Generated at P3 start; 03-development/src/ is empty. Real baseline will be computed at Gate 2 prep (G2a) when all 8 FRs are implemented.",
+  "regen_command": "mutmut run --paths-to-mutate=03-development/src/ --tests-dir=03-development/tests/"
+}

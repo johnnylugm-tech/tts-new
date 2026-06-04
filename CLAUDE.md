@@ -8,12 +8,12 @@
 <!-- harness:auto-start -->
 ## Harness Status _(auto-generated — do not edit this block)_
 
-> Phase: **2 — Architecture** | Last Gate: **Gate None** | Updated: 2026-06-03
+> Phase: **3 — Implementation** | Last Gate: **Gate None** | Updated: 2026-06-04
 
 ### Gate Progress
 | Gate | Score / FRs | Status |
 |------|-------------|--------|
-| Gate 1 | — | ⬜ Not Started |
+| Gate 1 | 0/8 FRs | 🔄 In Progress |
 | Gate 2 | — | ⬜ Not Started |
 | Gate 3 | — | ⬜ Not Started |
 | Gate 4 | — | ⬜ Not Started |
@@ -21,7 +21,40 @@
 ### FR Registry (Gate 1)
 | FR ID | Score | Status |
 |-------|-------|--------|
-| — | — | No FRs registered yet |
+| FR-01 | — | ⬜ Pending |
+| FR-02 | — | ⬜ Pending |
+| FR-03 | — | ⬜ Pending |
+| FR-04 | — | ⬜ Pending |
+| FR-05 | — | ⬜ Pending |
+| FR-06 | — | ⬜ Pending |
+| FR-07 | — | ⬜ Pending |
+| FR-08 | — | ⬜ Pending |
+
+### Architecture Constraints
+- No new tech stack (FastAPI + httpx + uvicorn + Kokoro Docker + optional Redis + ffmpeg only)
+- No core algorithm changes (FR-01..FR-08 logic is immutable)
+- No test deletion or modification (82 tests must remain green)
+- No coverage reduction
+- Feature freeze: bug fix only
+- FR-04 partial-success mode WAIVED for control-group scope (P2-DD-6)
+- FR-08 ffmpeg-missing: per-call check, FFmpegUnavailableError -> HTTP 500 (P2-DD-4)
+- NFR-08 log sanitization: allow-list of safe keys, deny-by-default (P2-DD-5)
+
+### High-Risk Modules
+- {'module': 'src/engines/synthesis.py', 'risk': 'Parallel httpx dispatch + byte-level MP3 concat; P3 must verify no re-encoding'}
+- {'module': 'src/middleware/circuit_breaker.py', 'risk': 'In-process state; each worker has independent state; P3 must verify Half-Open probe correctness'}
+- {'module': 'src/audio_converter.py', 'risk': 'Subprocess call to ffmpeg; P3 must verify timeout handling and missing-binary behavior'}
+- {'module': 'src/cache/redis_cache.py', 'risk': 'Optional dependency; P3 must verify graceful no-Redis fallback'}
+
+### NFR → Dimension Mapping
+- NFR-01 → correctness
+- NFR-02 → correctness
+- NFR-03 → correctness
+- NFR-04 → operability
+- NFR-05 → correctness
+- NFR-06 → operability
+- NFR-07 → correctness
+- NFR-08 → security
 <!-- harness:auto-end -->
 
 ## Agent Interaction Model

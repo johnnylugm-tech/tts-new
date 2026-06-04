@@ -110,7 +110,7 @@ def test_fr_02_ssml_tags(ssml_input):
         from src.engines.ssml_parser import (  # type: ignore[import-not-found]
             parse_ssml,
             ParsedSSML,
-            Segment,
+            Segment,  # noqa: F401  # API-contract: verify Segment is exported
         )
     except ImportError as exc:  # pragma: no cover - RED-phase guard
         pytest.fail(
@@ -393,3 +393,112 @@ def test_fr_02_ssml_tags(ssml_input):
             f"malformed XML must produce a warn log; "
             f"got {result.warnings!r}"
         )
+
+
+def test_fr_02_coverage_supplement() -> None:
+    """Gate-1 coverage supplement: branches not exercised by the 9 TEST_SPEC
+    parametrized cases.  All behaviours are consistent with SPEC.md L52-L65
+    and SRS.md FR-02 acceptance criteria.  Adding these cases brings
+    FR-02 line coverage above the Gate-1 threshold (≥ 80%).
+
+    [FR-02]
+    """
+    from src.engines.ssml_parser import ParsedSSML, parse_ssml  # type: ignore[import-not-found]
+
+    def _ssml(inner: str) -> str:
+        return f"<speak>{inner}</speak>"
+
+    # ── Empty input → empty result, no error (SPEC.md L64) ──────────────────
+    r = parse_ssml("")
+    assert isinstance(r, ParsedSSML) and r.plain_text == ""
+
+    # ── Non-<speak> root → plain-text fallback + warning (SPEC.md L65) ──────
+    r = parse_ssml("<div>你好</div>")
+    assert "你好" in r.plain_text and len(r.warnings) >= 1
+
+    # ── Namespaced <speak xmlns="…"> treated as <speak> (_local_tag) ─────────
+    r = parse_ssml(
+        '<speak xmlns="http://www.w3.org/2001/10/synthesis">hi</speak>'
+    )
+    assert "hi" in r.plain_text
+
+    # ── <break time="1.5s"> → 1500 ms (seconds unit) ─────────────────────────
+    r = parse_ssml(_ssml('<break time="1.5s"/>後'))
+    assert any(s.pad_ms == 1500 for s in r.segments)
+
+    # ── <break time="invalid"> → 0 ms graceful fallback ─────────────────────
+    r = parse_ssml(_ssml('<break time="invalid"/>後'))
+    assert any(s.text == "" and s.pad_ms == 0 for s in r.segments)
+
+    # ── <prosody rate="invalid"> → warn, keep parent speed ───────────────────
+    r = parse_ssml(_ssml('<prosody rate="bad">你好</prosody>'))
+    assert "你好" in r.plain_text and len(r.warnings) >= 1
+
+    # ── <prosody> with child whose .tail is non-empty ─────────────────────────
+    r = parse_ssml(_ssml('<prosody rate="1.2"><phoneme>ph</phoneme>尾</prosody>'))
+    assert "尾" in r.plain_text
+
+    # ── <emphasis> with child whose .tail is non-empty ────────────────────────
+    r = parse_ssml(
+        _ssml('<emphasis level="strong"><phoneme>ph</phoneme>尾</emphasis>')
+    )
+    assert "尾" in r.plain_text
+
+    # ── <voice> with child whose .tail is non-empty ───────────────────────────
+    r = parse_ssml(
+        _ssml('<voice name="af_heart"><phoneme>ph</phoneme>尾</voice>')
+    )
+    assert "尾" in r.plain_text
+
+    # ── <say-as interpret-as="ordinal"> → pass raw text through ──────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="ordinal">42</say-as>'))
+    assert "42" in r.plain_text
+
+    # ── Unknown element → warn-and-pass-through (SPEC.md L65) ────────────────
+    r = parse_ssml(_ssml("<custom>測試<phoneme>ph</phoneme>尾</custom>"))
+    assert "測試" in r.plain_text and any("custom" in w for w in r.warnings)
+    assert "尾" in r.plain_text
+
+    # ── _cardinal_to_chinese: empty string → "" ───────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal"></say-as>'))
+    assert r.plain_text == ""
+
+    # ── _cardinal_to_chinese: non-integer → digit-by-digit transliteration ───
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">3.14</say-as>'))
+    assert r.plain_text == "三一四"
+
+    # ── _cardinal_to_chinese: negative → 負 + abs ────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">-5</say-as>'))
+    assert "負" in r.plain_text
+
+    # ── _cardinal_to_chinese: zero → 零 ──────────────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">0</say-as>'))
+    assert r.plain_text == "零"
+
+    # ── _cardinal_to_chinese: single digit (1-9) ─────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">5</say-as>'))
+    assert r.plain_text == "五"
+
+    # ── _cardinal_to_chinese: exactly 10 → 十 ────────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">10</say-as>'))
+    assert r.plain_text == "十"
+
+    # ── _cardinal_to_chinese: teen 11-19 ─────────────────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">15</say-as>'))
+    assert r.plain_text == "十五"
+
+    # ── _cardinal_to_chinese: hundreds, no remainder ──────────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">200</say-as>'))
+    assert "二百" in r.plain_text
+
+    # ── _cardinal_to_chinese: hundreds + remainder < 10 ──────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">201</say-as>'))
+    assert "二百" in r.plain_text and "一" in r.plain_text
+
+    # ── _cardinal_to_chinese: hundreds + remainder ≥ 10 ──────────────────────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">215</say-as>'))
+    assert "二百" in r.plain_text and "五" in r.plain_text
+
+    # ── _cardinal_to_chinese: ≥ 1000 → digit-by-digit (raw digits gone) ──────
+    r = parse_ssml(_ssml('<say-as interpret-as="cardinal">1234</say-as>'))
+    assert all(c not in r.plain_text for c in "1234")

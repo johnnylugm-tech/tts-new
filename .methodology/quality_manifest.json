@@ -167,6 +167,21 @@
     "correctness": 100.0,
     "security": 100.0
   },
+  "fr_scope_overrides": {
+    "FR-01": [
+      "03-development/src/engines/taiwan_linguistic.py"
+    ],
+    "FR-02": [
+      "03-development/src/engines/ssml_parser.py"
+    ],
+    "FR-03": [
+      "03-development/src/engines/text_splitter.py"
+    ],
+    "FR-05": [
+      "03-development/src/middleware/circuit_breaker.py",
+      "03-development/src/routers/health.py"
+    ]
+  },
   "gate_results": {
     "gate1": {},
     "gate2": null,

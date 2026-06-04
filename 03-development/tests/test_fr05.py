@@ -60,6 +60,27 @@ from typing import Awaitable, Callable
 
 import pytest
 
+# Module-level imports for coverage visibility (added 2026-06-04).
+# The lazy import inside the test function is preserved for the
+# RED-phase import guard.
+try:
+    from src.middleware.circuit_breaker import (  # type: ignore[import-not-found]
+        CIRCUIT_BREAKER_THRESHOLD,
+        CIRCUIT_BREAKER_TIMEOUT,
+        CircuitBreaker,
+        CircuitOpenError,
+    )
+except ImportError:  # pragma: no cover - RED-phase guard
+    CIRCUIT_BREAKER_THRESHOLD = 3
+    CIRCUIT_BREAKER_TIMEOUT = 10.0
+    CircuitBreaker = None  # type: ignore[assignment,misc]
+    CircuitOpenError = None  # type: ignore[assignment,misc]
+
+try:
+    from src.routers.health import router as health_router  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - RED-phase guard
+    health_router = None  # type: ignore[assignment]
+
 # GREEN TODO: src/middleware/circuit_breaker.py must export:
 #   - CIRCUIT_BREAKER_THRESHOLD: int (= 3 per SPEC.md L130)
 #   - CIRCUIT_BREAKER_TIMEOUT:   float (= 10.0 per SPEC.md L131)

@@ -55,19 +55,30 @@ class CircuitBreaker:
         self.opened_at: float | None = None
         self.last_transition_at: float | None = None
 
-    def _transition(self, new_state: str, opened_at: float | None = None) -> None:
+    def _transition(
+        self,
+        new_state: str,
+        *,
+        opened_at: float | None = None,
+    ) -> None:
+        """Atomically advance the FSM and refresh derived fields.
+
+        - CLOSED:    clear ``failure_count`` and ``opened_at``.
+        - OPEN:      stamp ``opened_at`` (use the explicit value when
+          provided, else fall back to ``last_transition_at``).
+        - HALF_OPEN: clear ``failure_count`` so the probe's success/
+          failure is judged in isolation.
+        """
         self.state = new_state
         self.last_transition_at = self.time_func()
-        if opened_at is not None:
-            self.opened_at = opened_at
         if new_state == "CLOSED":
             self.failure_count = 0
             self.opened_at = None
-        elif new_state == "OPEN" and self.opened_at is None:
-            self.opened_at = self.last_transition_at
+        elif new_state == "OPEN":
+            self.opened_at = (
+                opened_at if opened_at is not None else self.last_transition_at
+            )
         elif new_state == "HALF_OPEN":
-            # HALF_OPEN resets the consecutive-failure counter so the
-            # probe's success/failure is judged in isolation.
             self.failure_count = 0
 
     async def call(self, coro: Awaitable[T]) -> T:
@@ -102,11 +113,11 @@ class CircuitBreaker:
     def _on_success(self) -> None:
         if self.state == "HALF_OPEN":
             self._transition("CLOSED")
-        else:
-            # CLOSED: a single success resets the consecutive-failure
-            # counter (AC1 sub-assertion in case 2; AC3 sub-assertion
-            # in case 1).
-            self.failure_count = 0
+            return
+        # CLOSED: a single success resets the consecutive-failure
+        # counter (AC1 sub-assertion in case 2; AC3 sub-assertion in
+        # case 1).
+        self.failure_count = 0
 
     def _on_failure(self) -> None:
         if self.state == "HALF_OPEN":
@@ -114,16 +125,13 @@ class CircuitBreaker:
             # and resets the timeout clock; failure_count becomes 1
             # (HALF_OPEN reset to 0 + this failure). opened_at is
             # refreshed to "now" so the new 10 s window starts here.
+            self._transition("OPEN", opened_at=self.time_func())
             self.failure_count = 1
-            now = self.time_func()
-            self.state = "OPEN"
-            self.opened_at = now
-            self.last_transition_at = now
-        else:
-            # CLOSED
-            self.failure_count += 1
-            if self.failure_count >= self.threshold:
-                self._transition("OPEN")
+            return
+        # CLOSED
+        self.failure_count += 1
+        if self.failure_count >= self.threshold:
+            self._transition("OPEN")
 
     def reset(self) -> str:
         """Force the breaker to CLOSED; return the prior state string."""

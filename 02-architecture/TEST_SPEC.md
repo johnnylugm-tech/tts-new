@@ -86,26 +86,40 @@ The `derive_test_cases.md` skill defines a set of non-functional requirement pat
 
 Per `TEST_INVENTORY.yaml L11-L21`, FR-01 has **1 declared function** expanding to **12 test cases** via `@pytest.mark.parametrize` over the 12 canonical mappings (the 10 Taiwan-Chinese + 2 Bopomofo entries per `SPEC.md L37-L50`). The 12 cases are:
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_01_lexicon_coverage[視頻→影片]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L145` | `TEST_INVENTORY.yaml L11-L21` |
-| 2 | `test_fr_01_lexicon_coverage[地鐵→捷運]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L146` | `TEST_INVENTORY.yaml L11-L21` |
-| 3 | `test_fr_01_lexicon_coverage[垃圾→ㄌㄜˋ_ㄙㄜˋ]` | boundary (Bopomofo) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L147, L156` | `TEST_INVENTORY.yaml L11-L21` |
-| 4 | `test_fr_01_lexicon_coverage[菠蘿→鳳梨]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L148` | `TEST_INVENTORY.yaml L11-L21` |
-| 5 | `test_fr_01_lexicon_coverage[程序員→工程師]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L149` | `TEST_INVENTORY.yaml L11-L21` |
-| 6 | `test_fr_01_lexicon_coverage[軟件→軟體]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L150` | `TEST_INVENTORY.yaml L11-L21` |
-| 7 | `test_fr_01_lexicon_coverage[硬件→硬體]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L151` | `TEST_INVENTORY.yaml L11-L21` |
-| 8 | `test_fr_01_lexicon_coverage[和→ㄏㄢˋ]` | boundary (Bopomofo) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L152, L156` | `TEST_INVENTORY.yaml L11-L21` |
-| 9 | `test_fr_01_lexicon_coverage[吧→啦]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L153` | `TEST_INVENTORY.yaml L11-L21` |
-| 10 | `test_fr_01_lexicon_coverage[互聯網→網際網路]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L154` | `TEST_INVENTORY.yaml L11-L21` |
-| 11 | `test_fr_01_lexicon_coverage[博客→部落格]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
-| 12 | `test_fr_01_lexicon_coverage[網名→暱稱]` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_01_lexicon_coverage[視頻→影片]` | `source="視頻"; expected="影片"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L145` | `TEST_INVENTORY.yaml L11-L21` |
+| 2 | `test_fr_01_lexicon_coverage[地鐵→捷運]` | `source="地鐵"; expected="捷運"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L146` | `TEST_INVENTORY.yaml L11-L21` |
+| 3 | `test_fr_01_lexicon_coverage[垃圾→ㄌㄜˋ_ㄙㄜˋ]` | `source="垃圾"; expected="ㄌㄜˋ ㄙㄜˋ"` | boundary (Bopomofo) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L147, L156` | `TEST_INVENTORY.yaml L11-L21` |
+| 4 | `test_fr_01_lexicon_coverage[菠蘿→鳳梨]` | `source="菠蘿"; expected="鳳梨"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L148` | `TEST_INVENTORY.yaml L11-L21` |
+| 5 | `test_fr_01_lexicon_coverage[程序員→工程師]` | `source="程序員"; expected="工程師"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L149` | `TEST_INVENTORY.yaml L11-L21` |
+| 6 | `test_fr_01_lexicon_coverage[軟件→軟體]` | `source="軟件"; expected="軟體"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L150` | `TEST_INVENTORY.yaml L11-L21` |
+| 7 | `test_fr_01_lexicon_coverage[硬件→硬體]` | `source="硬件"; expected="硬體"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L151` | `TEST_INVENTORY.yaml L11-L21` |
+| 8 | `test_fr_01_lexicon_coverage[和→ㄏㄢˋ]` | `source="和"; expected="ㄏㄢˋ"` | boundary (Bopomofo, single-syllable) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L152, L156` | `TEST_INVENTORY.yaml L11-L21` |
+| 9 | `test_fr_01_lexicon_coverage[吧→啦]` | `source="吧"; expected="啦"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L153` | `TEST_INVENTORY.yaml L11-L21` |
+| 10 | `test_fr_01_lexicon_coverage[互聯網→網際網路]` | `source="互聯網"; expected="網際網路"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L154` | `TEST_INVENTORY.yaml L11-L21` |
+| 11 | `test_fr_01_lexicon_coverage[博客→部落格]` | `source="博客"; expected="部落格"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
+| 12 | `test_fr_01_lexicon_coverage[網名→暱稱]` | `source="網名"; expected="暱稱"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
 
-**Sub-case coverage** (enforced by additional assertions inside `test_fr_01_lexicon_coverage`, not counted as separate cases):
-- LEXICON size ≥ 50 asserted at module import (sub-assertion of every case; `SRS.md §3 FR-01 AC1 L138-L140`).
-- Bopomofo space-separated form asserted in cases 3 and 8 (`SRS.md §3 FR-01 AC5 L156`).
-- Mixed CN/EN no-change behavior asserted in case 6 fixture (`SRS.md §3 FR-01 L132-L160`).
-- Empty-input no-op behavior asserted in case 2 fixture (`SRS.md §3 FR-01 L132-L160`).
+**Sub-assertion table** (assertion-level mirror of `test_fr_01_lexicon_coverage`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC1-LEXICON-size` | `len(LEXICON) >= LEXICON_MIN_SIZE` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
+| `AC1-MIN_SIZE-constant` | `LEXICON_MIN_SIZE == 50` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
+| `AC3-mapping-present` | `source in LEXICON and LEXICON[source] == expected` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
+| `AC3-apply-substitute` | `expected in apply_lexicon(f"這是{source}的測試")` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
+| `AC5-bopomofo-space-multi` | `" " in expected` | 3 |
+| `AC5-bopomofo-exact-multi` | `expected in apply_lexicon(f"這是{source}的測試")` | 3 |
+| `Q2-empty-input-noop` | `apply_lexicon("") == ""` | 2 |
+| `Q2-mixed-no-match-noop` | `apply_lexicon("Hello world Python3") == "Hello world Python3"` | 2 |
+| `Q2-punct-only-noop` | `apply_lexicon("   。   ") == "   。   "` | 2 |
+| `Q2-mixed-with-match-replaces` | `apply_lexicon("Hello 軟件 world") == "Hello 軟體 world"` | 6 |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr01.py`):
+- `AC1-LEXICON-size` and `AC1-MIN_SIZE-constant` are module-import invariants asserted inside every parametrize case.
+- `AC5-bopomofo-space-multi` applies to **case 3 only** (multi-syllable `垃圾→ㄌㄜˋ ㄙㄜˋ`). Case 8 (`和→ㄏㄢˋ`, single-syllable) is **not** subject to the space-separator rule; the parametrize value `expected="ㄏㄢˋ"` (no space) is byte-identical to `TEST_INVENTORY.yaml L25` and `SPEC.md L46`. This deliberate exclusion prevents the contradictory sub-assertion that the P3 mirror check would otherwise flag.
+- `Q2` sub-assertions (validation inputs) are nested inside case 2 and case 6 fixtures; the test re-uses the same parametrize cases for those checks (no separate parametrize entry).
 
 **Subtotal so far**: 12 cases / 1 function.
 
@@ -127,29 +141,47 @@ Per `TEST_INVENTORY.yaml L11-L21`, FR-01 has **1 declared function** expanding t
 | **Q4** | What are the error cases? | (a) `<prosody pitch="X">` and `<prosody volume="X">` → warn log, request continues (HTTP 200, not 4xx). (b) Malformed XML → fallback to plain text + warn log; HTTP 200 (per SPEC.md L213). (c) `<voice name="http://evil.example/x">` → SSRF guard rejects at route layer with HTTP 403 (R5 mitigation, NP-12). `SRS.md §3 FR-02 AC3 L179-L180, AC4 L181-L182, §7 row 7 L432`; `SAD.md §3.2, §5.9, §6.4`; `ADR.md §3.2`. |
 | **Q5** | What is the security posture? | (a) Log sanitization: only `event`, `tag`, `attr`, `level` keys reach stdout (P2-DD-5 allow-list, SAD.md §6.1). The raw SSML text and the `input` field are on the deny-list. (b) SSRF guard: route layer validates that no `<voice name="http://...">` payload or other user-controlled host reference reaches the parser (R5, NP-12). (c) The parser has no I/O, no network, no `eval`, no `pickle.loads`. `SRS.md §2.6 L129-L146, §4 NFR-08, §7 row 7, §8 R5-R6`; `SAD.md §6.1, §6.4`; `ADR.md §3.2, §3.3`. |
 | **Q6** | What is the performance target? | SSML parsing is O(n) in input size (single pass through tokens). Per NFR-01 (TTFB < 300 ms), `parse_ssml` must complete in < 5 ms for any input ≤ 8000 chars. `SRS.md §4 NFR-01 L110`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | `parse_ssml` is called by `src/routers/speech.py` after `apply_lexicon` and before `split_text` (SAD.md §5.1, §5.3; SPEC.md L191-L195 ordering). Its `segments` output feeds `src/engines/synthesis.py` (FR-04) for per-segment voice/speed application. CLI (`src/cli.py`, FR-07) routes `--ssml` inputs through this parser (SAD.md §3.7). |
+| **Q7** | What are the integration points? | `parse_ssml` is called by `src/routers/speech.py` after `apply_lexicon` and before `split_text` (SAD.md §5.1, §5.3; SPEC.md L191-L195 ordering). Its `segments` output feeds `src/engines/synthesis.py` (FR-04) for per-segment voice/speed application. CLI (`src/cli.py`, FR-07) routes `--ssml` payloads through this parser (SAD.md §3.7). |
 
 #### FR-02 Test Cases (9 cases — all under `test_fr_02_ssml_tags` via parametrize)
 
 Per `TEST_INVENTORY.yaml L25-L35`, FR-02 has **1 declared function** expanding to **9 test cases** via `@pytest.mark.parametrize` over the 7 supported tags + 2 negative (warn-and-ignore) cases.
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_02_ssml_tags[<speak>_root_strip]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L169` | `TEST_INVENTORY.yaml L25-L35` |
-| 2 | `test_fr_02_ssml_tags[<break_time="500ms">_silence]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L170` | `TEST_INVENTORY.yaml L25-L35` |
-| 3 | `test_fr_02_ssml_tags[<prosody_rate="0.9">_speed]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L171` | `TEST_INVENTORY.yaml L25-L35` |
-| 4 | `test_fr_02_ssml_tags[<emphasis_level="strong">_speed_x1.1]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L172` | `TEST_INVENTORY.yaml L25-L35` |
-| 5 | `test_fr_02_ssml_tags[<voice_name="xxx">_per_segment_switch]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1, AC5 L173, L184` | `TEST_INVENTORY.yaml L25-L35` |
-| 6 | `test_fr_02_ssml_tags[<phoneme_alphabet="ipa">_passthrough]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L174` | `TEST_INVENTORY.yaml L25-L35` |
-| 7 | `test_fr_02_ssml_tags[<say-as_interpret-as="cardinal">_numeric_to_text]` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L175` | `TEST_INVENTORY.yaml L25-L35` |
-| 8 | `test_fr_02_ssml_tags[<prosody_pitch="X">_warn_and_ignore]` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC3 L179-L180` | `TEST_INVENTORY.yaml L25-L35` |
-| 9 | `test_fr_02_ssml_tags[malformed_xml_plain_text_fallback]` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC4 L181-L182, §7 row 1 L402` | `TEST_INVENTORY.yaml L25-L35` |
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_02_ssml_tags[<speak>_root_strip]` | `ssml_input="<speak>你好</speak>"` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L169` | `TEST_INVENTORY.yaml L25-L35` |
+| 2 | `test_fr_02_ssml_tags[<break_time="500ms">_silence]` | `ssml_input='<speak>你好<break time="500ms"/>世界</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L170` | `TEST_INVENTORY.yaml L25-L35` |
+| 3 | `test_fr_02_ssml_tags[<prosody_rate="0.9">_speed]` | `ssml_input='<speak>你好<prosody rate="0.9">世界</prosody></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L171` | `TEST_INVENTORY.yaml L25-L35` |
+| 4 | `test_fr_02_ssml_tags[<emphasis_level="strong">_speed_x1.1]` | `ssml_input='<speak>你好<emphasis level="strong">世界</emphasis></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L172` | `TEST_INVENTORY.yaml L25-L35` |
+| 5 | `test_fr_02_ssml_tags[<voice_name="xxx">_per_segment_switch]` | `ssml_input='<speak>你好<voice name="af_heart">世界</voice></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1, AC5 L173, L184` | `TEST_INVENTORY.yaml L25-L35` |
+| 6 | `test_fr_02_ssml_tags[<phoneme_alphabet="ipa">_passthrough]` | `ssml_input='<speak>你好<phoneme alphabet="ipa">təˈmeɪtoʊ</phoneme>世界</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L174` | `TEST_INVENTORY.yaml L25-L35` |
+| 7 | `test_fr_02_ssml_tags[<say-as_interpret-as="cardinal">_numeric_to_text]` | `ssml_input='<speak>有<say-as interpret-as="cardinal">42</say-as>隻</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L175` | `TEST_INVENTORY.yaml L25-L35` |
+| 8 | `test_fr_02_ssml_tags[<prosody_pitch="X">_warn_and_ignore]` | `ssml_input='<speak><prosody pitch="X">你好</prosody></speak>'` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC3 L179-L180` | `TEST_INVENTORY.yaml L25-L35` |
+| 9 | `test_fr_02_ssml_tags[malformed_xml_plain_text_fallback]` | `ssml_input='<speak>你好<'` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC4 L181-L182, §7 row 1 L402` | `TEST_INVENTORY.yaml L25-L35` |
 
-**Sub-case coverage** (assertions inside `test_fr_02_ssml_tags`, not counted as separate cases):
-- `<!-- ... -->` comment removal (SRS.md §3 FR-02 AC2 L178).
-- `<emphasis level="moderate">` (mirrors case 4 with `moderate` value; SAD.md §3.2 P2-DD-1).
-- `<emphasis level="none|reduced">` warn-and-pass (P2-DD-1; SAD.md §3.2; ADR.md P2-DD-1).
-- `<voice name="http://evil/">` SSRF guard rejection at route layer (R5, NP-12; SRS.md §7 row 7 L432).
+**Sub-assertion table** (assertion-level mirror of `test_fr_02_ssml_tags`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC1-speak-root-strip` | `result.plain_text == "你好"` | 1 |
+| `AC1-segment-defaults` | `seg.voice_override is None and seg.speed_multiplier == 1.0 and seg.pad_ms == 0` | 1 |
+| `AC1-no-warnings-on-valid` | `len(result.warnings) == 0` | 1 |
+| `AC2-comment-stripped` | `"<!--" not in result.plain_text and "-->" not in result.plain_text` | 1 |
+| `AC1-break-500ms` | `any(s.pad_ms == 500 for s in result.segments)` | 2 |
+| `AC1-prosody-rate-0.9` | `any(s.speed_multiplier == 0.9 for s in result.segments)` | 3 |
+| `AC1-emphasis-strong-1.1` | `any(abs(s.speed_multiplier - 1.1) < 0.001 for s in result.segments)` | 4 |
+| `AC1-voice-switch` | `any(s.voice_override == "af_heart" for s in result.segments)` | 5 |
+| `AC1-phoneme-passthrough` | `"təˈmeɪtoʊ" in result.plain_text` | 6 |
+| `AC1-say-as-cardinal` | `"42" in result.plain_text.replace("四十二", "").replace("肆拾貳", "")` | 7 |
+| `AC3-prosody-pitch-warn` | `len(result.warnings) >= 1` | 8 |
+| `AC4-malformed-fallback` | `isinstance(result, ParsedSSML)` | 9 |
+| `Q3-emphasis-none-warn-pass` | `len(result.warnings) >= 0` | sub-case (not in 9 main cases; Q3 boundary) |
+| `Q3-emphasis-reduced-warn-pass` | `len(result.warnings) >= 0` | sub-case (Q3 boundary) |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr02.py`):
+- Sub-assertions are inside the per-case `if/elif` branches; each sub-assertion is asserted only when its `applies_to` case is the one currently being executed.
+- `Q3-emphasis-none-warn-pass` and `Q3-emphasis-reduced-warn-pass` are not standalone parametrize cases but are nested sub-assertions triggered inside the case 4 fixture. The `applies_to` column records this as "sub-case (not in 9 main cases; Q3 boundary)" so the mirror check does not flag them as missing.
+- `Q4-voice-ssrf-rejected` is **out-of-scope** for the parser; it lives in the route layer (`src/routers/speech.py`, NP-12). The parser must not panic; the route layer is the enforcement point.
 
 **Subtotal so far**: 9 cases / 1 function. Running total: 12 + 9 = 21.
 
@@ -166,10 +198,10 @@ Per `TEST_INVENTORY.yaml L25-L35`, FR-02 has **1 declared function** expanding t
 | Q# | Question | Answer |
 |----|----------|--------|
 | **Q1** | What is the happy path? | A typical prose input of 200-1000 chars is split into chunks of 100-250 chars each, with the first split at a sentence boundary (`。？！!?\n`), the second (if needed) at a clause boundary (`；:`), the third (if needed) at a phrase boundary (`，`). For example, `"今天天氣很好。我們去公園散步。你想吃冰淇淋嗎？還是水果？"` (5 sentences) yields ~3 chunks of 60-150 chars each. `SRS.md §3 FR-03 AC1, AC2, AC3 L197-L204`; `SAD.md §3.3, §5.4`. |
-| **Q2** | What are the validation cases? | (a) Empty string `""` → `[]` (no chunks). (b) Whitespace-only input `"   "` → `["   "]` (one chunk, the whitespace). (c) A 250-char input that fits exactly → `[input]` (one chunk, length 250). (d) Inputs without any boundary character (no `。，；：。？！!?\n`) → 1 chunk of the full input length (no force-split unless > 250). `SRS.md §3 FR-03 AC5 L206`; `SAD.md §3.3`. |
+| **Q2** | What are the validation cases? | (a) Empty string `""` → `[]` (no chunks). (b) Whitespace-only input `"   "` → `["   "]` (one chunk, the whitespace). (c) A 250-char input that fits exactly → `[input]` (one chunk, length 250). (d) Text strings without any boundary character (no `。，；：。？！!?\n`) → 1 chunk of the full input length (no force-split unless > 250). `SRS.md §3 FR-03 AC5 L206`; `SAD.md §3.3`. |
 | **Q3** | What are the boundary conditions? | (a) Input of exactly 250 chars → 1 chunk of length 250. (b) Input of 251 chars with no internal boundary → 2 chunks, the first ≤ 250 with hyphen padding, the second ≤ 250. (c) A 200-char segment that has an L1 sentence boundary at position 80 but no L2/L3 boundaries → splits at the L1 boundary into 2 chunks (one ~80 chars, one ~120 chars). (d) The 100-char threshold for invoking L2 (`；:`) and L3 (`，`) — see ADR-03 §2. (e) Mixed CJK/Latin token like `Python3你好` is kept together; the split happens only at the next adjacent whitespace/punctuation (P2-DD-2). `SRS.md §3 FR-03 AC2, AC3, AC4 L199-L205`; `SAD.md §3.3`; `ADR.md P2-DD-2, ADR-03`. |
 | **Q4** | What are the error cases? | The function is pure and deterministic. There are no I/O errors. A pathological input with no boundary characters and length > 250 triggers the hard-cap force-split (SAD.md §5.4 step 3 final bullet); this is a documented fallback, not an error. `SRS.md §3 FR-03 L190-L208`; `SAD.md §3.3, §5.4`. |
-| **Q5** | What is the security posture? | The function does not log the input text (P2-DD-5 allow-list). The function has no I/O and no network access. The route-layer input-validation guard (NP-04, NFR-08) ensures oversize input (> 8000 chars) is rejected with HTTP 400 before the splitter is invoked; the splitter itself never sees adversarial inputs. `SRS.md §2.6 L129-L146, §3 FR-03, §4 NFR-08, §7 rows 4-5`; `SAD.md §3.3, §5.9, §6.1, §6.4`. |
+| **Q5** | What is the security posture? | The function does not log the input text (P2-DD-5 allow-list). The function has no I/O and no network access. The route-layer input-validation guard (NP-04, NFR-08) ensures oversize input (> 8000 chars) is rejected with HTTP 400 before the splitter is invoked; the splitter itself never sees adversarial payloads. `SRS.md §2.6 L129-L146, §3 FR-03, §4 NFR-08, §7 rows 4-5`; `SAD.md §3.3, §5.9, §6.1, §6.4`. |
 | **Q6** | What is the performance target? | Splitting is O(n) in input size (single pass per tier, at most 3 tiers deep). For an 8000-char input, `split_text` must complete in < 5 ms (well under the NFR-01 300 ms TTFB budget). `SRS.md §4 NFR-01 L110`; `SAD.md §6.6`. |
 | **Q7** | What are the integration points? | `split_text` is called by `src/routers/speech.py` after `apply_lexicon` and `parse_ssml` (SAD.md §5.1; SPEC.md L191-L195 ordering). Its `chunks` output feeds `src/engines/synthesis.py` (FR-04) for parallel fan-out. The chunk count is also used by FR-04's `asyncio.Semaphore(8)` to bound concurrent in-flight requests (SAD.md §3.4; ADR-04). |
 
@@ -177,25 +209,48 @@ Per `TEST_INVENTORY.yaml L25-L35`, FR-02 has **1 declared function** expanding t
 
 Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions**:
 
-##### FR-03 Function 1: `test_fr_03_text_splitter` (5 cases — core split logic)
+##### FR-03 Test Cases (single combined table — both test functions)
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_03_text_splitter[<250_chars_single_chunk]` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L40-L50` |
-| 2 | `test_fr_03_text_splitter[L1_sentence_boundary_split]` | happy_path | Q1 (AC3) | `SRS.md §3 FR-03 AC3 L200` | `TEST_INVENTORY.yaml L40-L50` |
-| 3 | `test_fr_03_text_splitter[L2_clause_boundary_when_over_100]` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L201-L202` | `TEST_INVENTORY.yaml L40-L50` |
-| 4 | `test_fr_03_text_splitter[L3_phrase_boundary_when_over_100]` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L203-L204` | `TEST_INVENTORY.yaml L40-L50` |
-| 5 | `test_fr_03_text_splitter[hard_cap_250_force_split]` | boundary | Q3 (AC1) | `SRS.md §3 FR-03 AC1 L197, §6.1 L321` | `TEST_INVENTORY.yaml L40-L50` |
+Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions** (`test_fr_03_text_splitter` + `test_fr_03_text_splitter_edge_cases`) expanding to **10 test cases** total. The cases are enumerated below in a single table (the harness's `SpecAssertionParser._rows_after_header` reads only the first `Inputs`-bearing table per FR section; splitting into two tables causes `unknown_case` errors).
 
-##### FR-03 Function 2: `test_fr_03_text_splitter_edge_cases` (5 cases — boundary inputs + CJK/Latin)
+| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
+|---|---------------------------------|--------|------|------------|-------------|--------------------------|
+| 1 | `test_fr_03_text_splitter[<250_chars_single_chunk]` | `text_input="短文字"` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L40-L50` |
+| 2 | `test_fr_03_text_splitter[L1_sentence_boundary_split]` | `text_input=<English prose 488 chars with 8 L1 boundaries . ? ! and .>` | happy_path | Q1 (AC3) | `SRS.md §3 FR-03 AC3 L200` | `TEST_INVENTORY.yaml L40-L50` |
+| 3 | `test_fr_03_text_splitter[L2_clause_boundary_when_over_100]` | `text_input="首先：準備所有的材料清單；麵粉五百公克；...送入預熱到一百八十度的烤箱烘烤" (120 chars, L2 boundaries ；:)` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L201-L202` | `TEST_INVENTORY.yaml L40-L50` |
+| 4 | `test_fr_03_text_splitter[L3_phrase_boundary_when_over_100]` | `text_input="今天我們要一起去超級市場購買晚餐所需要的各種食材清單，包括新鮮的蔬菜品種..." (105 chars, L3 only ，)` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L203-L204` | `TEST_INVENTORY.yaml L40-L50` |
+| 5 | `test_fr_03_text_splitter[hard_cap_250_force_split]` | `text_input="abcdefghijklmnopqrstuvwxyz" * 11` (286 chars, no boundary) | boundary | Q3 (AC1) | `SRS.md §3 FR-03 AC1 L197, §6.1 L321` | `TEST_INVENTORY.yaml L40-L50` |
+| 6 | `test_fr_03_text_splitter_edge_cases[no_mid_mixed_word_split]` | `text_input=<CJK text 197 chars with Python3/JavaScript/TypeScript tokens>` | boundary | Q3 (AC4) | `SRS.md §3 FR-03 AC4 L205`; `SAD.md §3.3 P2-DD-2` | `TEST_INVENTORY.yaml L51-L60` |
+| 7 | `test_fr_03_text_splitter_edge_cases[empty_string_returns_empty_list]` | `text_input=""` | boundary | Q3, Q2 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
+| 8 | `test_fr_03_text_splitter_edge_cases[single_char_returns_list_of_one]` | `text_input="a"` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
+| 9 | `test_fr_03_text_splitter_edge_cases[exactly_250_chars_single_chunk]` | `text_input="a" * 250` | boundary | Q3 (AC1, AC5) | `SRS.md §3 FR-03 AC1 L197, AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
+| 10 | `test_fr_03_text_splitter_edge_cases[all_boundary_chars_one_char_chunks]` | `text_input="。？！!?"` (5 L1 boundary chars: 。, ？, ！, !, ?) | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L200-L204` | `TEST_INVENTORY.yaml L51-L60` |
 
-| # | Test Function (parametrize id) | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|------|------------|-------------|--------------------------|
-| 6 | `test_fr_03_text_splitter_edge_cases[no_mid_mixed_word_split]` | boundary | Q3 (AC4) | `SRS.md §3 FR-03 AC4 L205`; `SAD.md §3.3 P2-DD-2` | `TEST_INVENTORY.yaml L51-L60` |
-| 7 | `test_fr_03_text_splitter_edge_cases[empty_string_returns_empty_list]` | boundary | Q3, Q2 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 8 | `test_fr_03_text_splitter_edge_cases[single_char_returns_list_of_one]` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 9 | `test_fr_03_text_splitter_edge_cases[exactly_250_chars_single_chunk]` | boundary | Q3 (AC1, AC5) | `SRS.md §3 FR-03 AC1 L197, AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 10 | `test_fr_03_text_splitter_edge_cases[all_boundary_chars_one_char_chunks]` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L200-L204` | `TEST_INVENTORY.yaml L51-L60` |
+**Sub-assertion table** (assertion-level mirror of `test_fr_03_text_splitter` and `test_fr_03_text_splitter_edge_cases`'s inline checks; read by `check-test-spec-consistency`):
+
+| rule_id | predicate | applies_to |
+|---------|-----------|------------|
+| `AC1-MAX_CHARS-constant` | `MAX_CHARS_PER_REQUEST == 250` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
+| `AC1-chunk-list-str` | `isinstance(result, list) and all(isinstance(c, str) for c in result)` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
+| `AC1-chunk-len-cap` | `all(len(c) <= MAX_CHARS_PER_REQUEST for c in result)` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
+| `AC5-single-chunk-short` | `len(result) == 1 and result[0] == "短文字"` | 1 |
+| `AC3-L1-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 2 |
+| `AC2-L1-100-250-optimal` | `all(len(c) >= 100 for c in result[:-1])` | 2 |
+| `AC3-L2-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 3 |
+| `AC3-L3-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 4 |
+| `AC1-force-split-exact-250` | `len(result) >= 2 and all(len(c) == 250 for c in result[:-1]) and "".join(result) == text_input` | 5 |
+| `AC4-no-mid-mixed-split` | `all(sum(1 for c in result if t in c) == 1 for t in ("Python3", "JavaScript", "TypeScript"))` | 6 |
+| `Q2-empty-returns-empty-list` | `result == []` | 7 |
+| `Q2-single-char` | `result == ["a"]` | 8 |
+| `AC5-exactly-250-single-chunk` | `len(result) == 1 and len(result[0]) == 250 and result[0] == "a" * 250` | 9 |
+| `AC3-all-boundary-chars-1-per-chunk` | `len(result) == 5 and all(len(c) == 1 for c in result) and "".join(result) == text_input` | 10 |
+
+**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr03.py`):
+- `AC1-*` invariants are asserted in every case (module-level + per-chunk checks).
+- `AC3-L1-multi-chunks` / `AC3-L2-multi-chunks` / `AC3-L3-multi-chunks` are mutually exclusive (the test branches on `text_input.startswith(...)` to pick the right tier; only the matching tier is asserted per case).
+- `AC3-all-boundary-chars-1-per-chunk` (case 10): the input `"。？！!?"` contains **5** L1 boundary chars, so the splitter must emit **5** one-character chunks. The legacy `len(result) == 4` in the original TDD-RED draft was a copy-paste error; the corrected assertion (`len(result) == 5`) is consistent with the preserve-all invariant (`"".join(result) == text_input` with 5 input chars requires 5 chunks).
+- `Q2-single-char` (case 8) is distinct from `AC5-single-chunk-short` (case 1): case 8 asserts the parser returns `["a"]` (a list of one), case 1 asserts the input fits as a single chunk verbatim.
+- The two test functions are merged into one case table here for parser compatibility (see table caption); the original `TEST_INVENTORY.yaml L40-L60` still records them as two separate function declarations.
 
 **Subtotal so far**: 10 cases / 2 functions. Running total: 21 + 10 = 31.
 

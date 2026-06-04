@@ -449,6 +449,9 @@ are not re-opened. This bounds backtracking to a single step.
   - Each item testable/traceable?
   - All gaps from sub-task reviews addressed?
   - Terminology consistent across all documents?
+  - SAB block layers / NFR targets semantically match the module design in SAD §2?
+  - Every `fr_module_traceability` entry points to a real module defined in SAD §2?
+  - NFR `target` fields contain measurable values (not 'N/A' or empty placeholders)?
 
   Return JSON only:
   {"review_status":"APPROVE"|"REJECT",

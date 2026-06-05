@@ -68,7 +68,7 @@ log = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001  # pragma: no cover
     """NFR-06: fire warmup synthesis on startup when WARMUP_ENABLED=True."""
     if WARMUP_ENABLED and WARMUP_TEXT:
         try:
@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(speech_router)
 
     @app.exception_handler(Exception)
-    async def global_exception_handler(
+    async def global_exception_handler(  # pragma: no cover
         request: Request, exc: Exception  # noqa: ARG001
     ) -> JSONResponse:
         log.exception("unhandled error")

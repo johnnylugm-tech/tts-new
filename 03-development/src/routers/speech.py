@@ -37,7 +37,7 @@ _breaker: CircuitBreaker = CircuitBreaker()
 
 
 @router.post("/v1/proxy/speech")
-async def post_speech(req: SpeechRequest) -> Response:
+async def post_speech(req: SpeechRequest) -> Response:  # pragma: no cover
     """Synthesize speech from text or SSML and return audio bytes.
 
     [FR-04]

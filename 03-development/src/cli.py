@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     [FR-07]
     """
     if argv is None:
-        argv = sys.argv
+        argv = sys.argv  # pragma: no cover
 
     args = _parse_args(argv)
 

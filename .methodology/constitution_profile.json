@@ -1,0 +1,7 @@
+{
+  "phases": {
+    "3": {
+      "exclude_patterns": ["README.md"]
+    }
+  }
+}

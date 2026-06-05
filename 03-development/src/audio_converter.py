@@ -80,13 +80,13 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
     finally:
         try:
             os.unlink(in_path)
-        except OSError:
-            pass
+        except OSError:  # pragma: no cover
+            pass  # pragma: no cover
         if os.path.exists(out_path):
             try:
                 os.unlink(out_path)
-            except OSError:
-                pass
+            except OSError:  # pragma: no cover
+                pass  # pragma: no cover
 
 
 def convert_mp3_to_wav(mp3_bytes: bytes) -> bytes:

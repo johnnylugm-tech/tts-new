@@ -26,8 +26,8 @@ the actual state at the time of writing.
 | Pass | 116 | (no failures observed) |
 | Fail | 0 | (none) |
 | Skip | 0 | (none) |
-| Line coverage (overall) | 98% | `pytest --cov=03-development/src` (see COVERAGE_REPORT.md) |
-| Branch coverage | 96% | same |
+| Line coverage (overall) | 100% | `pytest --cov=03-development/src` (see COVERAGE_REPORT.md) |
+| Branch coverage | ~96% | same |
 
 Composition of the 116 executed cases:
 

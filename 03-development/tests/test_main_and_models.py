@@ -1,4 +1,7 @@
-"""Tests for src/main.py (sanitize_log_extra, create_app) and src/models.py."""
+"""Tests for src/main.py (sanitize_log_extra, create_app) and src/models.py.
+# NFR-04: availability — /health endpoint returns 200
+# NFR-06: cold-start warmup — WARMUP_ENABLED verified in create_app
+# NFR-08: input validation — SpeechRequest fields validated"""
 from __future__ import annotations
 
 import pytest

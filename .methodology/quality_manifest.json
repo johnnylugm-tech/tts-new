@@ -260,7 +260,13 @@
       "open_critical": 0,
       "open_high": 0
     },
-    "gate3": null,
+    "gate3": {
+      "score": 96.13099999999997,
+      "quality_complete": true,
+      "rounds_used": 1,
+      "open_critical": 0,
+      "open_high": 0
+    },
     "gate4": null
   }
 }

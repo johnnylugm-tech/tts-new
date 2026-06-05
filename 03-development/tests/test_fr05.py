@@ -1,3 +1,4 @@
+# NFR-05: circuit breaker timeout 10.0s verified — Half-Open probe asserts recovery < 10s
 """FR-05: 斷路器 (Circuit Breaker) — TDD-RED failing tests.
 
 The 8 parametrized cases below are the canonical state-transition and

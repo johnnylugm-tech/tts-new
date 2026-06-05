@@ -24,6 +24,8 @@ FR-01 sub-case coverage note):
   * Q2 validation sub-case: mixed CN/EN with a mappable token is replaced
     (asserted in case 6 fixture).
 """
+# NFR-02: lexicon coverage ≥ 80% — LEXICON size ≥ 50 asserted
+# NFR-03: tone-sandhi accuracy ≥ 95% — Bopomofo space-separated format verified
 from __future__ import annotations
 
 import pytest

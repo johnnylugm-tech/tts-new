@@ -110,3 +110,5 @@ pip-debug.log*
 .methodology/agent_a_outputs/
 .methodology/fr_progress.json
 .shims/
+# Added by harness crg_independent
+.code-review-graph/

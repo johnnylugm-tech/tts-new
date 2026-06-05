@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "9b86bd84eb6bb0744eaa0752290eb42d2e637c85",
-  "content_sha256": "543f338f117ebf44650d66a7b7c79a172e74b6f0f9f1ff4ef23a3691e0613119",
+  "git_sha": "1f7eaa77777fcb5f729254674dc443434b9e05ad",
+  "content_sha256": "52136d22121834603909419105e2b70ed1fe25013244dc762414fb6068904108",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -14,7 +14,7 @@
       "code_coverage": "100.0%",
       "test_coverage": "100.0%",
       "verification_rate": "100.0%",
-      "total_links": 31,
+      "total_links": 32,
       "missing_mappings": {
         "fr_without_srs": [],
         "fr_without_code": [],
@@ -78,6 +78,7 @@
           "03-development/src/engines/synthesis.py"
         ],
         "test_files": [
+          "tests/test_fr04.py",
           "tests/test_fr_04_synthesis_concat.py",
           "tests/test_fr_04_synthesis.py"
         ],

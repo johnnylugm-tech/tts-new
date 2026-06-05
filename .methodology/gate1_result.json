@@ -1,7 +1,7 @@
 {
   "gate": 1,
   "phase": 4,
-  "fr_id": "FR-02",
+  "fr_id": "FR-03",
   "overall_score": 100.0,
   "quality_complete": true,
   "rounds_used": 1,
@@ -14,7 +14,7 @@
     "type_safety": {
       "score": 100,
       "threshold": 85,
-      "tool_evidence": "{\"version\":\"1.1.409\",\"time\":\"1780677055922\",\"generalDiagnostics\":[],\"summary\":{\"filesAnalyzed\":13,\"errorCount\":0,\"warningCount\":0,\"informationCount\":0,\"timeInSec\":0.664}}"
+      "tool_evidence": "{\"version\":\"1.1.409\",\"time\":\"1780677141075\",\"generalDiagnostics\":[],\"summary\":{\"filesAnalyzed\":13,\"errorCount\":0,\"warningCount\":0,\"informationCount\":0,\"timeInSec\":0.657}}"
     },
     "test_coverage": {
       "score": 100,
@@ -22,7 +22,7 @@
       "tests_passed": 10,
       "tests_failed": 0,
       "tests_skipped": 0,
-      "tool_evidence": "collected 10 items\ntests/test_fr02.py ..........  [100%]\n============================== 10 passed in 0.06s ==============================\n03-development/src/engines/ssml_parser.py  180  0  100%\nSpec coverage: 9/9 required tests present and passing"
+      "tool_evidence": "collected 10 items\ntests/test_fr03.py ..........  [100%]\n============================== 10 passed in 0.06s ==============================\n03-development/src/engines/text_splitter.py  32  0  100%\nSpec coverage: 10/10 required tests present and passing"
     }
   }
 }

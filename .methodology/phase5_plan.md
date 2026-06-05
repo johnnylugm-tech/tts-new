@@ -29,13 +29,13 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). No harness run-gate — P
 
 ### Entry Gate Verification
 
-- [ ] **[ENTRY-CHECK]** Gate 3 PASS:
+- **[ENTRY-CHECK]** Gate 3 PASS:
   Proof: .methodology/quality_manifest.json records Gate 3 PASS from P4.
   If NOT confirmed: return to Phase 4 and complete exit gate first.
 
 ### Pre-Phase Preflight
 
-- [ ] **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
+- **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
   ```bash
   python3 harness_cli.py run-phase --phase 5 --project .
   ```
@@ -45,13 +45,13 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). No harness run-gate — P
   Human fix → re-run `run-phase --phase 5 --project .` → PASS required before continuing.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
-  python3 harness_cli.py build-trace-attestation --project . --write
+  python3 harness_cli.py build-trace-attestation --project .
   git add .methodology/trace/attestation.json
   git commit -m 'trace: regenerate attestation'
   ```
   Re-run `run-phase` to confirm `Attestation: clean` before continuing.
 
-- [ ] **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
+- **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
@@ -69,7 +69,7 @@ python3 harness_cli.py load-context --phase 5 --project . --json \
 
 ### FR Tasks — Expanded at Execution Time
 
-- [ ] **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
+- **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
   ```bash
   python3 harness_cli.py run-env-check --phase 5 --project .
   # evaluate inline → write .sessi-work/env_check_result.json →
@@ -83,7 +83,7 @@ python3 harness_cli.py load-context --phase 5 --project . --json \
 ---
 **{FR-ID} — {FR-TITLE from fr_details}**
 
-- [ ] **[ORCH-GATE1-DELTA]** `run-fr-step --phase 5 --fr-id {FR-ID} --step GATE1-DELTA --project .`
+- **[ORCH-GATE1-DELTA]** `run-fr-step --phase 5 --fr-id {FR-ID} --step GATE1-DELTA --project .`
 > Crash recovery: `resume-fr-phase` auto-detects code changes → switches to full TDD if needed.
 > **Auto-skip**: if NO FR's code changed since its last Gate 1 PASS, `advance-phase --completed 5`
 > treats this entire DELTA loop as satisfied automatically — you may skip the per-FR steps.
@@ -100,53 +100,53 @@ python3 harness_cli.py load-context --phase 5 --project . --json \
 
 ### P5 System Verification
 
-- [ ] **[BASELINE]** Generate `05-verification/BASELINE.md` (system state snapshot):
+- **[BASELINE]** Generate `05-verification/BASELINE.md` (system state snapshot):
   - Document: current version, test results summary, coverage %, Gate 3 composite score
   - Reference: `04-testing/TEST_RESULTS.md` and `03-development/src/` module list
-- [ ] **[VERIFY-REPORT]** Generate `05-verification/VERIFICATION_REPORT.md`:
+- **[VERIFY-REPORT]** Generate `05-verification/VERIFICATION_REPORT.md`:
   - For each FR: verification status, acceptance criteria result (PASS/FAIL), evidence
   - Include: test coverage %, mutation score, deferred issues from Gate 3
   - Certify: all Gate 3 open issues addressed or deferred with justification
-- [ ] Re-run integration tests: `pytest tests/integration/ -q` (or equivalent per NFRs)
-- [ ] Confirm performance NFRs met: review benchmark entries in `04-testing/TEST_RESULTS.md`
-- [ ] Re-run security scan clean: `bandit -r 03-development/src/ -ll` + `gitleaks detect`
+- Re-run integration tests: `pytest tests/integration/ -q` (or equivalent per NFRs)
+- Confirm performance NFRs met: review benchmark entries in `04-testing/TEST_RESULTS.md`
+- Re-run security scan clean: `bandit -r 03-development/src/ -ll` + `gitleaks detect`
 
 ### P5 Milestone Push (10-Push Strategy ⑦)
 
-- [ ] **PUSH ⑦ — P5-baseline** (after BASELINE.md is generated):
+- **PUSH ⑦ — P5-baseline** (after BASELINE.md is generated):
   ```bash
   python3 harness_cli.py push-milestone --type p5-baseline --project .
   ```
   > Writes HANDOVER.md + commits + pushes.
 
 ### Phase 5 Deliverables
-- [ ] `05-verification/BASELINE.md` - System baseline
-- [ ] `05-verification/VERIFICATION_REPORT.md` - Verification report
+- `05-verification/BASELINE.md` - System baseline
+- `05-verification/VERIFICATION_REPORT.md` - Verification report
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
-- [ ] Gate 1 PASS for every FR
+- Gate 1 PASS for every FR
 
 ### Phase 5 → Phase 6: Quality Assurance
 
-- [ ] **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
+- **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
   > **FAIL** → check `phase_truth_verifier` output in `.sessi-work/`
   >   → identify which phase link or gate artifact failed
   >   → fix artifacts → re-run `advance-phase`
   >   → If 3 consecutive failures: escalate to human with `phase_truth_verifier` log
 
-- [ ] **[D4-GAP WARNING]** Gate 4 (next phase) requires spec-coverage ≥ 90% but current advance threshold is 80%.
+- **[D4-GAP WARNING]** Gate 4 (next phase) requires spec-coverage ≥ 90% but current advance threshold is 80%.
   > Close this gap NOW to avoid a surprise Gate 4 D4 block.
   > Check: `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0`
   > If below 90%: add missing test implementations before advancing to Phase 6.
 
-- [ ] **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 80.0` (exit 10, D4 unified v2.6)
   > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
 
-- [ ] Advance FSM to Phase 6 (writes new HANDOVER.md + local commit):
+- Advance FSM to Phase 6 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 5 --project .
   ```
-- [ ] Confirm `HANDOVER.md` reflects Phase 6 entry (`P6-entry` checkpoint, correct plan path)
-- [ ] Open `phase6_plan.md` and follow from the top.
-- [ ] If session crashes during Phase 6: read `HANDOVER.md` or run `generate-next-plan`
+- Confirm `HANDOVER.md` reflects Phase 6 entry (`P6-entry` checkpoint, correct plan path)
+- Open `phase6_plan.md` and follow from the top.
+- If session crashes during Phase 6: read `HANDOVER.md` or run `generate-next-plan`

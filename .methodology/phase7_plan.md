@@ -29,13 +29,13 @@ Each FR gets a Gate 1 risk-aware re-evaluation (CHECKPOINT). No harness run-gate
 
 ### Entry Gate Verification
 
-- [ ] **[ENTRY-CHECK]** Gate 4 PASS:
+- **[ENTRY-CHECK]** Gate 4 PASS:
   Proof: .methodology/quality_manifest.json records Gate 4 PASS from P6.
   If NOT confirmed: return to Phase 6 and complete exit gate first.
 
 ### Pre-Phase Preflight
 
-- [ ] **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
+- **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
   ```bash
   python3 harness_cli.py run-phase --phase 7 --project .
   ```
@@ -45,13 +45,13 @@ Each FR gets a Gate 1 risk-aware re-evaluation (CHECKPOINT). No harness run-gate
   Human fix → re-run `run-phase --phase 7 --project .` → PASS required before continuing.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
-  python3 harness_cli.py build-trace-attestation --project . --write
+  python3 harness_cli.py build-trace-attestation --project .
   git add .methodology/trace/attestation.json
   git commit -m 'trace: regenerate attestation'
   ```
   Re-run `run-phase` to confirm `Attestation: clean` before continuing.
 
-- [ ] **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
+- **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
@@ -69,7 +69,7 @@ python3 harness_cli.py load-context --phase 7 --project . --json \
 
 ### FR Tasks — Expanded at Execution Time
 
-- [ ] **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
+- **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
   ```bash
   python3 harness_cli.py run-env-check --phase 7 --project .
   # evaluate inline → write .sessi-work/env_check_result.json →
@@ -83,7 +83,7 @@ python3 harness_cli.py load-context --phase 7 --project . --json \
 ---
 **{FR-ID} — {FR-TITLE from fr_details}**
 
-- [ ] **[ORCH-GATE1-DELTA]** `run-fr-step --phase 7 --fr-id {FR-ID} --step GATE1-DELTA --project .`
+- **[ORCH-GATE1-DELTA]** `run-fr-step --phase 7 --fr-id {FR-ID} --step GATE1-DELTA --project .`
 > Crash recovery: `resume-fr-phase` auto-detects code changes → switches to full TDD if needed.
 > **Auto-skip**: if NO FR's code changed since its last Gate 1 PASS, `advance-phase --completed 7`
 > treats this entire DELTA loop as satisfied automatically — you may skip the per-FR steps.
@@ -102,46 +102,46 @@ python3 harness_cli.py load-context --phase 7 --project . --json \
 
 > Generate risk deliverables ONCE before per-FR evaluation (orchestrator runs directly).
 
-- [ ] **[RISK-REGISTER]** Generate `07-risk/RISK_REGISTER.md`:
+- **[RISK-REGISTER]** Generate `07-risk/RISK_REGISTER.md`:
   - Review open issues from Gate 3/4, `deferred_fixes.md`, and `.sessi-work/issue_registry.json`
   - For each risk: ID, name, likelihood (1–5), impact (1–5), category, mitigation approach
-- [ ] **[RISK-MITIGATION]** Generate `07-risk/RISK_MITIGATION_PLANS.md`:
+- **[RISK-MITIGATION]** Generate `07-risk/RISK_MITIGATION_PLANS.md`:
   - For HIGH risks (likelihood × impact ≥ 9): write formal mitigation plan with owner + deadline
-- [ ] **[RISK-STATUS]** Generate `07-risk/RISK_STATUS_REPORT.md`:
+- **[RISK-STATUS]** Generate `07-risk/RISK_STATUS_REPORT.md`:
   - Summary of all risks, current status, mitigation owner, target date
 
 ### P7 Milestone Push (10-Push Strategy ⑨)
 
-- [ ] **PUSH ⑨ — P7 exit** (after risk register is complete):
+- **PUSH ⑨ — P7 exit** (after risk register is complete):
   ```bash
   python3 harness_cli.py push-milestone --type p7 --project .
   ```
   > Writes HANDOVER.md + commits + pushes.
 
 ### Phase 7 Deliverables
-- [ ] `07-risk/RISK_REGISTER.md` - Risk register
-- [ ] `07-risk/RISK_MITIGATION_PLANS.md` - Mitigation plans
-- [ ] `07-risk/RISK_STATUS_REPORT.md` - Risk status report
+- `07-risk/RISK_REGISTER.md` - Risk register
+- `07-risk/RISK_MITIGATION_PLANS.md` - Mitigation plans
+- `07-risk/RISK_STATUS_REPORT.md` - Risk status report
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
-- [ ] Gate 1 PASS for every FR
+- Gate 1 PASS for every FR
 
 ### Phase 7 → Phase 8: Configuration Management
 
-- [ ] **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
+- **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
   > **FAIL** → check `phase_truth_verifier` output in `.sessi-work/`
   >   → identify which phase link or gate artifact failed
   >   → fix artifacts → re-run `advance-phase`
   >   → If 3 consecutive failures: escalate to human with `phase_truth_verifier` log
 
-- [ ] **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0` (exit 10, D4 unified v2.6)
   > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
 
-- [ ] Advance FSM to Phase 8 (writes new HANDOVER.md + local commit):
+- Advance FSM to Phase 8 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 7 --project .
   ```
-- [ ] Confirm `HANDOVER.md` reflects Phase 8 entry (`P8-entry` checkpoint, correct plan path)
-- [ ] Open `phase8_plan.md` and follow from the top.
-- [ ] If session crashes during Phase 8: read `HANDOVER.md` or run `generate-next-plan`
+- Confirm `HANDOVER.md` reflects Phase 8 entry (`P8-entry` checkpoint, correct plan path)
+- Open `phase8_plan.md` and follow from the top.
+- If session crashes during Phase 8: read `HANDOVER.md` or run `generate-next-plan`

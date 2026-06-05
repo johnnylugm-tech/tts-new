@@ -25,11 +25,11 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
 
 ### Entry Gate Verification
 
-- [ ] **[ENTRY-CHECK]** P1 review-complete:
+- **[ENTRY-CHECK]** P1 review-complete:
   Proof: git log contains commit 'phase1(review-complete): Phase 1 deliverables APPROVED'.
   If NOT confirmed: return to Phase 1 and complete exit gate first.
 
-- [ ] **[P1-ARTIFACTS]** Verify all 4 Phase 1 deliverables exist (CONSTITUTION.md §2.3 P2 entry requirement):
+- **[P1-ARTIFACTS]** Verify all 4 Phase 1 deliverables exist (CONSTITUTION.md §2.3 P2 entry requirement):
   ```bash
   ls 01-requirements/SRS.md \
      01-requirements/SPEC_TRACKING.md \
@@ -40,7 +40,7 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
 
 ### Pre-Phase Preflight
 
-- [ ] **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
+- **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
   ```bash
   python3 harness_cli.py run-phase --phase 2 --project .
   ```
@@ -49,7 +49,7 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
   After 3 FAIL: escalate to human — provide last `run-phase --phase 2` full output.
   Human fix → re-run `run-phase --phase 2 --project .` → PASS required before continuing.
 
-- [ ] **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
+- **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
@@ -87,10 +87,10 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- [ ] **[A-1]** Agent A (ARCHITECT): Design system architecture → write SAD.md → validate every FR has a module mapping
+- **[A-1]** Agent A (ARCHITECT): Design system architecture → write SAD.md → validate every FR has a module mapping
   - FORBIDDEN: vague/non-testable acceptance criteria
-- [ ] **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
-- [ ] **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
+- **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
+- **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
   > ⚠️  **STATELESS SANDBOX**: Agent B has ZERO access to local files or /tmp.
   > NEVER write 'read 01-requirements/SRS.md' in the prompt — it will fail silently.
   > ALL context must be pasted verbatim into the prompt text. This is mandatory.
@@ -130,7 +130,7 @@ are not re-opened. This bounds backtracking to a single step.
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
-- [ ] **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
+- **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
   > gaps schema: `[{"severity": "low|medium|high", "message": "...", "fr_id": "FR-XX or null"}]`
   - `APPROVE` + all gaps are `low` → continue to Sub-Task 2/3
   - `APPROVE` + any gap is `medium` or `high` → fix gaps → **re-dispatch B as round 2**
@@ -153,10 +153,10 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- [ ] **[A-1]** Agent A (ARCHITECT): Extract key architecture decisions from SAD.md → write individual ADR entries → validate rationale and consequences are recorded
+- **[A-1]** Agent A (ARCHITECT): Extract key architecture decisions from SAD.md → write individual ADR entries → validate rationale and consequences are recorded
   - FORBIDDEN: vague/non-testable acceptance criteria
-- [ ] **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
-- [ ] **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
+- **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
+- **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
   > ⚠️  **STATELESS SANDBOX**: Agent B has ZERO access to local files or /tmp.
   > NEVER write 'read 01-requirements/SRS.md' in the prompt — it will fail silently.
   > ALL context must be pasted verbatim into the prompt text. This is mandatory.
@@ -202,7 +202,7 @@ are not re-opened. This bounds backtracking to a single step.
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
-- [ ] **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
+- **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
   > gaps schema: `[{"severity": "low|medium|high", "message": "...", "fr_id": "FR-XX or null"}]`
   - `APPROVE` + all gaps are `low` → continue to Sub-Task 3/3
   - `APPROVE` + any gap is `medium` or `high` → fix gaps → **re-dispatch B as round 2**
@@ -223,7 +223,7 @@ are not re-opened. This bounds backtracking to a single step.
 > **Scoped to the ADR file you just wrote.**
 > Catches stub-style or low-density ADRs *before* TEST_SPEC.md depends on them.
 
-- [ ] **[CONSTITUTION-CHECK-ADR]** Run single-file constitution check:
+- **[CONSTITUTION-CHECK-ADR]** Run single-file constitution check:
   ```bash
   python3 harness_cli.py check-constitution \
       --phase 2 \
@@ -241,10 +241,10 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- [ ] **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply 7-Question Protocol per FR → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
+- **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply 7-Question Protocol per FR → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
   - FORBIDDEN: vague/non-testable acceptance criteria
-- [ ] **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
-- [ ] **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
+- **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
+- **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
   > ⚠️  **STATELESS SANDBOX**: Agent B has ZERO access to local files or /tmp.
   > NEVER write 'read 01-requirements/SRS.md' in the prompt — it will fail silently.
   > ALL context must be pasted verbatim into the prompt text. This is mandatory.
@@ -297,7 +297,7 @@ are not re-opened. This bounds backtracking to a single step.
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
-- [ ] **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
+- **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
   > gaps schema: `[{"severity": "low|medium|high", "message": "...", "fr_id": "FR-XX or null"}]`
   - `APPROVE` + all gaps are `low` → all deliverables complete; proceed to Agent B Peer Review
   - `APPROVE` + any gap is `medium` or `high` → fix gaps → **re-dispatch B as round 2**
@@ -321,7 +321,7 @@ are not re-opened. This bounds backtracking to a single step.
 > NFR `type` values must match `render_canonical_sab_template()` exactly.
 > Do NOT hand-write the YAML — paste from the template below.
 
-- [ ] **[SAB-WRITE]** Write the SAB block into `02-architecture/SAD.md` §5
+- **[SAB-WRITE]** Write the SAB block into `02-architecture/SAD.md` §5
   using the canonical template (replace EXAMPLE values with real project values):
   ```yaml
   sab:
@@ -371,7 +371,7 @@ are not re-opened. This bounds backtracking to a single step.
       - "app.api.webhooks"
   ```
 
-- [ ] **[SAB-VALIDATE]** Validate the SAB block before committing:
+- **[SAB-VALIDATE]** Validate the SAB block before committing:
   ```bash
   python3 scripts/generate_sab.py --validate --project .
   ```
@@ -379,7 +379,7 @@ are not re-opened. This bounds backtracking to a single step.
     (e.g. unknown NFR type, `phase` as string).
   - Fix and re-run until PASS.
 
-- [ ] **[SAB-GENERATE]** Generate `.methodology/SAB.json` from the validated SAB block:
+- **[SAB-GENERATE]** Generate `.methodology/SAB.json` from the validated SAB block:
   ```bash
   python3 scripts/generate_sab.py --project .
   ```
@@ -392,11 +392,11 @@ are not re-opened. This bounds backtracking to a single step.
   - Also embedded inline in `quality_manifest.json` via `harness_bridge`
 
 ### Phase 2 Deliverables
-- [ ] `SAD.md` — Software Architecture Document (every FR has module mapping)
-- [ ] `ADR.md` — Architecture Decision Records (tech stack, patterns, interfaces)
-- [ ] `TEST_SPEC.md` — Test specification catalog (named test cases from SRS, single source of truth — D4 unified check)
-- [ ] `.methodology/quality_manifest.json` — Quality manifest (FR list + SAB data)
-- [ ] `.methodology/SAB.json` — Machine-readable architecture baseline
+- `SAD.md` — Software Architecture Document (every FR has module mapping)
+- `ADR.md` — Architecture Decision Records (tech stack, patterns, interfaces)
+- `TEST_SPEC.md` — Test specification catalog (named test cases from SRS, single source of truth — D4 unified check)
+- `.methodology/quality_manifest.json` — Quality manifest (FR list + SAB data)
+- `.methodology/SAB.json` — Machine-readable architecture baseline
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
 
 ### 📋 Constitution Quality Self-Check
@@ -404,7 +404,7 @@ are not re-opened. This bounds backtracking to a single step.
 > **Verify document quality meets constitution standards BEFORE peer review.**
 > Run this check, fix gaps, and re-run until PASS. This avoids cascading rewrites after Agent B review.
 
-- [ ] **[CONSTITUTION-CHECK]** Run constitution self-check:
+- **[CONSTITUTION-CHECK]** Run constitution self-check:
   ```bash
   python3 harness_cli.py check-constitution --phase 2 --project .
   ```
@@ -417,7 +417,7 @@ are not re-opened. This bounds backtracking to a single step.
 > Phase 1/2 exit gate = Agent B document review (NOT `harness run-gate --gate 1`).
 > APPROVE criteria: all FRs addressed, no critical gaps, terminology consistent.
 
-- [ ] **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent (holistic review of all deliverables):
+- **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent (holistic review of all deliverables):
   > ⚠️  **STATELESS SANDBOX**: Agent B has ZERO access to local files or /tmp.
   > NEVER pass file paths in the prompt — ALL document content must be pasted verbatim.
   >
@@ -463,7 +463,7 @@ are not re-opened. This bounds backtracking to a single step.
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
-- [ ] **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
+- **[B-2]** Agent B returns JSON — parse `review_status` **AND** `gaps` severity:
   - `APPROVE` + all gaps are `low` → proceed to push (CHECKPOINT saved)
   - `APPROVE` + any gap is `medium` or `high` → fix gaps → **re-dispatch B as round 2**
     (embed same docs as B-1 above with updated content) → push only after round-2 APPROVE
@@ -471,7 +471,7 @@ are not re-opened. This bounds backtracking to a single step.
     > If round 5 REJECT: escalate to human — orchestrator cannot self-resolve.
     > Human fix → re-dispatch Agent B (same prompt + updated content) → `APPROVE` required before continuing.
 
-- [ ] **[B-PUSH]** ✅ PUSH ② — Push to GitHub + HANDOVER.md — retry until success (CHECKPOINT-PEER-REVIEW saved):
+- **[B-PUSH]** ✅ PUSH ② — Push to GitHub + HANDOVER.md — retry until success (CHECKPOINT-PEER-REVIEW saved):
   > Run `push-checkpoint` → if blocked, read the error → fix → re-run until green.
   > Do NOT use `--no-verify` to bypass.
   ```bash
@@ -483,10 +483,10 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 2 → Phase 3: Implementation
 
-- [ ] Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
+- Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 2 --project .
   ```
-- [ ] Confirm `HANDOVER.md` reflects Phase 3 entry (`P3-entry` checkpoint, correct plan path)
-- [ ] Open `phase3_plan.md` and follow from the top.
-- [ ] If session crashes during Phase 3: read `HANDOVER.md` or run `generate-next-plan`
+- Confirm `HANDOVER.md` reflects Phase 3 entry (`P3-entry` checkpoint, correct plan path)
+- Open `phase3_plan.md` and follow from the top.
+- If session crashes during Phase 3: read `HANDOVER.md` or run `generate-next-plan`

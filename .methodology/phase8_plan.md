@@ -29,13 +29,13 @@ Each FR gets a Gate 1 config-aware re-evaluation (CHECKPOINT). No harness run-ga
 
 ### Entry Gate Verification
 
-- [ ] **[ENTRY-CHECK]** Gate 4 PASS (P6 exit — P7 has no exit gate, P7 completed stands between):
+- **[ENTRY-CHECK]** Gate 4 PASS (P6 exit — P7 has no exit gate, P7 completed stands between):
   Proof: .methodology/quality_manifest.json records Gate 4 PASS from P6.
   If NOT confirmed: return to Phase 6 and complete exit gate first.
 
 ### Pre-Phase Preflight
 
-- [ ] **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
+- **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
   ```bash
   python3 harness_cli.py run-phase --phase 8 --project .
   ```
@@ -45,13 +45,13 @@ Each FR gets a Gate 1 config-aware re-evaluation (CHECKPOINT). No harness run-ga
   Human fix → re-run `run-phase --phase 8 --project .` → PASS required before continuing.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
-  python3 harness_cli.py build-trace-attestation --project . --write
+  python3 harness_cli.py build-trace-attestation --project .
   git add .methodology/trace/attestation.json
   git commit -m 'trace: regenerate attestation'
   ```
   Re-run `run-phase` to confirm `Attestation: clean` before continuing.
 
-- [ ] **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
+- **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
@@ -69,7 +69,7 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
 
 ### FR Tasks — Expanded at Execution Time
 
-- [ ] **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
+- **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
   ```bash
   python3 harness_cli.py run-env-check --phase 8 --project .
   # evaluate inline → write .sessi-work/env_check_result.json →
@@ -83,7 +83,7 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
 ---
 **{FR-ID} — {FR-TITLE from fr_details}**
 
-- [ ] **[ORCH-GATE1-DELTA]** `run-fr-step --phase 8 --fr-id {FR-ID} --step GATE1-DELTA --project .`
+- **[ORCH-GATE1-DELTA]** `run-fr-step --phase 8 --fr-id {FR-ID} --step GATE1-DELTA --project .`
 > Crash recovery: `resume-fr-phase` auto-detects code changes → switches to full TDD if needed.
 > **Auto-skip**: if NO FR's code changed since its last Gate 1 PASS, `advance-phase --completed 8`
 > treats this entire DELTA loop as satisfied automatically — you may skip the per-FR steps.
@@ -102,18 +102,18 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
 
 > Generate config deliverables ONCE before push-milestone (orchestrator runs directly).
 
-- [ ] **[CONFIG-RECORDS]** Generate `CONFIG_RECORDS.md` in `08-config/` directory:
+- **[CONFIG-RECORDS]** Generate `CONFIG_RECORDS.md` in `08-config/` directory:
   - Review all env vars, secrets, feature flags, and deployment settings
   - For each config item: name, value/source, access method, owner, environment (dev/staging/prod)
   - Reference: `03-development/src/` module configs + any `.env.example` or `settings.py`
-- [ ] **[RELEASE-CHECKLIST]** Generate `RELEASE_CHECKLIST.md` in `08-config/` directory:
+- **[RELEASE-CHECKLIST]** Generate `RELEASE_CHECKLIST.md` in `08-config/` directory:
   - Pre-release: all Gate 4 dims PASS, no open critical issues, security scan clean
   - Deployment: env vars set, secrets rotated, DB migrations run, smoke tests pass
   - Post-release: monitoring alerts configured, rollback plan documented
 
 ### P8 Archive — REQUIRED before push-milestone (CI p8-archive-check)
 
-- [ ] **[P8-ARCHIVE]** Create `.methodology-archive/` directory (required for CI `p8-archive-check`):
+- **[P8-ARCHIVE]** Create `.methodology-archive/` directory (required for CI `p8-archive-check`):
   ```bash
   mkdir -p .methodology-archive
   cp -r .sessi-work/ .methodology-archive/
@@ -121,7 +121,7 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
   > Must run BEFORE `push-milestone --type p8`; `_validate_p8_completion()` in push-milestone auto-verifies.
   > CI job `p8-archive-check` also validates this directory on push to main.
 
-- [ ] **[P8-HANDOVER-CHECK]** Verify `HANDOVER.md` has no Phase 9 references (validated by CI `p8-archive-check`):
+- **[P8-HANDOVER-CHECK]** Verify `HANDOVER.md` has no Phase 9 references (validated by CI `p8-archive-check`):
   ```bash
   grep -qi "phase 9\|phase9\|phase9_plan" HANDOVER.md \
     && echo "ERROR: Phase 9 refs found — remove them" \
@@ -131,20 +131,20 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
 
 ### P8 Milestone Push (10-Push Strategy ⑩)
 
-- [ ] **PUSH ⑩ — P8 exit** (after config records are complete):
+- **PUSH ⑩ — P8 exit** (after config records are complete):
   ```bash
   python3 harness_cli.py push-milestone --type p8 --project .
   ```
   > Writes HANDOVER.md + commits + pushes. Pipeline complete.
 
 ### Phase 8 Deliverables
-- [ ] `CONFIG_RECORDS.md` - Configuration records
-- [ ] `RELEASE_CHECKLIST.md` - Release checklist
+- `CONFIG_RECORDS.md` - Configuration records
+- `RELEASE_CHECKLIST.md` - Release checklist
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
-- [ ] Gate 1 PASS for every FR
+- Gate 1 PASS for every FR
 
-- [ ] **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
+- **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
 
 ### 🎉 Pipeline Complete
 
-- [ ] All 8 phases complete. Archive `.methodology/` for the audit trail.
+- All 8 phases complete. Archive `.methodology/` for the audit trail.

@@ -30,13 +30,13 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (1
 
 ### Entry Gate Verification
 
-- [ ] **[ENTRY-CHECK]** Gate 2 PASS:
+- **[ENTRY-CHECK]** Gate 2 PASS:
   Proof: .methodology/quality_manifest.json records Gate 2 PASS from P3.
   If NOT confirmed: return to Phase 3 and complete exit gate first.
 
 ### Pre-Phase Preflight
 
-- [ ] **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
+- **[PREFLIGHT]** Run phase hooks (FSM, Constitution, Kill-Switch, Drift, CI Readiness):
   ```bash
   python3 harness_cli.py run-phase --phase 4 --project .
   ```
@@ -45,7 +45,7 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (1
   After 3 FAIL: escalate to human — provide last `run-phase --phase 4` full output.
   Human fix → re-run `run-phase --phase 4 --project .` → PASS required before continuing.
 
-- [ ] **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
+- **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
@@ -67,16 +67,16 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 > This step runs once before per-FR test execution.
 
 **Generate TEST_PLAN.md** (orchestrator runs directly — not a sub-agent dispatch):
-- [ ] Read SRS.md FR acceptance criteria → write TEST_PLAN.md with per-FR test cases
+- Read SRS.md FR acceptance criteria → write TEST_PLAN.md with per-FR test cases
   - For each FR: test case ID, description, input, expected output, priority
   - Include positive, negative, boundary, and edge case categories
   - Output: `04-testing/TEST_PLAN.md`
-- [ ] Verify TEST_PLAN.md covers all FRs from manifest/quality_manifest.json
-- [ ] **[TP-DONE]** TEST_PLAN.md written: all FRs have ≥1 test case, NFRs addressed
+- Verify TEST_PLAN.md covers all FRs from manifest/quality_manifest.json
+- **[TP-DONE]** TEST_PLAN.md written: all FRs have ≥1 test case, NFRs addressed
 
 ### FR Tasks — Expanded at Execution Time
 
-- [ ] **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
+- **[ENV-CHECK]** Run ONCE before the FR loop — `GATE1`/`GATE1-DELTA` preflight requires `.sessi-work/env_check_result.json`:
   ```bash
   python3 harness_cli.py run-env-check --phase 4 --project .
   # evaluate inline → write .sessi-work/env_check_result.json →
@@ -90,7 +90,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 ---
 **{FR-ID} — {FR-TITLE from fr_details}**
 
-- [ ] **[ORCH-GATE1-DELTA]** `run-fr-step --phase 4 --fr-id {FR-ID} --step GATE1-DELTA --project .`
+- **[ORCH-GATE1-DELTA]** `run-fr-step --phase 4 --fr-id {FR-ID} --step GATE1-DELTA --project .`
 > Crash recovery: `resume-fr-phase` auto-detects code changes → switches to full TDD if needed.
 > **Auto-skip**: if NO FR's code changed since its last Gate 1 PASS, `advance-phase --completed 4`
 > treats this entire DELTA loop as satisfied automatically — you may skip the per-FR steps.
@@ -111,7 +111,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 > also write `HANDOVER.md` with phase/FR/status summary and push to origin.
 > All FR IDs in this project: <FR-01,FR-02,…>
 
-- [ ] **PUSH ⑤ — P4-mid** (trigger when ≥50%/N FRs have Gate 1 PASS):
+- **PUSH ⑤ — P4-mid** (trigger when ≥50%/N FRs have Gate 1 PASS):
   ```bash
   python3 harness_cli.py push-milestone --type p4-mid --project . \
     --fr-done 50% --fr-total N --fr-ids <comma-separated FR-IDs with Gate 1 PASS>
@@ -119,7 +119,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
   > `--fr-ids` lists the FRs with Gate 1 PASS so far. Replace `<comma-separated FR-IDs with Gate 1 PASS>` with actual.
   > Writes HANDOVER.md + commits + pushes. Next session reads HANDOVER.md to resume.
 
-- [ ] **PUSH ⑥ — P4-pre-gate3** (trigger when all N FRs Gate 1 PASS, before Gate 3):
+- **PUSH ⑥ — P4-pre-gate3** (trigger when all N FRs Gate 1 PASS, before Gate 3):
   ```bash
   python3 harness_cli.py push-milestone --type p4-pre-gate3 --project . \
     --fr-ids <comma-separated FR-IDs with Gate 1 PASS>
@@ -128,13 +128,13 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 
 ### TEST_RESULTS.md Summary
 
-- [ ] **[TEST-RESULTS-SUMMARY]** Finalize `04-testing/TEST_RESULTS.md` before milestone push:
+- **[TEST-RESULTS-SUMMARY]** Finalize `04-testing/TEST_RESULTS.md` before milestone push:
   - Summarise test execution: test cases run, pass/fail outcome, any deferred issues
   - Real test execution is enforced by advance-phase TDD-PRECHECK (`pytest --cov-fail-under=100`), not by string-matching this document
 
 ### COVERAGE_REPORT.md — Coverage Summary
 
-- [ ] **[COVERAGE-REPORT]** Generate `04-testing/COVERAGE_REPORT.md`:
+- **[COVERAGE-REPORT]** Generate `04-testing/COVERAGE_REPORT.md`:
   ```bash
   pytest --cov=03-development/src --cov-report=term-missing -q \
     | tee 04-testing/coverage_raw.txt
@@ -151,14 +151,14 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 ### 🔒 CHECKPOINT-GATE-3: Phase 4 Exit
 > linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · integration_coverage(60) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · test_assertion_quality(60) · performance(75) · traceability(100)  [traceability: framework-owned, harness-computed · CRG recon inside run-gate · D4 spec-coverage unified ≥80%]
 
-- [ ] **G3a** Prepare Gate 3:
+- **G3a** Prepare Gate 3:
   ```bash
   python3 harness_cli.py run-gate --gate 3 --phase 4 --project .
   ```
   Read the evaluation prompt printed above.
   (CRG recon triggered inside run-gate automatically — no separate action needed)
 
-- [ ] **G3b** Evaluate all Gate 3 dimensions inline:
+- **G3b** Evaluate all Gate 3 dimensions inline:
   - Follow `harness/ssi/prompts/evaluate_dimension.md`
   - Write result to `.sessi-work/gate3_result.json`
   - Failing dim: fix code → re-evaluate → re-score
@@ -173,14 +173,14 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
   > **traceability** is also framework-owned: the harness calls `compute_trace_dimension()`
   > inside `finalize-gate` and injects the score automatically. Do NOT report a traceability
   > score in gate_result.json. If the gate is blocked by traceability, fix gaps then run:
-  > `python3 harness_cli.py build-trace-attestation --project . --write`
+  > `python3 harness_cli.py build-trace-attestation --project .`
   > `git add .methodology/trace/attestation.json && git commit -m 'trace: regen attestation'`
 
-- [ ] **G3c** Finalize Gate 3:
+- **G3c** Finalize Gate 3:
   ```bash
   python3 harness_cli.py finalize-gate --gate 3 --phase 4 --project .
   ```
-- [ ] **[D4]** D4 spec-coverage-check — unified v2.6 (Gate 3 threshold 80%):
+- **[D4]** D4 spec-coverage-check — unified v2.6 (Gate 3 threshold 80%):
   ```bash
   python3 harness_cli.py spec-coverage-check --project . --threshold 80.0
   ```
@@ -193,7 +193,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
   - CASE 4 BLOCKED:  max_rounds exhausted, not PASS → `GateBlockedError` → escalate to human
     > Human fix → re-run `run-gate --gate 3 → finalize-gate --gate 3` → CASE 1 PASS required before continuing.
 
-- [ ] **G3d** ✅ Verify checkpoint saved (finalize-gate above already pushed + wrote HANDOVER.md):
+- **G3d** ✅ Verify checkpoint saved (finalize-gate above already pushed + wrote HANDOVER.md):
   ```bash
   # Confirm HANDOVER.md exists at project root (written by finalize-gate → commit_and_push_gate)
   ls -la HANDOVER.md
@@ -203,31 +203,31 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
   > `HANDOVER.md` **before** committing + pushing. No separate push needed here.
   > If HANDOVER.md is missing, re-run `finalize-gate` (do **not** raw-push).
 
-- [ ] **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
+- **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
   > **FAIL** → check `phase_truth_verifier` output in `.sessi-work/`
   >   → identify which phase link or gate artifact failed
   >   → fix artifacts → re-run `advance-phase`
   >   → If 3 consecutive failures: escalate to human with `phase_truth_verifier` log
 
 ### Phase 4 Deliverables
-- [ ] `04-testing/TEST_PLAN.md` - Test plan
-- [ ] `04-testing/TEST_RESULTS.md` - Test results (test execution summary)
-- [ ] `04-testing/COVERAGE_REPORT.md` - Coverage report
+- `04-testing/TEST_PLAN.md` - Test plan
+- `04-testing/TEST_RESULTS.md` - Test results (test execution summary)
+- `04-testing/COVERAGE_REPORT.md` - Coverage report
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
-- [ ] Gate 1 PASS for every FR
-- [ ] Gate 3 PASS (phase exit, composite ≥ 80, 15 dims)
+- Gate 1 PASS for every FR
+- Gate 3 PASS (phase exit, composite ≥ 80, 15 dims)
 
 ### Phase 4 → Phase 5: Verification & Delivery
 
-- [ ] **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 80.0` (exit 10, D4 unified v2.6)
   > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
 
-- [ ] Advance FSM to Phase 5 (writes new HANDOVER.md + local commit):
+- Advance FSM to Phase 5 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 4 --project .
   ```
-- [ ] Confirm `HANDOVER.md` reflects Phase 5 entry (`P5-entry` checkpoint, correct plan path)
-- [ ] Open `phase5_plan.md` and follow from the top.
-- [ ] If session crashes during Phase 5: read `HANDOVER.md` or run `generate-next-plan`
+- Confirm `HANDOVER.md` reflects Phase 5 entry (`P5-entry` checkpoint, correct plan path)
+- Open `phase5_plan.md` and follow from the top.
+- If session crashes during Phase 5: read `HANDOVER.md` or run `generate-next-plan`

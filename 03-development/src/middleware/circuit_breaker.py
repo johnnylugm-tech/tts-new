@@ -12,7 +12,7 @@ Citations:
 from __future__ import annotations
 
 import time
-from typing import Awaitable, Callable, TypeVar
+from typing import Any, Callable, Coroutine, TypeVar
 
 T = TypeVar("T")
 
@@ -81,7 +81,7 @@ class CircuitBreaker:
         elif new_state == "HALF_OPEN":
             self.failure_count = 0
 
-    async def call(self, coro: Awaitable[T]) -> T:
+    async def call(self, coro: Coroutine[Any, Any, T]) -> T:
         """Execute `coro` through the breaker.
 
         - CLOSED: run the coroutine. Success resets the counter to 0;
@@ -96,8 +96,7 @@ class CircuitBreaker:
             if self.opened_at is not None and (now - self.opened_at) >= self.timeout:
                 self._transition("HALF_OPEN")
             else:
-                if hasattr(coro, "close"):
-                    coro.close()
+                coro.close()
                 raise CircuitOpenError(
                     f"circuit breaker is OPEN "
                     f"(opened at {self.opened_at}, timeout {self.timeout}s)"

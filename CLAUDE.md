@@ -8,12 +8,12 @@
 <!-- harness:auto-start -->
 ## Harness Status _(auto-generated — do not edit this block)_
 
-> Phase: **4 — Testing** | Last Gate: **Gate 1** | Last FR: FR-06 | Updated: 2026-06-05
+> Phase: **4 — Testing** | Last Gate: **Gate 1** | Last FR: FR-08 | Updated: 2026-06-05
 
 ### Gate Progress
 | Gate | Score / FRs | Status |
 |------|-------------|--------|
-| Gate 1 | 5/8 FRs | 🔄 In Progress |
+| Gate 1 | 6/8 FRs | 🔄 In Progress |
 | Gate 2 | 95.2 | ✅ PASS |
 | Gate 3 | — | ⬜ Not Started |
 | Gate 4 | — | ⬜ Not Started |
@@ -28,7 +28,7 @@
 | FR-05 | — | ⬜ Pending |
 | FR-06 | 94.6 | ✅ COMPLETE |
 | FR-07 | 95.0 | ✅ COMPLETE |
-| FR-08 | — | ⬜ Pending |
+| FR-08 | 100.0 | ✅ COMPLETE |
 
 ### Architecture Constraints
 - No new tech stack (FastAPI + httpx + uvicorn + Kokoro Docker + optional Redis + ffmpeg only)

@@ -1,13 +1,13 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "da91d5f8fd91b172ad2dbdab62227dbf145cc69c",
-  "content_sha256": "543f338f117ebf44650d66a7b7c79a172e74b6f0f9f1ff4ef23a3691e0613119",
+  "git_sha": "unknown-workspace",
+  "content_sha256": "b6700e71388ba9234f5eba94ff3e247253eb3bc3b4818280e3732a5d92686160",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
   "matrix": {
     "schema_version": "harness/traceability/overlay/v1",
-    "project_id": "tts-new",
+    "project_id": "workspace",
     "completeness": {
       "total_requirements": 8,
       "srs_coverage": "100.0%",

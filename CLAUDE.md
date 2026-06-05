@@ -8,7 +8,7 @@
 <!-- harness:auto-start -->
 ## Harness Status _(auto-generated — do not edit this block)_
 
-> Phase: **4 — Testing** | Last Gate: **Gate 2** | Last FR: FR-07 | Updated: 2026-06-05
+> Phase: **4 — Testing** | Last Gate: **Gate 1** | Last FR: FR-01 | Updated: 2026-06-05
 
 ### Gate Progress
 | Gate | Score / FRs | Status |

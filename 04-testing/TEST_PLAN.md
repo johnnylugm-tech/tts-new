@@ -1,4 +1,4 @@
-# Test Plan — Kokoro Taiwan Proxy
+# Test Plan — Kokoro Taiwan Proxy (Phase 4)
 
 > **Phase**: 4 — Testing
 > **Version**: 1.0.0

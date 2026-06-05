@@ -1,8 +1,8 @@
 # Harness Methodology — Session Handover
 
-**Checkpoint**: `P4-gate3-20260605`  
-**Phase**: P4 — Testing  
-**Generated**: 2026-06-05T17:27:05Z
+**Checkpoint**: `P5-entry-20260605`  
+**Phase**: P5 — Review Baseline  
+**Generated**: 2026-06-05T17:27:52Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 
@@ -14,9 +14,9 @@
 # 1. Clone (if working directory cleared)
 git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git && cd tts-new
 
-# 2. Read plan and start Phase 5
+# 2. Read plan and continue Phase 5
 cat .methodology/phase5_plan.md
-# Follow SKILL.md §0.1 Phase 5 entry check, then execute
+# Follow the active plan and continue from where you left off
 ```
 
 ---
@@ -31,7 +31,7 @@ git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git /t
 git log --oneline -3
 
 # Confirm FSM state
-cat .methodology/state.json   # expected: phase=4 state=RUNNING last_gate=3
+cat .methodology/state.json   # expected: phase=5 state=RUNNING last_gate=3 last_fr=FR-08
 
 # Read active plan
 cat .methodology/phase5_plan.md
@@ -41,35 +41,29 @@ cat .methodology/phase5_plan.md
 |------|----|
 | Remote | `https://github.com/johnnylugm-tech/tts-new.git` |
 | Branch | `main` |
-| State | `phase=4 state=RUNNING last_gate=3` |
+| State | `phase=5 state=RUNNING last_gate=3 last_fr=FR-08` |
 | Plan | `.methodology/phase5_plan.md` |
 
 ---
 
 ## 任務背景
 
-Gate 3 PASS — quality cycle complete.
+Phase 4 complete (8/8 FRs Gate 1 PASS). Gate 3 (score=96.13099999999997). Advancing to Phase 5.
 
 ## 目前執行狀況
 
-Gate 3 PASS: score=96.1. — full test suite
+Phase 4: 8/8 FRs Gate 1 PASS. Gate 3 (score=96.13099999999997) — quality_complete. Ready to begin Phase 5.
 
 ## 接下來的工作
 
-1. Proceed to P5: Review Baseline
-2. Generate BASELINE.md
-3. On BASELINE.md ready → call commit_and_push_p5_baseline()
+1. Follow SKILL.md §0.1 Phase 5 entry checklist
+2. Read the Phase 5 plan and execute
 
 ## 注意事項
 
 - 100% follow SKILL.md
 - Do NOT commit `.sessi-work/` or `.methodology/` runtime artifacts
 - Git failures are warnings — they never block the pipeline
-
-## 附加資訊
-
-- **gate**: 3
-- **score**: 96.1
 
 ---
 *由 `HandoverGenerator` 自動生成。下次 push 時此檔案將被覆寫。*

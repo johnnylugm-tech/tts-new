@@ -1,8 +1,8 @@
 # Harness Methodology — Session Handover
 
-**Checkpoint**: `P3-pre-gate2-20260604`  
+**Checkpoint**: `P3-gate2-20260605`  
 **Phase**: P3 — Implementation  
-**Generated**: 2026-06-04T16:39:57Z
+**Generated**: 2026-06-05T02:40:14Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 
@@ -14,9 +14,9 @@
 # 1. Clone (if working directory cleared)
 git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git && cd tts-new
 
-# 2. Read plan and continue Phase 3
-cat .methodology/phase3_plan.md
-# Follow the active plan and continue from where you left off
+# 2. Read plan and start Phase 4
+cat .methodology/phase4_plan.md
+# Follow SKILL.md §0.1 Phase 4 entry check, then execute
 ```
 
 ---
@@ -31,80 +31,34 @@ git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git /t
 git log --oneline -3
 
 # Confirm FSM state
-cat .methodology/state.json   # expected: phase=3 state=RUNNING
+cat .methodology/state.json   # expected: phase=3 state=RUNNING last_gate=2
 
 # Read active plan
-cat .methodology/phase3_plan.md
+cat .methodology/phase4_plan.md
 ```
 
 | 欄位 | 值 |
 |------|----|
 | Remote | `https://github.com/johnnylugm-tech/tts-new.git` |
 | Branch | `main` |
-| State | `phase=3 state=RUNNING` |
-| Plan | `.methodology/phase3_plan.md` |
+| State | `phase=3 state=RUNNING last_gate=2` |
+| Plan | `.methodology/phase4_plan.md` |
 
 ---
 
 ## 任務背景
 
-P3 Implementation complete. Gate 2 not yet executed.
+Gate 2 PASS — quality cycle complete.
 
 ## 目前執行狀況
 
-All 8 FR(s) Gate 1 PASS [FR-01,FR-02,FR-03,FR-04,FR-05,…+3]. Gate 2 evaluation not yet started.
-
-**A/B Session Results:**
-  - SRS.md / developer: **complete**
-  - SRS.md / reviewer: **complete**
-  - SPEC_TRACKING.md / developer: **complete**
-  - SPEC_TRACKING.md / reviewer: **complete**
-  - TRACEABILITY_MATRIX.md / developer: **complete**
-  - TRACEABILITY_MATRIX.md / reviewer: **complete**
-  - TEST_INVENTORY.yaml / developer: **complete**
-  - TEST_INVENTORY.yaml / reviewer: **complete**
-  - P1_HOLISTIC / reviewer: **complete**
-  - SAD.md / developer: **complete**
-  - SAD.md / reviewer: **complete**
-  - ADR.md / developer: **complete**
-  - ADR.md / reviewer: **complete**
-  - TEST_SPEC.md / developer: **complete**
-  - TEST_SPEC.md / reviewer: **complete**
-  - P2_HOLISTIC / reviewer: **complete**
-  - FR-01 / developer: **complete**
-  - FR-02 / developer: **complete**
-  - FR-03 / developer: **complete**
-  - FR-05 / developer: **complete**
-  - FR-06 / developer: **complete**
-  - FR-07 / developer: **complete**
-
-**Recently Committed Files:**
-  - `.methodology/gap_report.json`
-  - `03-development/run_cov.py`
-  - `03-development/run_cov_fr02.py`
-  - `03-development/run_cov_fr02.sh`
-  - `HANDOVER.md`
-  - `coverage.json`
-  - `.methodology/quality_manifest.json`
-  - `03-development/src/cli.py`
-  - `03-development/tests/conftest.py`
-  - `03-development/tests/test_fr07.py`
-  - `03-development/src/engines/synthesis.py`
-  - `03-development/tests/test_fr_04_synthesis.py`
-  - `03-development/tests/test_fr_04_synthesis_concat.py`
-  - `03-development/src/cache/__init__.py`
-  - `03-development/src/cache/redis_cache.py`
-  - `03-development/tests/test_fr06.py`
-  - `03-development/src/audio_converter.py`
-  - `03-development/tests/test_fr08.py`
-  - `03-development/tests/test_fr05.py`
-  - `.methodology/mutation_baseline.json`
+Gate 2 PASS: score=95.2.
 
 ## 接下來的工作
 
-1. Run Gate 2 evaluation (target score ≥ 75)
-2. Fix any failures during evaluation
-3. On Gate 2 PASS → `finalize-gate --gate 2` handles push + HANDOVER
+1. Proceed to P4: Testing
+2. Build full test suite (Gate 3 target ≥ 80)
+3. On Gate 3 PASS → call commit_and_push_gate(gate_num=3, ...)
 
 ## 注意事項
 
@@ -114,7 +68,8 @@ All 8 FR(s) Gate 1 PASS [FR-01,FR-02,FR-03,FR-04,FR-05,…+3]. Gate 2 evaluation
 
 ## 附加資訊
 
-- **fr_count**: 8
+- **gate**: 2
+- **score**: 95.2
 
 ---
 *由 `HandoverGenerator` 自動生成。下次 push 時此檔案將被覆寫。*

@@ -26,26 +26,33 @@ from src.engines.text_splitter import _apply_boundary_tier
 def test_mutation_kill_boundary_tier(case: str):
     """Kill mutations in _apply_boundary_tier by testing exact-threshold inputs."""
     if case == "L2_threshold_exact_100_not_split":
-        # L2: CJK boundary at punctuation. Segment of exactly 100 chars.
-        # Original: len(seg) > 100 → False → not split → 1 segment
-        # Mutant:   len(seg) >= 100 → True → split by pattern → possibly >1 segment
-        seg_100 = "測試" * 50  # 50 × 2 chars = 100 chars (CJK)
+        # Construct 100-char input that CONTAINS pattern but is NOT split
+        # under original (>). Under mutant (>=), it IS split → different result.
+        # 98 chars of CJK + 2 punctuation chars = 100 chars
+        seg_100 = "。" + "測試" * 49 + "？"  # 100 chars with CJK punctuation
+        assert len(seg_100) == 100, f"Expected 100 chars, got {len(seg_100)}"
         pattern = re.compile(r"[。！？]")
         result = _apply_boundary_tier([seg_100], pattern, threshold=100)
-        # With > (original), segment is passed through (not split).
-        # With >= (mutant), segment would be split, producing different output.
-        assert len(result) == 1, (
+        # Original (>):   len(100) > 100 → False → pass-through → [seg_100] unchanged
+        # Mutant (>=):    len(100) >= 100 → True → split by pattern → punctuation removed
+        # The critical assertion: the segment content must be PRESERVED (not split)
+        assert result == [seg_100], (
             f"Exact-threshold segment must NOT be split with '>' operator. "
-            f"Got {len(result)} chunks. If this fails, the mutation survived."
+            f"Mutation to '>=' would split and remove punctuation. "
+            f"Got: {result}"
         )
-        assert result[0] == seg_100
 
     elif case == "L3_threshold_exact_100_not_split":
-        # L3: CJK/Latin split at boundary. Segment of exactly 100 chars.
-        seg_100_cjk = "測試" * 50  # 100 CJK chars
+        # 100-char string with a CJK→Latin boundary.
+        # Under original (>): not split. Under mutant (>=): split by boundary.
+        seg_100 = "試" * 99 + "A"  # 99 CJK + 1 Latin = 100 chars
+        assert len(seg_100) == 100, f"Expected 100 chars, got {len(seg_100)}"
         pattern = re.compile(r"(?<=[一-鿿])(?=[a-zA-Z])")
-        result = _apply_boundary_tier([seg_100_cjk], pattern, threshold=100)
-        assert len(result) == 1, (
+        result = _apply_boundary_tier([seg_100], pattern, threshold=100)
+        # Original (>):  len(100) > 100 → False → pass-through → [seg_100]
+        # Mutant (>=):   len(100) >= 100 → True → split at CJK-Latin boundary → 2 parts
+        assert result == [seg_100], (
             f"Exact-threshold CJK segment must NOT be split. "
-            f"Got {len(result)} chunks."
+            f"Mutation to '>=' would split at CJK-Latin boundary. "
+            f"Got: {result}"
         )

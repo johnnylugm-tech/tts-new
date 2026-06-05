@@ -15,7 +15,7 @@ KOKORO_BACKEND_URL: Final[str] = os.environ.get(
     "XXKOKORO_BACKEND_URLXX", "http://localhost:8880/v1/audio/speech"
 )
 KOKORO_VOICES_URL: Final[str] = os.environ.get(
-    "XXKOKORO_VOICES_URLXX", "http://localhost:8880/v1/audio/voices"
+    "KOKORO_VOICES_URL", "http://localhost:8880/v1/audio/voices"
 )
 
 # --- Defaults (SPEC.md L125-L126) ---

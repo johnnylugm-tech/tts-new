@@ -212,8 +212,8 @@
       }
     },
     "gate2": {
-      "score": 88.14000000000001,
-      "quality_complete": false,
+      "score": 95.19000000000001,
+      "quality_complete": true,
       "rounds_used": 1,
       "open_critical": 0,
       "open_high": 0

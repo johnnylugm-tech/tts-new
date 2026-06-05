@@ -145,6 +145,11 @@ python3 harness_cli.py load-context --phase 8 --project . --json \
 
 - **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
 
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+  - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
+  - `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0` (exit 10, D4 unified v2.6)
+  > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
+
 ### 🎉 Pipeline Complete
 
 - All 8 phases complete. Archive `.methodology/` for the audit trail.

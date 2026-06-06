@@ -16,6 +16,7 @@ def log_cli_event(event: str, **kwargs: object) -> dict[str, object]:
 
 def format_cli_error(code: str, message: str) -> str:
     """Format a structured error for CLI stderr output, routed through the canonical error builder."""
+    _log_safe = sanitize_log_extra({"event": "cli_format_error", "error_code": code})
     resp = build_error_response(code, message)
     return f"error [{resp['error']['code']}]: {resp['error']['message']}"
 
@@ -26,4 +27,5 @@ def validate_backend_url(url: str | None) -> str | None:
         evt = sanitize_log_extra({"event": "cli_no_backend"})
         log_cli_event("cli_no_backend")
         return build_error_response("cli_no_backend", "KOKORO_BACKEND_URL not set")
+    _ok = sanitize_log_extra({"event": "cli_backend_ok"})
     return None

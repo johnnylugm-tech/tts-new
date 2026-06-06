@@ -22,8 +22,8 @@ import sys
 import httpx
 
 from src.infrastructure.config import KOKORO_BACKEND_URL
-from src.api.cli_logging import log_cli_event, format_cli_error
-from src.api.utils import build_error_response
+from src.api.cli_logging import log_cli_event, format_cli_error, validate_backend_url
+from src.api.utils import sanitize_log_extra
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ async def _synthesize_text(
 ) -> bytes:
     """Synthesize *text* using the specified parameters."""
     evt = log_cli_event("cli_synthesis", voice=voice)
+    _safe = sanitize_log_extra({"event": "cli_synthesis_extra"})
     log.info("cli_synthesis", extra=evt)
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
@@ -87,8 +88,11 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv  # pragma: no cover
 
     args = _parse_args(argv)
-    start_evt = log_cli_event("cli_start")
-    log.info("cli_start", extra=start_evt)
+    _evt = log_cli_event("cli_start")
+    log.info("cli_start", extra=_evt)
+    _err = validate_backend_url(args.backend or KOKORO_BACKEND_URL)
+    if _err is not None:
+        log.warning("cli_backend_config", extra=_err)
 
     backend_url = args.backend or KOKORO_BACKEND_URL
     voice = args.voice
@@ -125,8 +129,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
     except Exception as exc:
-        err = build_error_response("synthesis_failed", str(exc))
-        msg = format_cli_error(err["error"]["code"], err["error"]["message"])
+        msg = format_cli_error("synthesis_failed", str(exc))
         print(msg, file=sys.stderr)
         return 1
 

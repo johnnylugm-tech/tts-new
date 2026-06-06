@@ -23,11 +23,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from src.infrastructure.config import DEFAULT_VOICE
-from src.engines.ssml_parser import parse_ssml
-from src.engines.text_splitter import split_text
-from src.engines.synthesis import synthesize_chunks
+from src.engines.synthesis import synthesize_text
 from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
 from src.infrastructure.models import SpeechRequest
+from src.api.utils import sanitize_log_extra, build_error_response
 
 log = logging.getLogger(__name__)
 
@@ -46,26 +45,21 @@ async def post_speech(req: SpeechRequest) -> Response:
     speed = req.speed
     fmt = req.response_format
 
-    parsed = parse_ssml(req.input)
-    for w in parsed.warnings:
-        log.warning("ssml_warning: %s", w)
-
-    chunks = split_text(parsed.plain_text)
+    log.info("synthesis_start", extra=sanitize_log_extra({"event": "synthesis_start", "voice": voice}))
 
     async def _synthesize() -> bytes:
-        return await synthesize_chunks(chunks, voice=voice, speed=speed, fmt="mp3")
+        audio, warnings = await synthesize_text(req.input, voice=voice, speed=speed, fmt="mp3")
+        for w in warnings:
+            log.warning("ssml_warning", extra=sanitize_log_extra({"event": "ssml_warning"}))
+        return audio
 
     try:
         audio = await _breaker.call(_synthesize())
     except CircuitOpenError as exc:
-        raise HTTPException(status_code=503, detail={
-            "error": {"code": "circuit_open", "message": str(exc)}
-        }) from exc
+        raise HTTPException(status_code=503, detail=build_error_response("circuit_open", str(exc))) from exc
     except Exception as exc:
-        log.error("synthesis_error: %s", exc)
-        raise HTTPException(status_code=502, detail={
-            "error": {"code": "synthesis_error", "message": str(exc)}
-        }) from exc
+        log.error("synthesis_error", extra=sanitize_log_extra({"event": "synthesis_error", "error_code": "synthesis_error"}))
+        raise HTTPException(status_code=502, detail=build_error_response("synthesis_error", str(exc))) from exc
 
     if fmt == "wav":
         from src.infrastructure.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError

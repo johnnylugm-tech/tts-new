@@ -22,7 +22,8 @@ import sys
 import httpx
 
 from src.infrastructure.config import KOKORO_BACKEND_URL
-from src.cli_logging import log_cli_event, format_cli_error
+from src.api.cli_logging import log_cli_event, format_cli_error
+from src.api.utils import build_error_response
 
 log = logging.getLogger(__name__)
 
@@ -124,7 +125,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
     except Exception as exc:
-        msg = format_cli_error("synthesis_failed", str(exc))
+        err = build_error_response("synthesis_failed", str(exc))
+        msg = format_cli_error(err["error"]["code"], err["error"]["message"])
         print(msg, file=sys.stderr)
         return 1
 

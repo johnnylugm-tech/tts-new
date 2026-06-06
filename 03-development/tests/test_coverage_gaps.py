@@ -12,7 +12,7 @@ import pytest
 try:
     from src.cache.redis_cache import RedisCache
     from src.engines.synthesis import synthesize_chunks
-    from src.cli import main
+    from src.api.cli import main
     _IMPORTED = True
 except ImportError:
     _IMPORTED = False

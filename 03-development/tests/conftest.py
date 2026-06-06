@@ -34,7 +34,7 @@ with contextlib.suppress(ImportError):
 with contextlib.suppress(ImportError):
     import src.audio_converter  # FR-08
 with contextlib.suppress(ImportError):
-    import src.cli  # FR-07
+    import src.api.cli  # FR-07
 with contextlib.suppress(ImportError):
     import src.models  # request/response schemas
 with contextlib.suppress(ImportError):

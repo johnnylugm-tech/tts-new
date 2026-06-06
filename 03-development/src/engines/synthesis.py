@@ -23,7 +23,7 @@ import asyncio
 
 import httpx
 
-from src.config import KOKORO_BACKEND_URL, MAX_CONCURRENT_SYNTHESIS
+from src.infrastructure.config import KOKORO_BACKEND_URL, MAX_CONCURRENT_SYNTHESIS
 
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_SYNTHESIS)
 

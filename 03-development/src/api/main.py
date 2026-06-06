@@ -30,9 +30,9 @@ from typing import Any, AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.config import WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE
-from src.routers.health import router as health_router
-from src.routers.speech import router as speech_router
+from src.infrastructure.config import WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE
+from src.api.health import router as health_router
+from src.api.speech_router import router as speech_router
 
 # ── NFR-08 allow-list sanitizer ──────────────────────────────────────────────
 # Keys allowed in structured log output; all others are dropped (deny-by-default).

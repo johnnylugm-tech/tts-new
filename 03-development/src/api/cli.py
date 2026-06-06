@@ -20,7 +20,7 @@ import sys
 
 import httpx
 
-from src.config import KOKORO_BACKEND_URL
+from src.infrastructure.config import KOKORO_BACKEND_URL
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:

@@ -18,7 +18,7 @@ import re
 from typing import Final
 
 # Re-export so tests can import MAX_CHARS_PER_REQUEST directly from this module.
-from src.config import MAX_CHARS_PER_REQUEST  # noqa: F401  (public re-export)
+from src.infrastructure.config import MAX_CHARS_PER_REQUEST  # noqa: F401  (public re-export)
 
 # --- Boundary sets (SPEC.md L72-L74) -----------------------------------------
 _L1_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?<=[。？！!?\n])")

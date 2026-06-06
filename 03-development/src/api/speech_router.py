@@ -22,12 +22,12 @@ import logging
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from src.config import DEFAULT_VOICE
+from src.infrastructure.config import DEFAULT_VOICE
 from src.engines.ssml_parser import parse_ssml
 from src.engines.text_splitter import split_text
 from src.engines.synthesis import synthesize_chunks
-from src.middleware.circuit_breaker import CircuitBreaker, CircuitOpenError
-from src.models import SpeechRequest
+from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
+from src.infrastructure.models import SpeechRequest
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ async def post_speech(req: SpeechRequest) -> Response:
         }) from exc
 
     if fmt == "wav":
-        from src.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError
+        from src.infrastructure.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError
         try:
             audio = convert_mp3_to_wav(audio)
         except FFmpegUnavailableError as exc:

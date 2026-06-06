@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from src.middleware.circuit_breaker import CircuitBreaker
+from src.infrastructure.circuit_breaker import CircuitBreaker
 
 router: APIRouter = APIRouter()
 

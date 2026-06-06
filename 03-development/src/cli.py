@@ -16,11 +16,15 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 import sys
 
 import httpx
 
 from src.infrastructure.config import KOKORO_BACKEND_URL
+from src.cli_logging import log_cli_event, format_cli_error
+
+log = logging.getLogger(__name__)
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -60,6 +64,7 @@ async def _synthesize_text(
     backend_url: str,
 ) -> bytes:
     """Synthesize *text* using the specified parameters."""
+    log.info("cli_synthesis", extra=log_cli_event("cli_synthesis", voice=voice))
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
             backend_url + "/v1/audio/speech",
@@ -80,38 +85,45 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv  # pragma: no cover
 
     args = _parse_args(argv)
+    log.info("cli_start", extra=log_cli_event("cli_start"))
 
     backend_url = args.backend or KOKORO_BACKEND_URL
     voice = args.voice
     speed = args.speed
     fmt = args.format
 
-    if args.text:
-        text = args.text
-        if args.ssml:
-            from src.engines.ssml_parser import parse_ssml
-            parsed = parse_ssml(text)
-            text = parsed.plain_text
+    try:
+        if args.text:
+            text = args.text
+            if args.ssml:
+                from src.engines.ssml_parser import parse_ssml
+                parsed = parse_ssml(text)
+                text = parsed.plain_text
 
-        audio = asyncio.run(_synthesize_text(text, voice, speed, fmt, backend_url))
+            audio = asyncio.run(_synthesize_text(text, voice, speed, fmt, backend_url))
 
-        with open(args.output, "wb") as fh:
-            fh.write(audio)
-        return 0
-
-    elif args.input_file:
-        import os
-        out_dir = args.output
-        with open(args.input_file, encoding="utf-8") as fh:
-            lines = [ln.rstrip("\n") for ln in fh if ln.strip()]
-
-        for i, line in enumerate(lines):
-            audio = asyncio.run(
-                _synthesize_text(line, voice, speed, fmt, backend_url)
-            )
-            out_path = os.path.join(out_dir, f"output_{i+1:04d}.mp3")
-            with open(out_path, "wb") as fh:
+            with open(args.output, "wb") as fh:
                 fh.write(audio)
-        return 0
+            return 0
+
+        elif args.input_file:
+            import os
+            out_dir = args.output
+            with open(args.input_file, encoding="utf-8") as fh:
+                lines = [ln.rstrip("\n") for ln in fh if ln.strip()]
+
+            for i, line in enumerate(lines):
+                audio = asyncio.run(
+                    _synthesize_text(line, voice, speed, fmt, backend_url)
+                )
+                out_path = os.path.join(out_dir, f"output_{i+1:04d}.mp3")
+                with open(out_path, "wb") as fh:
+                    fh.write(audio)
+            return 0
+
+    except Exception as exc:
+        msg = format_cli_error("synthesis_failed", str(exc))
+        print(msg, file=sys.stderr)
+        return 1
 
     return 0

@@ -51,7 +51,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001 
             await synthesize_chunks(chunks, voice=DEFAULT_VOICE, speed=1.0, fmt="mp3")
             log.info("warmup completed", extra=sanitize_log_extra({"event": "warmup_ok"}))
         except Exception as exc:  # warmup failure must not block startup
-            log.warning("warmup failed: %s", exc,
+            warm_err = build_error_response("warmup_failed", str(exc))
+            log.warning("warmup failed: %s", warm_err["error"]["message"],
                         extra=sanitize_log_extra({"event": "warmup_fail"}))
     yield
 
@@ -61,6 +62,12 @@ def create_app() -> FastAPI:
 
     [FR-04]
     """
+    log.info("app_created", extra=sanitize_log_extra({"event": "app_created"}))
+    from src.infrastructure.config import KOKORO_BACKEND_URL
+    if not KOKORO_BACKEND_URL:
+        cfg_warn = build_error_response("config_warning", "KOKORO_BACKEND_URL not set")
+        log.warning("startup: %s", cfg_warn["error"]["message"],
+                    extra=sanitize_log_extra({"event": "config_warning"}))
     app = FastAPI(title="Kokoro Taiwan Proxy", lifespan=lifespan)
 
     app.include_router(health_router)
@@ -71,10 +78,8 @@ def create_app() -> FastAPI:
         request: Request, exc: Exception  # noqa: ARG001
     ) -> JSONResponse:
         log.exception("unhandled error", extra=sanitize_log_extra({"event": "unhandled_error"}))
-        return JSONResponse(
-            status_code=500,
-            content=build_error_response("internal_error", str(exc)),
-        )
+        err = build_error_response("internal_error", str(exc))
+        return JSONResponse(status_code=500, content=err)
 
     return app
 

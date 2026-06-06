@@ -1,8 +1,8 @@
-"""Tests for src/routers/speech.py — POST /v1/proxy/speech handler.
+"""Tests for src/api/speech_router.py — POST /v1/proxy/speech handler.
 
 Covers all 6 behavioral paths through post_speech:
   1. MP3 happy path (default format, CLOSED breaker)
-  2. Voice/speed passed through to synthesize_chunks
+  2. Voice/speed passed through to synthesize_text
   3. WAV happy path (ffmpeg available)
   4. CircuitOpenError → HTTP 503
   5. Synthesis exception → HTTP 502
@@ -22,9 +22,9 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 
 try:
-    from src.routers.speech import router
-    from src.middleware.circuit_breaker import CircuitBreaker, CircuitOpenError
-    from src.audio_converter import FFmpegUnavailableError
+    from src.api.speech_router import router
+    from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
+    from src.infrastructure.audio_converter import FFmpegUnavailableError
     _IMPORTED = True
 except ImportError:
     _IMPORTED = False
@@ -46,7 +46,7 @@ def client():
 @pytest.fixture(autouse=True)
 def fresh_breaker():
     """Give each test a clean CLOSED CircuitBreaker so state does not leak."""
-    import src.routers.speech as _mod
+    import src.api.speech_router as _mod
     original = _mod._breaker
     _mod._breaker = CircuitBreaker()
     yield
@@ -56,7 +56,7 @@ def fresh_breaker():
 # ── 1. MP3 happy path ─────────────────────────────────────────────────────────
 
 def test_post_speech_mp3_returns_200_with_audio_mpeg(client):
-    with patch("src.routers.speech.synthesize_chunks", new=AsyncMock(return_value=_MP3)):
+    with patch("src.api.speech_router.synthesize_text", new=AsyncMock(return_value=(_MP3, []))):
         resp = client.post("/v1/proxy/speech", json={"input": "hello world"})
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "audio/mpeg"
@@ -68,11 +68,11 @@ def test_post_speech_mp3_returns_200_with_audio_mpeg(client):
 def test_post_speech_forwards_voice_and_speed(client):
     calls: list[dict] = []
 
-    async def _capture(chunks, *, voice, speed, fmt):
+    async def _capture(raw_input, voice, speed, fmt):
         calls.append({"voice": voice, "speed": speed})
-        return _MP3
+        return _MP3, []
 
-    with patch("src.routers.speech.synthesize_chunks", new=_capture):
+    with patch("src.api.speech_router.synthesize_text", new=_capture):
         resp = client.post("/v1/proxy/speech",
                            json={"input": "test", "voice": "af_heart", "speed": 1.5})
     assert resp.status_code == 200
@@ -83,8 +83,8 @@ def test_post_speech_forwards_voice_and_speed(client):
 # ── 3. WAV happy path ─────────────────────────────────────────────────────────
 
 def test_post_speech_wav_returns_audio_wav(client):
-    with patch("src.routers.speech.synthesize_chunks", new=AsyncMock(return_value=_MP3)), \
-         patch("src.audio_converter.convert_mp3_to_wav", return_value=_WAV):
+    with patch("src.api.speech_router.synthesize_text", new=AsyncMock(return_value=(_MP3, []))), \
+         patch("src.infrastructure.audio_converter.convert_mp3_to_wav", return_value=_WAV):
         resp = client.post("/v1/proxy/speech",
                            json={"input": "hello", "response_format": "wav"})
     assert resp.status_code == 200
@@ -95,7 +95,7 @@ def test_post_speech_wav_returns_audio_wav(client):
 # ── 4. CircuitOpenError → 503 ─────────────────────────────────────────────────
 
 def test_post_speech_circuit_open_returns_503(client):
-    import src.routers.speech as _mod
+    import src.api.speech_router as _mod
     _mod._breaker.call = AsyncMock(side_effect=CircuitOpenError("OPEN"))
     resp = client.post("/v1/proxy/speech", json={"input": "hello"})
     assert resp.status_code == 503
@@ -105,7 +105,7 @@ def test_post_speech_circuit_open_returns_503(client):
 # ── 5. Synthesis exception → 502 ─────────────────────────────────────────────
 
 def test_post_speech_synthesis_error_returns_502(client):
-    with patch("src.routers.speech.synthesize_chunks",
+    with patch("src.api.speech_router.synthesize_text",
                new=AsyncMock(side_effect=RuntimeError("backend down"))):
         resp = client.post("/v1/proxy/speech", json={"input": "hello"})
     assert resp.status_code == 502
@@ -115,8 +115,8 @@ def test_post_speech_synthesis_error_returns_502(client):
 # ── 6. FFmpegUnavailableError → 500 ──────────────────────────────────────────
 
 def test_post_speech_ffmpeg_unavailable_returns_500(client):
-    with patch("src.routers.speech.synthesize_chunks", new=AsyncMock(return_value=_MP3)), \
-         patch("src.audio_converter.convert_mp3_to_wav",
+    with patch("src.api.speech_router.synthesize_text", new=AsyncMock(return_value=(_MP3, []))), \
+         patch("src.infrastructure.audio_converter.convert_mp3_to_wav",
                side_effect=FFmpegUnavailableError()):
         resp = client.post("/v1/proxy/speech",
                            json={"input": "hello", "response_format": "wav"})
@@ -128,7 +128,7 @@ def test_post_speech_ffmpeg_unavailable_returns_500(client):
 
 def test_post_speech_ssml_warning_does_not_block(client):
     """parse_ssml emits a warning for unsupported SSML; response must still be 200."""
-    with patch("src.routers.speech.synthesize_chunks", new=AsyncMock(return_value=_MP3)):
+    with patch("src.api.speech_router.synthesize_text", new=AsyncMock(return_value=(_MP3, []))):
         resp = client.post(
             "/v1/proxy/speech",
             json={"input": '<speak><emphasis level="none">hi</emphasis></speak>'},

@@ -26,16 +26,16 @@ with contextlib.suppress(ImportError):
 with contextlib.suppress(ImportError):
     import src.engines.text_splitter  # FR-03
 with contextlib.suppress(ImportError):
-    import src.middleware.circuit_breaker  # FR-05
+    import src.infrastructure.circuit_breaker  # FR-05
 with contextlib.suppress(ImportError):
-    import src.routers.health  # FR-05 (health endpoint integration)
+    import src.infrastructure.health  # FR-05 (health endpoint integration)
 with contextlib.suppress(ImportError):
     import src.engines.synthesis  # FR-04
 with contextlib.suppress(ImportError):
-    import src.audio_converter  # FR-08
+    import src.infrastructure.audio_converter  # FR-08
 with contextlib.suppress(ImportError):
     import src.api.cli  # FR-07
 with contextlib.suppress(ImportError):
-    import src.models  # request/response schemas
+    import src.infrastructure.models  # request/response schemas
 with contextlib.suppress(ImportError):
-    import src.main  # FastAPI app factory
+    import src.api.main  # FastAPI app factory

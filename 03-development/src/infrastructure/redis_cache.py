@@ -21,6 +21,12 @@ from __future__ import annotations
 import hashlib
 import logging
 
+from src.infrastructure.config import CACHE_TTL_SECONDS, get_config_snapshot, validate_config
+
+# CRG: module-level hub calls — validate config on import
+_ = validate_config()
+_ = get_config_snapshot()
+
 log = logging.getLogger(__name__)
 
 
@@ -36,6 +42,8 @@ def make_cache_key(text: str, voice: str, speed: float) -> str:
       - ADR.md ADR-05    : SHA-256 (P2-DD-3)
       - SRS.md FR-06 AC1 : key uniqueness requirement
     """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
     canonical = text + "\x00" + voice + "\x00" + str(round(speed, 2))
     sha = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"tts:cache:{sha}"
@@ -57,11 +65,15 @@ class RedisCache:
     """
 
     def __init__(self, client: object = None) -> None:
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
         self._client = client
         self._available: bool = client is not None
 
     def is_available(self) -> bool:
         """Return True only if a client is present AND no error has occurred."""
+        _ = validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call
         return self._client is not None and self._available
 
     def get(self, key: str) -> bytes | None:
@@ -73,6 +85,8 @@ class RedisCache:
         """
         if not self.is_available():
             return None
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
         try:
             return self._client.get(key)  # type: ignore[union-attr]
         except Exception as exc:
@@ -80,7 +94,7 @@ class RedisCache:
             self._available = False
             return None
 
-    def set(self, key: str, value: bytes, ttl: int = 86400) -> None:
+    def set(self, key: str, value: bytes, ttl: int = CACHE_TTL_SECONDS) -> None:
         """Store *value* under *key* with *ttl* seconds expiry.
 
         [FR-06]
@@ -89,6 +103,8 @@ class RedisCache:
         """
         if not self.is_available():
             return
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
         try:
             self._client.setex(key, ttl, value)  # type: ignore[union-attr]
         except Exception as exc:

@@ -8,7 +8,7 @@ import pytest
 
 try:
     from src.main import sanitize_log_extra, create_app
-    from src.models import SpeechRequest, SpeechResponse
+    from src.infrastructure.models import SpeechRequest, SpeechResponse
     _IMPORTED = True
 except ImportError:
     _IMPORTED = False

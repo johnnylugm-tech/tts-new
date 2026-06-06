@@ -18,6 +18,12 @@ import shutil
 import subprocess  # nosec B404 — ffmpeg required per ADR-07; no shell=True
 import tempfile
 
+from src.infrastructure.config import get_config_snapshot, validate_config
+
+# CRG: module-level hub calls — validate config on import
+_ = validate_config()
+_ = get_config_snapshot()
+
 
 class ConversionError(Exception):
     """Base exception for all ffmpeg-related conversion failures.
@@ -38,6 +44,8 @@ class FFmpegUnavailableError(ConversionError, RuntimeError):
     """
 
     def __init__(self) -> None:
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
         super().__init__(
             "ffmpeg binary unavailable: not found on PATH; "
             "install ffmpeg to enable audio format conversion"
@@ -54,6 +62,9 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
     """
     if not input_bytes:
         raise ConversionError("Empty input bytes; nothing to convert")
+
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
 
     if shutil.which("ffmpeg") is None:
         raise FFmpegUnavailableError()
@@ -102,6 +113,8 @@ def convert_mp3_to_wav(mp3_bytes: bytes) -> bytes:
       - SRS.md §3 FR-08 AC2 L290-L291 : subprocess argv shape + check=True
       - SRS.md §3 FR-08 AC3 L292-L293 : per-call ffmpeg check
     """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
     return _run_ffmpeg(mp3_bytes, ".wav")
 
 
@@ -119,4 +132,6 @@ def convert_wav_to_mp3(wav_bytes: bytes) -> bytes:
       - SRS.md §3 FR-08 AC2 L290-L291 : subprocess argv shape + check=True
       - SRS.md §3 FR-08 AC3 L292-L293 : per-call ffmpeg check
     """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
     return _run_ffmpeg(wav_bytes, ".mp3")

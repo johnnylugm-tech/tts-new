@@ -38,7 +38,7 @@ import pytest
 
 # NO try/except — collection error (Exit Code 2) is the valid RED state per
 # TDD-RED protocol (FORBIDDEN section item 3).
-from src.cache.redis_cache import RedisCache, make_cache_key
+from src.infrastructure.redis_cache import RedisCache, make_cache_key
 
 # ---------------------------------------------------------------------------
 # Spec constants & shared fixtures
@@ -213,7 +213,7 @@ def test_fr_06_redis_cache(case_id, caplog):
         saved = sys.modules.get("redis", _ABSENT)
         sys.modules["redis"] = None  # type: ignore[assignment]
         try:
-            import src.cache.redis_cache as _rcm
+            import src.infrastructure.redis_cache as _rcm
             importlib.reload(_rcm)
             _cache2 = _rcm.RedisCache(client=None)
             assert not _cache2.is_available(), (
@@ -222,7 +222,7 @@ def test_fr_06_redis_cache(case_id, caplog):
             )
         except ImportError as exc:
             pytest.fail(
-                "src.cache.redis_cache must NOT raise ImportError when the "
+                "src.infrastructure.redis_cache must NOT raise ImportError when the "
                 f"redis package is absent (SPEC.md L229); got: {exc!r}"
             )
         finally:

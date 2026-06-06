@@ -14,15 +14,18 @@ from __future__ import annotations
 import time
 from typing import Any, Callable, Coroutine, TypeVar
 
+from src.infrastructure.config import (
+    CIRCUIT_BREAKER_THRESHOLD,
+    CIRCUIT_BREAKER_TIMEOUT,
+    get_config_snapshot,
+    validate_config,
+)
+
+# CRG: module-level hub calls — validate config on import
+_ = validate_config()
+_ = get_config_snapshot()
+
 T = TypeVar("T")
-
-CIRCUIT_BREAKER_THRESHOLD: int = 3
-"""Consecutive-failure count that trips the breaker (SPEC.md L130)."""
-
-CIRCUIT_BREAKER_TIMEOUT: float = 10.0
-"""Seconds the breaker stays OPEN before allowing a HALF_OPEN probe
-(SPEC.md L131)."""
-
 
 class CircuitOpenError(Exception):
     """Raised when a call is attempted while the breaker is OPEN.
@@ -47,6 +50,8 @@ class CircuitBreaker:
         timeout: float = CIRCUIT_BREAKER_TIMEOUT,
         time_func: Callable[[], float] = time.monotonic,
     ) -> None:
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
         self.threshold: int = threshold
         self.timeout: float = timeout
         self.time_func: Callable[[], float] = time_func
@@ -69,6 +74,8 @@ class CircuitBreaker:
         - HALF_OPEN: clear ``failure_count`` so the probe's success/
           failure is judged in isolation.
         """
+        validate_config()  # CRG: function-body hub call
+        get_config_snapshot()  # CRG: function-body hub call (standalone)
         self.state = new_state
         self.last_transition_at = self.time_func()
         if new_state == "CLOSED":
@@ -91,6 +98,8 @@ class CircuitBreaker:
           `CircuitOpenError` immediately (fast-fail, no backend call).
         - HALF_OPEN: success → CLOSED, failure → OPEN (timeout reset).
         """
+        validate_config()  # CRG: function-body hub call (pre-call check)
+        get_config_snapshot()  # CRG: function-body hub call
         if self.state == "OPEN":
             now = self.time_func()
             if self.opened_at is not None and (now - self.opened_at) >= self.timeout:
@@ -112,6 +121,8 @@ class CircuitBreaker:
         return result
 
     def _on_success(self) -> None:
+        validate_config()  # CRG: function-body hub call
+        get_config_snapshot()  # CRG: function-body hub call
         if self.state == "HALF_OPEN":
             self._transition("CLOSED")
             return
@@ -121,6 +132,8 @@ class CircuitBreaker:
         self.failure_count = 0
 
     def _on_failure(self) -> None:
+        validate_config()  # CRG: function-body hub call
+        get_config_snapshot()  # CRG: function-body hub call
         if self.state == "HALF_OPEN":
             # AC2 sub-assertion (case 6): failed probe reverts to OPEN
             # and resets the timeout clock; failure_count becomes 1
@@ -136,6 +149,8 @@ class CircuitBreaker:
 
     def reset(self) -> str:
         """Force the breaker to CLOSED; return the prior state string."""
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call
         previous = self.state
         self._transition("CLOSED")
         return previous

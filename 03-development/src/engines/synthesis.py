@@ -24,6 +24,8 @@ import asyncio
 import httpx
 
 from src.infrastructure.config import KOKORO_BACKEND_URL, MAX_CONCURRENT_SYNTHESIS
+from src.engines.ssml_parser import parse_ssml
+from src.engines.text_splitter import split_text
 
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_SYNTHESIS)
 
@@ -103,3 +105,21 @@ async def synthesize_chunks(
         coros = [synthesize_one(c, voice, speed, client, fmt) for c in chunks]
         results = await asyncio.gather(*coros)
         return concat_mp3_chunks(list(results))
+
+
+async def synthesize_text(
+    raw_input: str,
+    voice: str,
+    speed: float,
+    fmt: str,
+) -> tuple[bytes, list[str]]:
+    """Full TTS pipeline: parse SSML → split → synthesize_chunks.
+
+    [FR-04]
+    Encapsulates the three-stage pipeline so callers (routers, CLI) need
+    only one entry point. Returns (audio_bytes, ssml_warnings).
+    """
+    parsed = parse_ssml(raw_input)
+    chunks = split_text(parsed.plain_text)
+    audio = await synthesize_chunks(chunks, voice=voice, speed=speed, fmt=fmt)
+    return audio, parsed.warnings

@@ -38,6 +38,8 @@ import xml.etree.ElementTree as ET  # nosec B405 — SSML parsing is trusted inp
 from dataclasses import dataclass
 from typing import Final
 
+from src.engines.taiwan_linguistic import apply_lexicon
+
 log = logging.getLogger(__name__)
 
 #: <emphasis> levels that multiply the current speed by 1.1
@@ -357,7 +359,7 @@ def parse_ssml(ssml_or_text: str) -> ParsedSSML:
             plain_parts.append(child.tail)
 
     return ParsedSSML(
-        plain_text="".join(plain_parts),
+        plain_text=apply_lexicon("".join(plain_parts)),
         segments=segments,
         warnings=warnings,
     )

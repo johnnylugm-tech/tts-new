@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.engines.text_splitter import _apply_boundary_tier, split_text
-from src.config import MAX_CHARS_PER_REQUEST
+from src.infrastructure.config import MAX_CHARS_PER_REQUEST
 
 
 # ── Synthesis mutations ──────────────────────────────────────

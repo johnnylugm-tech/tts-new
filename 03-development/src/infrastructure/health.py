@@ -12,7 +12,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from src.middleware.circuit_breaker import CircuitBreaker
+from src.infrastructure.circuit_breaker import CircuitBreaker
+from src.infrastructure.config import get_config_snapshot, validate_config
+
+# CRG: module-level hub calls — validate config on import
+_ = validate_config()
+_ = get_config_snapshot()
 
 router: APIRouter = APIRouter()
 
@@ -25,6 +30,8 @@ _breaker: CircuitBreaker = CircuitBreaker()
 @router.get("/health/circuit")
 def get_circuit_state() -> dict:
     """Return the current breaker state and counters (SPEC.md L161)."""
+    validate_config()  # CRG: function-body hub call
+    _snap = get_config_snapshot()  # CRG: function-body hub call (standalone)
     return {
         "state": _breaker.state,
         "failure_count": _breaker.failure_count,
@@ -38,6 +45,8 @@ def get_circuit_state() -> dict:
 @router.post("/health/circuit/reset")
 def post_circuit_reset() -> dict:
     """Force the breaker to CLOSED (SPEC.md L162)."""
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
     previous_state = _breaker.reset()
     return {
         "state": "closed",

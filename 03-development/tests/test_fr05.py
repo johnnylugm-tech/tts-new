@@ -65,9 +65,8 @@ import pytest
 # The lazy import inside the test function is preserved for the
 # RED-phase import guard.
 try:
-    from src.middleware.circuit_breaker import (  # type: ignore[import-not-found]
-        CIRCUIT_BREAKER_THRESHOLD,
-        CIRCUIT_BREAKER_TIMEOUT,
+    from src.infrastructure.config import CIRCUIT_BREAKER_THRESHOLD, CIRCUIT_BREAKER_TIMEOUT
+    from src.infrastructure.circuit_breaker import (  # type: ignore[import-not-found]
         CircuitBreaker,
         CircuitOpenError,
     )
@@ -78,7 +77,7 @@ except ImportError:  # pragma: no cover - RED-phase guard
     CircuitOpenError = None  # type: ignore[assignment,misc]
 
 try:
-    from src.routers.health import router as health_router  # type: ignore[import-not-found]
+    from src.infrastructure.health import router as health_router  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover - RED-phase guard
     health_router = None  # type: ignore[assignment]
 
@@ -165,7 +164,7 @@ def test_fr_05_circuit_breaker(case_id):
     """
     # --- Lazy import (RED-phase guard) -----------------------------------
     try:
-        from src.middleware.circuit_breaker import (  # type: ignore[import-not-found]
+        from src.infrastructure.circuit_breaker import (  # type: ignore[import-not-found]
             CIRCUIT_BREAKER_THRESHOLD,
             CIRCUIT_BREAKER_TIMEOUT,
             CircuitBreaker,
@@ -173,7 +172,7 @@ def test_fr_05_circuit_breaker(case_id):
         )
     except ImportError as exc:  # pragma: no cover - RED-phase guard
         pytest.fail(
-            "src.middleware.circuit_breaker must export "
+            "src.infrastructure.circuit_breaker must export "
             "CIRCUIT_BREAKER_THRESHOLD, CIRCUIT_BREAKER_TIMEOUT, "
             "CircuitBreaker, and CircuitOpenError — import failed: "
             f"{exc!r}"
@@ -429,10 +428,10 @@ def _run_router_case(case_id: str) -> None:
     from fastapi.testclient import TestClient
 
     try:
-        from src.routers.health import router  # type: ignore[import-not-found]
+        from src.infrastructure.health import router  # type: ignore[import-not-found]
     except ImportError as exc:  # pragma: no cover - RED-phase guard
         pytest.fail(
-            "src.routers.health must export `router` (APIRouter) — "
+            "src.infrastructure.health must export `router` (APIRouter) — "
             f"import failed: {exc!r}"
         )
 

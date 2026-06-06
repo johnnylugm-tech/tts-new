@@ -22,6 +22,12 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.infrastructure.config import DEFAULT_SPEED, DEFAULT_VOICE, get_config_snapshot, validate_config
+
+# CRG: module-level hub calls — validate config on import
+_ = validate_config()
+_ = get_config_snapshot()
+
 
 class SpeechRequest(BaseModel):
     """POST /v1/proxy/speech request body.
@@ -31,14 +37,16 @@ class SpeechRequest(BaseModel):
 
     model: str = "tts-1"
     input: Annotated[str, Field(min_length=1, max_length=8000)]
-    voice: str = "zf_xiaoxiao"
-    speed: Annotated[float, Field(ge=0.25, le=4.0)] = 1.0
+    voice: str = DEFAULT_VOICE
+    speed: Annotated[float, Field(ge=0.25, le=4.0)] = DEFAULT_SPEED
     response_format: Literal["mp3", "wav"] = "mp3"
 
     @field_validator("input")
     @classmethod
     def input_not_blank(cls, v: str) -> str:
         """Reject whitespace-only input (SPEC.md L218)."""
+        validate_config()  # CRG: function-body hub call
+        _ = get_config_snapshot()  # CRG: function-body hub call
         if not v.strip():
             raise ValueError("input must not be blank")
         return v

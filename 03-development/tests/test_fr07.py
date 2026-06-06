@@ -1,9 +1,9 @@
 """FR-07: CLI command-line tool — TDD-RED failing tests.
 
-6 parametrized cases for src/cli.py (SPEC.md L91-L98, SRS.md §3 FR-07).
+6 parametrized cases for src/api/cli.py (SPEC.md L91-L98, SRS.md §3 FR-07).
 Tests fail at collection time (ImportError) — valid RED state.
 
-GREEN TODO: implement src/cli.py with:
+GREEN TODO: implement src/api/cli.py with:
   - main(argv: list[str] | None = None) -> int
       Parse CLI args, invoke synthesis engine in-process (no loopback HTTP
       per SAD.md §3.7), return 0 on success, non-zero on error.
@@ -13,7 +13,7 @@ GREEN TODO: implement src/cli.py with:
       tts-v610 "文字" -v "zf_xiaoxiao" -s 1.0 -f mp3
       tts-v610 --ssml "<speak>...</speak>" -o out.mp3
       tts-v610 --backend "http://localhost:8880" "text" -o out.mp3
-  - python -m src.cli --help must exit 0 (SPEC.md L237)
+  - python -m src.api.cli --help must exit 0 (SPEC.md L237)
   - --backend flag overrides KOKORO_BACKEND_URL for the call (SPEC.md L97, L123)
   - --ssml flag routes input through parse_ssml() (SPEC.md L96)
   - -i file + -o directory writes one output file per non-blank input line
@@ -28,7 +28,7 @@ import pytest
 
 # NO try/except — Collection Error (Exit Code 2) is the valid RED state
 # per TDD-RED protocol (FORBIDDEN section item 3).
-from src.cli import main  # noqa: E402
+from src.api.cli import main  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Spec constants & shared fixtures
@@ -132,7 +132,7 @@ def test_fr_07_cli(case_id, tmp_path):
         mock_post = _make_mock_post()
 
         with patch("httpx.AsyncClient.post", mock_post):
-            # GREEN TODO: src.cli must call parse_ssml() from
+            # GREEN TODO: src.api.cli must call parse_ssml() from
             # src.engines.ssml_parser when --ssml flag is given
             with patch("src.engines.ssml_parser.parse_ssml") as mock_parse:
                 from src.engines.ssml_parser import ParsedSSML

@@ -25,7 +25,7 @@
   "nfr_traceability": {
     "NFR-01": {
       "type": "latency",
-      "module": "src/main.py + src/engines/synthesis.py",
+      "module": "src/api/main.py + src/engines/synthesis.py",
       "test_file": "tests/test_fr01_perf.py",
       "verification": "p50 < 300ms on warm proxy (excludes Kokoro backend network)"
     },
@@ -44,31 +44,31 @@
     },
     "NFR-04": {
       "type": "availability",
-      "module": "src/main.py",
+      "module": "src/api/main.py",
       "test_file": "N/A - operational SLA",
       "verification": "30-day rolling availability of GET /health returning 200; methodology-v2 owner; out-of-scope for proxy implementation"
     },
     "NFR-05": {
       "type": "recovery_time",
-      "module": "src/middleware/circuit_breaker.py",
+      "module": "src/infrastructure/circuit_breaker.py",
       "test_file": "tests/test_fr_05_circuit_breaker.py",
       "verification": "Half-Open probe after CIRCUIT_BREAKER_TIMEOUT=10s; recovery time < 10s"
     },
     "NFR-06": {
       "type": "warmup",
-      "module": "src/main.py",
+      "module": "src/api/main.py",
       "test_file": "tests/test_warmup.py",
       "verification": "WARMUP_ENABLED=True; WARMUP_TEXT='ni-hao, ce-shi-zhong'; on-launch warmup call"
     },
     "NFR-07": {
       "type": "timeout",
-      "module": "src/config.py + src/middleware/circuit_breaker.py",
+      "module": "src/infrastructure/config.py + src/infrastructure/circuit_breaker.py",
       "test_file": "tests/test_fr_05_timeout.py",
       "verification": "REQUEST_TIMEOUT=30.0; on overrun, breaker counter incremented"
     },
     "NFR-08": {
       "type": "security",
-      "module": "src/routers/speech.py + src/models.py + src/config.py + structured logger",
+      "module": "src/api/speech_router.py + src/infrastructure/models.py + src/infrastructure/config.py + structured logger",
       "test_file": "tests distributed across test_fr_01..08.py",
       "verification": "input validation on SpeechRequest fields; secrets via env vars only; TLS deferred to reverse proxy; no PII in logs (allow-list sanitizer)"
     }
@@ -115,22 +115,22 @@
       "test": "tests/test_fr_04_synthesis.py + tests/test_fr_04_synthesis_concat.py"
     },
     "FR-05": {
-      "module": "src/middleware/circuit_breaker.py",
+      "module": "src/infrastructure/circuit_breaker.py",
       "spec": "SPEC.md L81-L85, L197",
       "test": "tests/test_fr_05_circuit_breaker.py"
     },
     "FR-06": {
-      "module": "src/cache/redis_cache.py",
+      "module": "src/infrastructure/redis_cache.py",
       "spec": "SPEC.md L86-L89, L198",
       "test": "tests/test_fr_06_redis_cache.py"
     },
     "FR-07": {
-      "module": "src/cli.py",
+      "module": "src/api/cli.py",
       "spec": "SPEC.md L92-L97, L187",
       "test": "tests/test_fr_07_cli.py"
     },
     "FR-08": {
-      "module": "src/audio_converter.py",
+      "module": "src/infrastructure/audio_converter.py",
       "spec": "SPEC.md L100-L102, L188",
       "test": "tests/test_fr_08_audio_converter.py"
     }
@@ -151,15 +151,15 @@
       "risk": "Parallel httpx dispatch + byte-level MP3 concat; P3 must verify no re-encoding"
     },
     {
-      "module": "src/middleware/circuit_breaker.py",
+      "module": "src/infrastructure/circuit_breaker.py",
       "risk": "In-process state; each worker has independent state; P3 must verify Half-Open probe correctness"
     },
     {
-      "module": "src/audio_converter.py",
+      "module": "src/infrastructure/audio_converter.py",
       "risk": "Subprocess call to ffmpeg; P3 must verify timeout handling and missing-binary behavior"
     },
     {
-      "module": "src/cache/redis_cache.py",
+      "module": "src/infrastructure/redis_cache.py",
       "risk": "Optional dependency; P3 must verify graceful no-Redis fallback"
     }
   ],
@@ -181,17 +181,17 @@
       "03-development/src/engines/synthesis.py"
     ],
     "FR-05": [
-      "03-development/src/middleware/circuit_breaker.py",
-      "03-development/src/routers/health.py"
+      "03-development/src/infrastructure/circuit_breaker.py",
+      "03-development/src/infrastructure/health.py"
     ],
     "FR-06": [
-      "03-development/src/cache/redis_cache.py"
+      "03-development/src/infrastructure/redis_cache.py"
     ],
     "FR-07": [
-      "03-development/src/cli.py"
+      "03-development/src/api/cli.py"
     ],
     "FR-08": [
-      "03-development/src/audio_converter.py"
+      "03-development/src/infrastructure/audio_converter.py"
     ]
   },
   "gate_results": {

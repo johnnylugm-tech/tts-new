@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "17e119f3b5496ada852d9216de30336f7097029d",
-  "content_sha256": "329ef705efa584929fc3284f0b6c64b76ec7cd5ef8add6061fd1848790c657eb",
+  "git_sha": "7f64b350ea2fb97db0359616b7170edbd7131cf6",
+  "content_sha256": "1878b1aafcdb8c31b5819be774306600e14749691f6571430291cb00dd7f3905",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -72,10 +72,10 @@
         "status": "verified",
         "srs_section": "SAD.md",
         "code_files": [
+          "03-development/src/api/main.py",
+          "03-development/src/api/speech_router.py",
           "03-development/src/engines/synthesis.py",
-          "03-development/src/main.py",
-          "03-development/src/models.py",
-          "03-development/src/routers/speech.py"
+          "03-development/src/infrastructure/models.py"
         ],
         "test_files": [
           "tests/test_fr04.py",
@@ -90,13 +90,13 @@
         "status": "verified",
         "srs_section": "SAD.md",
         "code_files": [
-          "03-development/src/middleware/circuit_breaker.py",
-          "03-development/src/routers/health.py"
+          "03-development/src/infrastructure/circuit_breaker.py",
+          "03-development/src/infrastructure/health.py"
         ],
         "test_files": [
           "tests/test_fr05.py"
         ],
-        "sad_module": "src/cache/redis_cache.py",
+        "sad_module": "src/infrastructure/circuit_breaker.py",
         "priority": "HIGH"
       },
       "FR-06": {
@@ -104,12 +104,12 @@
         "status": "verified",
         "srs_section": "SAD.md",
         "code_files": [
-          "03-development/src/cache/redis_cache.py"
+          "03-development/src/infrastructure/redis_cache.py"
         ],
         "test_files": [
           "tests/test_fr06.py"
         ],
-        "sad_module": "src/audio_converter.py",
+        "sad_module": "src/api/main.py",
         "priority": "HIGH"
       },
       "FR-07": {
@@ -117,12 +117,12 @@
         "status": "verified",
         "srs_section": "SAD.md",
         "code_files": [
-          "03-development/src/cli.py"
+          "03-development/src/api/cli.py"
         ],
         "test_files": [
           "tests/test_fr07.py"
         ],
-        "sad_module": "src/cli.py",
+        "sad_module": "src/api/cli.py",
         "priority": "HIGH"
       },
       "FR-08": {
@@ -130,13 +130,13 @@
         "status": "verified",
         "srs_section": "SAD.md",
         "code_files": [
-          "03-development/src/audio_converter.py",
-          "03-development/src/models.py"
+          "03-development/src/infrastructure/audio_converter.py",
+          "03-development/src/infrastructure/models.py"
         ],
         "test_files": [
           "tests/test_fr08.py"
         ],
-        "sad_module": "src/audio_converter.py",
+        "sad_module": "src/infrastructure/audio_converter.py",
         "priority": "HIGH"
       }
     },

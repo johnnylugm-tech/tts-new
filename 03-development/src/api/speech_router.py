@@ -22,12 +22,11 @@ import logging
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from src.config import DEFAULT_VOICE
-from src.engines.ssml_parser import parse_ssml
-from src.engines.text_splitter import split_text
-from src.engines.synthesis import synthesize_chunks
-from src.middleware.circuit_breaker import CircuitBreaker, CircuitOpenError
-from src.models import SpeechRequest
+from src.infrastructure.config import DEFAULT_VOICE
+from src.engines.synthesis import synthesize_text
+from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
+from src.infrastructure.models import SpeechRequest
+from src.api.utils import sanitize_log_extra, build_error_response
 
 log = logging.getLogger(__name__)
 
@@ -46,35 +45,32 @@ async def post_speech(req: SpeechRequest) -> Response:
     speed = req.speed
     fmt = req.response_format
 
-    parsed = parse_ssml(req.input)
-    for w in parsed.warnings:
-        log.warning("ssml_warning: %s", w)
-
-    chunks = split_text(parsed.plain_text)
+    log.info("synthesis_start", extra=sanitize_log_extra({"event": "synthesis_start", "voice": voice}))
 
     async def _synthesize() -> bytes:
-        return await synthesize_chunks(chunks, voice=voice, speed=speed, fmt="mp3")
+        audio, warnings = await synthesize_text(req.input, voice=voice, speed=speed, fmt="mp3")
+        for w in warnings:
+            warn_detail = build_error_response("ssml_warning", w)
+            log.warning("ssml_warning", extra=sanitize_log_extra({"event": warn_detail["error"]["code"]}))
+        return audio
 
     try:
         audio = await _breaker.call(_synthesize())
     except CircuitOpenError as exc:
-        raise HTTPException(status_code=503, detail={
-            "error": {"code": "circuit_open", "message": str(exc)}
-        }) from exc
+        err = build_error_response("circuit_open", str(exc))
+        raise HTTPException(status_code=503, detail=err) from exc
     except Exception as exc:
-        log.error("synthesis_error: %s", exc)
-        raise HTTPException(status_code=502, detail={
-            "error": {"code": "synthesis_error", "message": str(exc)}
-        }) from exc
+        log.error("synthesis_error", extra=sanitize_log_extra({"event": "synthesis_error", "error_code": "synthesis_error"}))
+        err = build_error_response("synthesis_error", str(exc))
+        raise HTTPException(status_code=502, detail=err) from exc
 
     if fmt == "wav":
-        from src.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError
+        from src.infrastructure.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError
         try:
             audio = convert_mp3_to_wav(audio)
         except FFmpegUnavailableError as exc:
-            raise HTTPException(status_code=500, detail={
-                "error": {"code": "ffmpeg_unavailable", "message": str(exc)}
-            }) from exc
+            err = build_error_response("ffmpeg_unavailable", str(exc))
+            raise HTTPException(status_code=500, detail=err) from exc
 
     media_type = "audio/wav" if fmt == "wav" else "audio/mpeg"
     return Response(content=audio, media_type=media_type)

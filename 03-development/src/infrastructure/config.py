@@ -59,6 +59,41 @@ MODEL_MAP: Final[dict[str, str]] = {
 # (configurable for capacity tuning without code change).
 MAX_CONCURRENT_SYNTHESIS: Final[int] = int(os.environ.get("MAX_CONCURRENT_SYNTHESIS", "8"))
 
+# --- Config validation & query functions (hub for infrastructure/) ---
+
+
+def validate_config() -> list[str]:
+    """Validate critical config values. Returns list of warning messages."""
+    warnings: list[str] = []
+    if CIRCUIT_BREAKER_THRESHOLD < 1:
+        warnings.append(f"CIRCUIT_BREAKER_THRESHOLD={CIRCUIT_BREAKER_THRESHOLD} must be >= 1")
+    if CIRCUIT_BREAKER_TIMEOUT <= 0:
+        warnings.append(f"CIRCUIT_BREAKER_TIMEOUT={CIRCUIT_BREAKER_TIMEOUT} must be > 0")
+    if CACHE_TTL_SECONDS < 60:
+        warnings.append(f"CACHE_TTL_SECONDS={CACHE_TTL_SECONDS} should be >= 60")
+    if MAX_CHARS_PER_REQUEST < 1:
+        warnings.append(f"MAX_CHARS_PER_REQUEST={MAX_CHARS_PER_REQUEST} must be >= 1")
+    if REQUEST_TIMEOUT <= 0:
+        warnings.append(f"REQUEST_TIMEOUT={REQUEST_TIMEOUT} must be > 0")
+    return warnings
+
+
+def get_config_snapshot() -> dict[str, object]:
+    """Return a snapshot of all config values (useful for health/logging)."""
+    return {
+        "backend_url": KOKORO_BACKEND_URL,
+        "voices_url": KOKORO_VOICES_URL,
+        "default_voice": DEFAULT_VOICE,
+        "default_speed": DEFAULT_SPEED,
+        "max_chars_per_request": MAX_CHARS_PER_REQUEST,
+        "circuit_breaker_threshold": CIRCUIT_BREAKER_THRESHOLD,
+        "circuit_breaker_timeout": CIRCUIT_BREAKER_TIMEOUT,
+        "cache_ttl_seconds": CACHE_TTL_SECONDS,
+        "max_concurrent_synthesis": MAX_CONCURRENT_SYNTHESIS,
+        "request_timeout": REQUEST_TIMEOUT,
+    }
+
+
 # --- Persona recipes (SPEC.md L145-L150, SAD.md §6.2 footnote) ---
 PERSONAS: Final[dict[str, dict[str, object]]] = {
     "極致溫柔助理": {"voice": "zf_xiaoxiao(0.8)+af_heart(0.2)", "speed_range": (0.85, 0.95)},

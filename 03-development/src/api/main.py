@@ -25,42 +25,15 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.config import WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE
-from src.routers.health import router as health_router
-from src.routers.speech import router as speech_router
-
-# ── NFR-08 allow-list sanitizer ──────────────────────────────────────────────
-# Keys allowed in structured log output; all others are dropped (deny-by-default).
-_LOG_ALLOW_LIST: frozenset[str] = frozenset({
-    "event", "level", "ts", "request_id", "voice", "format", "speed",
-    "duration_ms", "status_code", "error_code", "dropped_pii",
-    "chunk_count", "total_bytes", "circuit_state",
-})
-
-_dropped_pii: int = 0
-
-
-def sanitize_log_extra(extra: dict[str, Any]) -> dict[str, Any]:
-    """Project ``extra`` down to the allow-list; increment dropped_pii counter.
-
-    [NFR-08]
-    """
-    global _dropped_pii
-    safe: dict[str, Any] = {}
-    for k, v in extra.items():
-        if k in _LOG_ALLOW_LIST:
-            safe[k] = v
-        else:
-            _dropped_pii += 1
-    if _dropped_pii > 0:
-        safe["dropped_pii"] = _dropped_pii
-    return safe
-
+from src.infrastructure.config import WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE
+from src.infrastructure.health import router as health_router
+from src.api.speech_router import router as speech_router
+from src.api.utils import sanitize_log_extra, build_error_response
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +51,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001 
             await synthesize_chunks(chunks, voice=DEFAULT_VOICE, speed=1.0, fmt="mp3")
             log.info("warmup completed", extra=sanitize_log_extra({"event": "warmup_ok"}))
         except Exception as exc:  # warmup failure must not block startup
-            log.warning("warmup failed: %s", exc,
+            warm_err = build_error_response("warmup_failed", str(exc))
+            log.warning("warmup failed: %s", warm_err["error"]["message"],
                         extra=sanitize_log_extra({"event": "warmup_fail"}))
     yield
 
@@ -88,6 +62,12 @@ def create_app() -> FastAPI:
 
     [FR-04]
     """
+    log.info("app_created", extra=sanitize_log_extra({"event": "app_created"}))
+    from src.infrastructure.config import KOKORO_BACKEND_URL
+    if not KOKORO_BACKEND_URL:
+        cfg_warn = build_error_response("config_warning", "KOKORO_BACKEND_URL not set")
+        log.warning("startup: %s", cfg_warn["error"]["message"],
+                    extra=sanitize_log_extra({"event": "config_warning"}))
     app = FastAPI(title="Kokoro Taiwan Proxy", lifespan=lifespan)
 
     app.include_router(health_router)
@@ -97,11 +77,9 @@ def create_app() -> FastAPI:
     async def global_exception_handler(  # pragma: no cover
         request: Request, exc: Exception  # noqa: ARG001
     ) -> JSONResponse:
-        log.exception("unhandled error")
-        return JSONResponse(
-            status_code=500,
-            content={"error": {"code": "internal_error", "message": str(exc)}},
-        )
+        log.exception("unhandled error", extra=sanitize_log_extra({"event": "unhandled_error"}))
+        err = build_error_response("internal_error", str(exc))
+        return JSONResponse(status_code=500, content=err)
 
     return app
 

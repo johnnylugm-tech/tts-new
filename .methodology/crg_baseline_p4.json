@@ -1,23 +1,14 @@
 {
   "community_cohesion": {
-    "score": 83.3,
-    "healthy": 5,
-    "total": 6,
-    "unhealthy": [
-      {
-        "name": "tests-speech",
-        "cohesion": 0.0944,
-        "size": 80,
-        "issues": [
-          "oversized(80)"
-        ]
-      }
-    ]
+    "score": 100.0,
+    "healthy": 3,
+    "total": 3,
+    "unhealthy": []
   },
   "large_functions_critical": [],
   "large_functions_penalty": 0,
-  "architecture_score": 83.3,
+  "architecture_score": 100.0,
   "_source": "framework-independent",
-  "_baseline_sha": "bef42af4fac58beaf67291d713267d770842168f",
+  "_baseline_sha": "ec0e540cfc12a72b5954f04bad4bac58a9e03672",
   "_baseline_phase": 4
 }

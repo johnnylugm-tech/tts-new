@@ -30,7 +30,7 @@ import pytest
 
 # NO try/except — collection error (Exit Code 2) is the valid RED state per
 # TDD-RED protocol (FORBIDDEN section item 3).
-from src.audio_converter import (
+from src.infrastructure.audio_converter import (
     ConversionError,
     FFmpegUnavailableError,
     convert_mp3_to_wav,

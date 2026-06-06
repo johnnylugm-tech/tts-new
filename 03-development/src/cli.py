@@ -64,7 +64,8 @@ async def _synthesize_text(
     backend_url: str,
 ) -> bytes:
     """Synthesize *text* using the specified parameters."""
-    log.info("cli_synthesis", extra=log_cli_event("cli_synthesis", voice=voice))
+    evt = log_cli_event("cli_synthesis", voice=voice)
+    log.info("cli_synthesis", extra=evt)
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
             backend_url + "/v1/audio/speech",
@@ -85,7 +86,8 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv  # pragma: no cover
 
     args = _parse_args(argv)
-    log.info("cli_start", extra=log_cli_event("cli_start"))
+    start_evt = log_cli_event("cli_start")
+    log.info("cli_start", extra=start_evt)
 
     backend_url = args.backend or KOKORO_BACKEND_URL
     voice = args.voice

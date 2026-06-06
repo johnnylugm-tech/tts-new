@@ -125,9 +125,7 @@ are not re-opened. This bounds backtracking to a single step.
   - SAB block present in §5 (<!-- SAB:START --> marker exists)?
   - `phase` is a bare int (not quoted string)? e.g. `phase: 2` not `phase: "2"`
   - All NFR `type` values from legal values (performance/security/maintainability/reliability/testability/deployability/scalability/usability)?
-  - Directory structure follows CRG cohesion principles (SAD.md §2.1)?
-    Hub coverage per dir, per-function-body calls, entry point placement.
-    See embedded DOC 3 (templates/SAD.md §2.1) for the full 6 universal principles.
+  - Directory structure follows CRG cohesion principles (SAD.md §2.1)?  Hub coverage per dir, per-function-body calls, entry point placement.  See embedded DOC 3 for the full 6 universal principles.
   - No flat dumps or god-modules? (≤15 files per dir, no single dir with all source)
 
   Return JSON only:

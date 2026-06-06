@@ -169,7 +169,7 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
 **General fix strategies by dimension:**
 | Dimension | Fix |
 |-----------|-----|
-| mutation_testing | Add/improve tests to kill surviving mutants. Run `mutmut run` → `mutmut results`. Target: each new test kills ≥1 mutant. |
+| mutation_testing | Add/improve tests to kill surviving mutants. Run `mutmut run` → `mutmut results`. Exclude data-only files (constants, dicts, Pydantic models) via `paths_to_exclude` in setup.cfg. Target: kill rate ≥ threshold. |
 | architecture (G3/G4 only) | Community cohesion low → add cross-module integration tests, break hub-and-spoke coupling, or file a DA waiver if the pattern is intentional (Orchestrator). |
 | error_handling | Add try/except blocks in `03-development/src/` files. `grep -r 'try:' 03-development/src/` to see current coverage. |
 | documentation | Add docstrings to public functions/classes. `python3 -m ast_docstrings` or manual: every `def`/`class` in `03-development/src/` needs a docstring. |
@@ -219,9 +219,11 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
 
 ### Phase 3 → Phase 4: Testing
 
-- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 60.0` (exit 10, D4 unified v2.6)
+  - mutmut mutation testing (exit 11 — soft-skip if `mutmut` not installed;
+    kill surviving mutants or exclude data-only files via `paths_to_exclude` in setup.cfg)
   > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
 
 - Advance FSM to Phase 4 (writes new HANDOVER.md + local commit):

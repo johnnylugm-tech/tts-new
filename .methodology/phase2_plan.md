@@ -101,6 +101,7 @@ are not re-opened. This bounds backtracking to a single step.
   **Embed these documents in full** (copy content, not paths):
   - `01-requirements/SRS.md (full)`
   - `draft 02-architecture/SAD.md (full)`
+  - `templates/SAD.md §2.1 (Directory Structure Design Principles)`
 
   **Agent B prompt structure** (use this template verbatim):
   ```
@@ -113,6 +114,9 @@ are not re-opened. This bounds backtracking to a single step.
   === [DOC 2: draft 02-architecture/SAD.md (full)] ===
   <<paste full content here>>
 
+  === [DOC 3: templates/SAD.md §2.1 (Directory Structure Design Principles)] ===
+  <<paste full content here>>
+
   Review checklist:
   - Every FR maps to ≥1 module?
   - NFRs addressed (latency/security/cost)?
@@ -121,6 +125,10 @@ are not re-opened. This bounds backtracking to a single step.
   - SAB block present in §5 (<!-- SAB:START --> marker exists)?
   - `phase` is a bare int (not quoted string)? e.g. `phase: 2` not `phase: "2"`
   - All NFR `type` values from legal values (performance/security/maintainability/reliability/testability/deployability/scalability/usability)?
+  - Directory structure follows CRG cohesion principles (SAD.md §2.1)?
+    Hub coverage per dir, per-function-body calls, entry point placement.
+    See embedded DOC 3 (templates/SAD.md §2.1) for the full 6 universal principles.
+  - No flat dumps or god-modules? (≤15 files per dir, no single dir with all source)
 
   Return JSON only:
   {"review_status":"APPROVE"|"REJECT",
@@ -281,12 +289,15 @@ are not re-opened. This bounds backtracking to a single step.
 
   Review checklist:
   - Upstream deliverable review caveats addressed? (check previous B-2 gaps field)
-  - Every FR has ≥1 named test case?
-  - 7-Question Protocol applied per FR?
-  - Every case has concrete Inputs (not just a descriptive id)?
+  - Every FR has ≥1 named test case (happy_path + validation mandatory)?
+  - 7-Question Protocol applied per FR (Q1-Q7 as applicable by classification)?
+  - Classification assigned per FR (API_ENDPOINT|DATA_ENTITY|ALGORITHM|STATE_MACHINE|INTEGRATION|SECURITY_CONTROL|INFRASTRUCTURE)?
+  - NFR Pattern Activation table filled (Step 1 of derive_test_cases.md)?
+  - Every case has concrete Inputs in TRUE form (key="value"), NOT pytest-id form (underscore-replaced)?
+  - Sub-assertions table populated per FR (rule_id + predicate + applies_to referencing real case #s)?
   - Self-consistency gate passes? (python3 harness_cli.py check-test-spec-consistency --project .)
-  - Cross-cutting section complete?
-  - Summary table populated?
+  - Cross-cutting sections complete (NFR Integration + Deployment Smoke + Backward Compatibility if multi-phase)?
+  - Summary table populated with counts per type?
   - All upstream deliverables consistent with each other? No contradictory decisions?
 
   Return JSON only:

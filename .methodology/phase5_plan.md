@@ -15,7 +15,7 @@
 
 ### Phase 5 Overview
 Phase 5 verifies the system against test results, ensuring all FRs meet acceptance criteria.
-Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). No harness run-gate — P5 was cleared by Gate 3 at P4 exit. However, advance-phase still enforces TDD-PRECHECK (pytest 100% + D4 spec-coverage ≥80%) before FSM transition.
+Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). No harness run-gate — P5 was cleared by Gate 3 at P4 exit. However, advance-phase still enforces TDD-PRECHECK (pytest 100% + D4 spec-coverage ≥80% + mutmut mutation testing) before FSM transition.
 
 > If code changes are needed for any FR (e.g., bug fixes found during verification), run full TDD: `run-fr-step --step TDD-RED` → TDD-GREEN → TDD-IMPROVE → GATE1. Crash recovery (`resume-fr-phase`) auto-detects code changes and switches from GATE1-DELTA to full TDD when needed.
 
@@ -138,9 +138,11 @@ python3 harness_cli.py load-context --phase 5 --project . --json \
   > Check: `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0`
   > If below 90%: add missing test implementations before advancing to Phase 6.
 
-- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces both:
+- **[TDD-PRECHECK]** Verify TDD checks pass — advance-phase enforces:
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 80.0` (exit 10, D4 unified v2.6)
+  - mutmut mutation testing (exit 11 — soft-skip if `mutmut` not installed;
+    kill surviving mutants or exclude data-only files via `paths_to_exclude` in setup.cfg)
   > For genuinely untestable lines add: `# pragma: no cover` (requires justification comment).
 
 - Advance FSM to Phase 6 (writes new HANDOVER.md + local commit):

@@ -8,12 +8,12 @@
 <!-- harness:auto-start -->
 ## Harness Status _(auto-generated — do not edit this block)_
 
-> Phase: **4 — Testing** | Last Gate: **Gate 3** | Updated: 2026-06-05
+> Phase: **5 — Verification** | Last Gate: **Gate 1** | Last FR: FR-08 | Updated: 2026-06-07
 
 ### Gate Progress
 | Gate | Score / FRs | Status |
 |------|-------------|--------|
-| Gate 1 | 8/8 FRs | ✅ PASS |
+| Gate 1 | 3/8 FRs | 🔄 In Progress |
 | Gate 2 | 95.2 | ✅ PASS |
 | Gate 3 | 96.1 | ✅ PASS |
 | Gate 4 | — | ⬜ Not Started |
@@ -22,13 +22,13 @@
 | FR ID | Score | Status |
 |-------|-------|--------|
 | FR-01 | 95.0 | ✅ COMPLETE |
-| FR-02 | 100.0 | ✅ COMPLETE |
-| FR-03 | 100.0 | ✅ COMPLETE |
-| FR-04 | 100.0 | ✅ COMPLETE |
-| FR-05 | 100.0 | ✅ COMPLETE |
-| FR-06 | 94.6 | ✅ COMPLETE |
+| FR-02 | 95.0 | 🔄 In Progress |
+| FR-03 | 95.0 | 🔄 In Progress |
+| FR-04 | 90.3 | 🔄 In Progress |
+| FR-05 | 95.0 | 🔄 In Progress |
+| FR-06 | 95.0 | 🔄 In Progress |
 | FR-07 | 95.0 | ✅ COMPLETE |
-| FR-08 | 100.0 | ✅ COMPLETE |
+| FR-08 | 95.0 | ✅ COMPLETE |
 
 ### Architecture Constraints
 - No new tech stack (FastAPI + httpx + uvicorn + Kokoro Docker + optional Redis + ffmpeg only)
@@ -42,9 +42,9 @@
 
 ### High-Risk Modules
 - {'module': 'src/engines/synthesis.py', 'risk': 'Parallel httpx dispatch + byte-level MP3 concat; P3 must verify no re-encoding'}
-- {'module': 'src/middleware/circuit_breaker.py', 'risk': 'In-process state; each worker has independent state; P3 must verify Half-Open probe correctness'}
-- {'module': 'src/audio_converter.py', 'risk': 'Subprocess call to ffmpeg; P3 must verify timeout handling and missing-binary behavior'}
-- {'module': 'src/cache/redis_cache.py', 'risk': 'Optional dependency; P3 must verify graceful no-Redis fallback'}
+- {'module': 'src/infrastructure/circuit_breaker.py', 'risk': 'In-process state; each worker has independent state; P3 must verify Half-Open probe correctness'}
+- {'module': 'src/infrastructure/audio_converter.py', 'risk': 'Subprocess call to ffmpeg; P3 must verify timeout handling and missing-binary behavior'}
+- {'module': 'src/infrastructure/redis_cache.py', 'risk': 'Optional dependency; P3 must verify graceful no-Redis fallback'}
 
 ### NFR → Dimension Mapping
 - NFR-01 → correctness

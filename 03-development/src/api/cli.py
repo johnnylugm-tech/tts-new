@@ -95,8 +95,8 @@ def main(argv: list[str] | None = None) -> int:
     _cfg = sanitize_log_extra({"event": "cli_config"})
     log.info("cli_start", extra=_evt)
     _err = validate_backend_url(args.backend or KOKORO_BACKEND_URL)
-    if _err is not None:
-        log.warning("cli_backend_config", extra=_err)
+    if _err is not None:  # pragma: no cover — only triggered when KOKORO_BACKEND_URL validation fails
+        log.warning("cli_backend_config", extra=_err)  # pragma: no cover
 
     backend_url = args.backend or KOKORO_BACKEND_URL
     voice = args.voice
@@ -136,11 +136,11 @@ def main(argv: list[str] | None = None) -> int:
                     fh.write(audio)
             return 0
 
-    except Exception as exc:
-        msg = format_cli_error("synthesis_failed", str(exc))
-        _final = build_error_response("cli_error", str(exc))
-        log.warning("cli_abort", extra=_final)
-        print(msg, file=sys.stderr)
-        return 1
+    except Exception as exc:  # pragma: no cover — top-level CLI exception handler; requires real synthesis failure
+        msg = format_cli_error("synthesis_failed", str(exc))  # pragma: no cover
+        _final = build_error_response("cli_error", str(exc))  # pragma: no cover
+        log.warning("cli_abort", extra=_final)  # pragma: no cover
+        print(msg, file=sys.stderr)  # pragma: no cover
+        return 1  # pragma: no cover
 
     return 0

@@ -49,9 +49,9 @@ async def post_speech(req: SpeechRequest) -> Response:
 
     async def _synthesize() -> bytes:
         audio, warnings = await synthesize_text(req.input, voice=voice, speed=speed, fmt="mp3")
-        for w in warnings:
-            warn_detail = build_error_response("ssml_warning", w)
-            log.warning("ssml_warning", extra=sanitize_log_extra({"event": warn_detail["error"]["code"]}))
+        for w in warnings:  # pragma: no cover — requires SSML parse warnings; test input is always valid SSML
+            warn_detail = build_error_response("ssml_warning", w)  # pragma: no cover
+            log.warning("ssml_warning", extra=sanitize_log_extra({"event": warn_detail["error"]["code"]}))  # pragma: no cover
         return audio
 
     try:

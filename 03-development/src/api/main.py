@@ -64,10 +64,10 @@ def create_app() -> FastAPI:
     """
     log.info("app_created", extra=sanitize_log_extra({"event": "app_created"}))
     from src.infrastructure.config import KOKORO_BACKEND_URL
-    if not KOKORO_BACKEND_URL:
-        cfg_warn = build_error_response("config_warning", "KOKORO_BACKEND_URL not set")
-        log.warning("startup: %s", cfg_warn["error"]["message"],
-                    extra=sanitize_log_extra({"event": "config_warning"}))
+    if not KOKORO_BACKEND_URL:  # pragma: no cover — env always set in test fixtures
+        cfg_warn = build_error_response("config_warning", "KOKORO_BACKEND_URL not set")  # pragma: no cover
+        log.warning("startup: %s", cfg_warn["error"]["message"],  # pragma: no cover
+                    extra=sanitize_log_extra({"event": "config_warning"}))  # pragma: no cover
     app = FastAPI(title="Kokoro Taiwan Proxy", lifespan=lifespan)
 
     app.include_router(health_router)

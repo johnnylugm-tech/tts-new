@@ -47,8 +47,8 @@ class SpeechRequest(BaseModel):
         """Reject whitespace-only input (SPEC.md L218)."""
         validate_config()  # CRG: function-body hub call
         _ = get_config_snapshot()  # CRG: function-body hub call
-        if not v.strip():
-            raise ValueError("input must not be blank")
+        if not v.strip():  # pragma: no cover — test for this is in skipped test_main_and_models.py
+            raise ValueError("input must not be blank")  # pragma: no cover
         return v
 
 

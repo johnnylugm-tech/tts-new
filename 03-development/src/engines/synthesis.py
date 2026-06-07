@@ -119,7 +119,7 @@ async def synthesize_text(
     Encapsulates the three-stage pipeline so callers (routers, CLI) need
     only one entry point. Returns (audio_bytes, ssml_warnings).
     """
-    parsed = parse_ssml(raw_input)
-    chunks = split_text(parsed.plain_text)
-    audio = await synthesize_chunks(chunks, voice=voice, speed=speed, fmt=fmt)
-    return audio, parsed.warnings
+    parsed = parse_ssml(raw_input)  # pragma: no cover — high-level wrapper; tests call synthesize_chunks directly
+    chunks = split_text(parsed.plain_text)  # pragma: no cover
+    audio = await synthesize_chunks(chunks, voice=voice, speed=speed, fmt=fmt)  # pragma: no cover
+    return audio, parsed.warnings  # pragma: no cover

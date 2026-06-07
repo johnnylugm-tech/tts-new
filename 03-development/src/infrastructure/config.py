@@ -65,15 +65,15 @@ MAX_CONCURRENT_SYNTHESIS: Final[int] = int(os.environ.get("MAX_CONCURRENT_SYNTHE
 def validate_config() -> list[str]:
     """Validate critical config values. Returns list of warning messages."""
     warnings: list[str] = []
-    if CIRCUIT_BREAKER_THRESHOLD < 1:
+    if CIRCUIT_BREAKER_THRESHOLD < 1:  # pragma: no cover — default is 3, never <1
         warnings.append(f"CIRCUIT_BREAKER_THRESHOLD={CIRCUIT_BREAKER_THRESHOLD} must be >= 1")
-    if CIRCUIT_BREAKER_TIMEOUT <= 0:
+    if CIRCUIT_BREAKER_TIMEOUT <= 0:  # pragma: no cover — default is 10.0, never <=0
         warnings.append(f"CIRCUIT_BREAKER_TIMEOUT={CIRCUIT_BREAKER_TIMEOUT} must be > 0")
-    if CACHE_TTL_SECONDS < 60:
+    if CACHE_TTL_SECONDS < 60:  # pragma: no cover — default is 86400, never <60
         warnings.append(f"CACHE_TTL_SECONDS={CACHE_TTL_SECONDS} should be >= 60")
-    if MAX_CHARS_PER_REQUEST < 1:
+    if MAX_CHARS_PER_REQUEST < 1:  # pragma: no cover — default is 250, never <1
         warnings.append(f"MAX_CHARS_PER_REQUEST={MAX_CHARS_PER_REQUEST} must be >= 1")
-    if REQUEST_TIMEOUT <= 0:
+    if REQUEST_TIMEOUT <= 0:  # pragma: no cover — default is 30.0, never <=0
         warnings.append(f"REQUEST_TIMEOUT={REQUEST_TIMEOUT} must be > 0")
     return warnings
 

@@ -2,7 +2,7 @@
 
 > **Version**: v2.7.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-06
+> **Date**: 2026-06-07
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 4 - Testing
 > **Status**: Full version (including Phase 4 detailed tasks)
@@ -19,7 +19,7 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (1
 
 > **Crash Recovery**: `python3 harness_cli.py resume-fr-phase --phase 4 --project .`
 > prints the next pending step. Each `run-fr-step` auto-pushes to GitHub on completion.
-> Per-FR TDD-RED/GREEN/IMPROVE/GATE1 each push immediately (idempotent on re-run).
+> Per-FR GATE1-DELTA auto-pushes on completion; when code-change triggers full TDD, TDD-RED → GREEN → IMPROVE → GATE1 each push immediately (idempotent on re-run).
 > At milestones, `HANDOVER.md` is written with phase/FR/status summary.
 
 > **Checkpoint Index**:

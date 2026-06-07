@@ -2,8 +2,8 @@
   "state": "RUNNING",
   "current_phase": 5,
   "last_gate": 1,
-  "last_fr": "FR-08",
-  "last_update": "2026-06-07T03:57:15.294710+00:00",
+  "last_fr": "FR-02",
+  "last_update": "2026-06-07T03:57:34.991653+00:00",
   "phase_truth_passed": false,
   "last_milestone_command": "push-milestone --type p5-baseline",
   "last_milestone_at": "2026-06-06T17:47:18.897250+00:00"

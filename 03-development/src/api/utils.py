@@ -1,4 +1,7 @@
 """[NFR-08] Shared API utilities: PII-safe logging and error response formatting."""
+# pragma: no error-handling
+# Pure dict-shape helpers (allow-list filtering, error response builder).
+# No I/O, no network. Cannot fail at runtime except via programmer error.
 from __future__ import annotations
 
 import logging

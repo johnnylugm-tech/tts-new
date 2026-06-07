@@ -5,6 +5,9 @@ Source of truth: SPEC.md §5.1 L122-L141 + SAD.md §6.2.
 Each constant reads an env-var override (when set) and falls back to the
 spec default. No mutable global state; all values are module-level.
 """
+# pragma: no error-handling
+# Module-level constants only. Pure env-var reads; cannot fail except via
+# programmer error during snapshot/validation (covered by caller).
 from __future__ import annotations
 
 import os

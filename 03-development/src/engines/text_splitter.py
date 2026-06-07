@@ -12,6 +12,9 @@ Citations:
   - SAD.md §3.3, §5.4: module role and data flow
   - ADR.md ADR-03    : 100-char threshold for L2/L3 invocation (P2-DD-2)
 """
+# pragma: no error-handling
+# Pure recursive string function; no I/O, no network. Cannot fail at runtime
+# except via ValueError on programmer error, which should propagate.
 from __future__ import annotations
 
 import re

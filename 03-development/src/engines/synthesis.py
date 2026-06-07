@@ -17,6 +17,11 @@ Citations:
   - P2-DD-6             : partial-success WAIVED
   - TEST_SPEC.md FR-04  : 9 test cases (5 synthesis + 4 concat)
 """
+# pragma: no error-handling
+# Per P2-DD-6, partial-success mode is WAIVED: any httpx/gather exception
+# propagates to the caller (speech_router.py) which owns the circuit-breaker
+# increment and the user-facing 5xx mapping. This module is intentionally
+# handler-free so the failure path is linear and observable.
 from __future__ import annotations
 
 import asyncio

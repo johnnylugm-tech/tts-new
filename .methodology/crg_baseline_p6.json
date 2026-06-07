@@ -1,0 +1,18 @@
+{
+  "community_cohesion": {
+    "score": 100.0,
+    "healthy": 3,
+    "total": 3,
+    "total_all": 4,
+    "excluded_test_communities": 1,
+    "unhealthy": [],
+    "_cohesion_threshold": 0.3,
+    "_community_oversized": 50
+  },
+  "large_functions_critical": [],
+  "large_functions_penalty": 0,
+  "architecture_score": 100.0,
+  "_source": "framework-independent",
+  "_baseline_sha": "c6e506221850219b41524c7465e1a33b759d7ece",
+  "_baseline_phase": 6
+}

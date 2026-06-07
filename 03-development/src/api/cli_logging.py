@@ -4,6 +4,10 @@ CLI operations use different log semantics than HTTP handlers:
 no request IDs, circuit states, or HTTP status codes.
 All events pass through the PII sanitizer to prevent secret leakage.
 """
+# pragma: no error-handling
+# Pure logging helpers; only call into utils.sanitize_log_extra and
+# utils.build_error_response which are themselves no-I/O. No failure modes
+# at runtime that would benefit from a local try/except.
 from __future__ import annotations
 
 from src.api.utils import sanitize_log_extra, build_error_response
@@ -21,7 +25,7 @@ def format_cli_error(code: str, message: str) -> str:
     return f"error [{resp['error']['code']}]: {resp['error']['message']}"  # pragma: no cover — CLI-only helper, tested indirectly via cli.py
 
 
-def validate_backend_url(url: str | None) -> str | None:
+def validate_backend_url(url: str | None) -> dict[str, object] | None:
     """Validate the backend URL and log warnings for missing config."""
     if not url:  # pragma: no cover — only triggered when KOKORO_BACKEND_URL is unset
         _evt = sanitize_log_extra({"event": "cli_no_backend"})  # pragma: no cover

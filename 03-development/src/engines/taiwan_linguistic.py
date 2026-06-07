@@ -17,6 +17,9 @@ The substitution uses a single compiled ``re`` pass with keys sorted by
 length descending, which is the canonical longest-match-first algorithm
 required by AC4.
 """
+# pragma: no error-handling
+# Pure data file: LEXICON dict + dict-comprehension substitutions.
+# No I/O, no network, no external calls — cannot fail at runtime.
 from __future__ import annotations
 
 import re

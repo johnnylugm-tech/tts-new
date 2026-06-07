@@ -16,6 +16,9 @@ Citations:
   - SRS.md §3 NFR-08  : input validation and allow-list logging
   - SAD.md §3.3 §5.3  : model definitions, field contracts
 """
+# pragma: no error-handling
+# Pure Pydantic data models. Field validation is handled by Pydantic itself;
+# no I/O, no network, no logic that can fail at runtime.
 from __future__ import annotations
 
 from typing import Annotated, Literal

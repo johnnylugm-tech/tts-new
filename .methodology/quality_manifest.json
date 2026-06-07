@@ -267,6 +267,16 @@
       "open_critical": 0,
       "open_high": 0
     },
-    "gate4": null
+    "gate4": {
+      "score": 97.12879999999998,
+      "quality_complete": true,
+      "rounds_used": 1,
+      "open_critical": 0,
+      "open_high": 0,
+      "da_waiver_applied": [
+        "architecture"
+      ],
+      "da_waiver_needs_human_review": true
+    }
   }
 }

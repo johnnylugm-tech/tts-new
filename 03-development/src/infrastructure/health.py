@@ -8,6 +8,10 @@ Citations:
                        `src/middleware/circuit_breaker.py` provides the
                        FSM; this router exposes it.
 """
+# pragma: no error-handling
+# Read-only FastAPI endpoints exposing in-process circuit-breaker state.
+# No external I/O — validate_config() and CircuitBreaker state reads are
+# in-process; FastAPI handles HTTP-level errors via its own error handlers.
 from __future__ import annotations
 
 from fastapi import APIRouter

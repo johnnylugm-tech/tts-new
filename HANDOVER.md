@@ -2,7 +2,7 @@
 
 **Checkpoint**: `P7-exit-20260608`  
 **Phase**: P7 — Risk Register  
-**Generated**: 2026-06-08T14:54:15Z
+**Generated**: 2026-06-08T14:54:34Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 

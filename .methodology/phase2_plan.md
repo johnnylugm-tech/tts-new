@@ -1,11 +1,13 @@
-# Phase 2 Full Execution Plan -- 
+# Phase 2 Full Execution Plan -- tts-new
 
 > **Version**: v2.7.0 (project plan)
-> **Project**: 
+> **Project**: tts-new
 > **Date**: 2026-06-08
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 2 - Architecture Design
 > **Status**: Full version (including Phase 2 detailed tasks)
+> **Mode**: Dynamic (load-context at execution time)
+
 
 ---
 
@@ -53,6 +55,14 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
   4. Phase 2 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 2 --project . --overwrite`
+
+### 🔄 [PHASE-CONTEXT] — Load Before Starting
+
+```bash
+python3 harness_cli.py load-context --phase 2 --project . --json \
+  > .sessi-work/phase2_ctx.json
+```
+> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -312,14 +322,6 @@ are not re-opened. This bounds backtracking to a single step.
 
   > fr_id uses P2 as phase-level placeholder; replace with FR-XX for FR-specific plans.
 
-### FR Architecture Mapping (2 total)
-
-#### FR-01: {requirement}
-**Requirement**: {requirement}
-
-#### FR-02: ...
-**Requirement**: ...
-
 ### SAB Generation (Machine-Readable Architecture Baseline)
 
 > **CONTRACT**: The SAB block in SAD.md §5 is parsed by
@@ -390,6 +392,7 @@ are not re-opened. This bounds backtracking to a single step.
   ```bash
   python3 scripts/generate_sab.py --project .
   ```
+  > **Note**: If `SAB.json` already exists and needs regeneration, pass `--overwrite`.
   - SAB.json contains all 14 fields from `SABSpec`:
     version, created_at, phase, project, layers, allowed_dependencies,
     quality_targets, nfr_dimension_mapping, nfr_traceability, advisory_only,
@@ -490,11 +493,6 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 2 → Phase 3: Implementation
 
-- Generate Phase 3 plan:
-  ```bash
-  python3 harness_cli.py plan-phase --phase 3 --project . \
-    --output .methodology/phase3_plan.md
-  ```
 - Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 2 --project .

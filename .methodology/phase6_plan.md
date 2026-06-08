@@ -1,11 +1,13 @@
-# Phase 6 Full Execution Plan -- 
+# Phase 6 Full Execution Plan -- tts-new
 
 > **Version**: v2.7.0 (project plan)
-> **Project**: 
+> **Project**: tts-new
 > **Date**: 2026-06-08
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 6 - Quality Assurance
 > **Status**: Full version (including Phase 6 detailed tasks)
+> **Mode**: Dynamic (load-context at execution time)
+
 
 ---
 
@@ -38,7 +40,7 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   Human fix → re-run `run-phase --phase 6 --project .` → PASS required before continuing.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
-  python3 harness_cli.py build-trace-attestation --project .
+  python3 harness_cli.py build-trace-attestation --project . --write
   git add .methodology/trace/attestation.json
   git commit -m 'trace: regenerate attestation'
   ```
@@ -51,23 +53,19 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   4. Phase 6 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 6 --project . --overwrite`
 
+### 🔄 [PHASE-CONTEXT] — Load Before Starting
+
+```bash
+python3 harness_cli.py load-context --phase 6 --project . --json \
+  > .sessi-work/phase6_ctx.json
+```
+> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
+
 ### P6 Phase End Audit (+ A/B Review)
 
 > A/B collaboration is active for Phase 6 deliverables (HR-01).
 > Agent A generates QUALITY_REPORT.md and RELEASE_NOTES.md.
-> Agent B (ARCHITECT) reviews the deliverables and verifies Gate 4 score.
-
-### Existing Quality Metrics (from QUALITY_REPORT.md)
-
-- **Generated**: 2026-06-08 19:14:29
-- **Gate**: 4
-- **Overall Score**: 97.1288/100
-- **Critical**: 0
-- **High**: 0
-- **Medium**: 0
-- **Low**: 0
-- **BASELINE.md**: See `05-verification/BASELINE.md` for performance baseline
-- **VERIFICATION_REPORT.md**: See `05-verification/VERIFICATION_REPORT.md` for verification results
+> Agent B (reviewer — stateless) reviews the deliverables and verifies Gate 4 score.
 
 ### Pre-Gate Preparation
 - Confirm all FRs are merged to main branch
@@ -128,7 +126,7 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   > **traceability** is also framework-owned: the harness calls `compute_trace_dimension()`
   > inside `finalize-gate` and injects the score automatically. Do NOT report a traceability
   > score in gate_result.json. If the gate is blocked by traceability, fix gaps then run:
-  > `python3 harness_cli.py build-trace-attestation --project .`
+  > `python3 harness_cli.py build-trace-attestation --project . --write`
   > `git add .methodology/trace/attestation.json && git commit -m 'trace: regen attestation'`
 
 - **G4c** Finalize Gate 4:
@@ -234,11 +232,6 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
 
 ### Phase 6 → Phase 7: Risk Management
 
-- Generate Phase 7 plan:
-  ```bash
-  python3 harness_cli.py plan-phase --phase 7 --project . \
-    --output .methodology/phase7_plan.md
-  ```
 - **[GIT-TAG]** Push Gate 4 git tag (SKILL.md §0.4):
   ```bash
   SCORE=$(python3 -c "import json; d=json.load(open('.sessi-work/gate4_result.json')); print(d.get('composite_score','XX'))" 2>/dev/null || echo 'XX')

@@ -31,6 +31,8 @@
 
 ---
 
+## FR Test Case Catalog
+
 ### FR-01: Taiwan Linguistic Processing (Lexicon)
 
 | # | Test Function | Type | Derivation |

@@ -247,7 +247,7 @@
       },
       "FR-04": {
         "score": 95.0,
-        "quality_complete": true,
+        "quality_complete": false,
         "rounds_used": 1,
         "open_critical": 0,
         "open_high": 0

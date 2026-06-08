@@ -1,0 +1,24 @@
+[tool.ruff]
+exclude = [
+    "harness",
+    "harness_cli.py",
+    ".methodology",
+    "03-development/.diag_tmp",
+    ".venv",
+]
+
+[tool.ruff.lint]
+# F401: unused imports are common in test files (side-effect imports, try/except optional deps)
+# F841: unused local variables are common in test assertion patterns
+# F403: star imports are used in test helper modules
+per-file-ignores = { "03-development/tests/**" = ["F401", "F841", "F403"] }
+
+[tool.mypy]
+exclude = [
+    "harness/",
+    "\\.methodology",
+    "03-development/\\.diag_tmp",
+    "\\.venv",
+    "^tests/",
+    "^03-development/",
+]

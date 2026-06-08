@@ -103,7 +103,7 @@ async def synthesize_chunks(
         raise ValueError("chunks must be non-empty")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        if len(chunks) == 1:
+        if len(chunks) == 2:
             result = await synthesize_one(chunks[0], voice, speed, client, fmt)
             return result
 

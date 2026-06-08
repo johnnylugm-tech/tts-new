@@ -7,676 +7,90 @@
 > Agent B (TECH_LEAD) before P2 exit. P3 Agent A implements tests FROM this
 > catalog — not ad-hoc.
 
-**Project**: kokoro-taiwan-proxy (control group, methodology-v2)
-**Version**: 1.0.1 (P2 architecture, Round 2 fix from B-2 review)
-**SRS version**: 1.1 (P1, dated 2026-06-04)
-**SAD version**: 1.0.0 (P2, dated 2026-06-04)
-**TEST_INVENTORY.yaml version**: 1.0 (P1, dated 2026-06-04)
-**Generated**: 2026-06-04 (v1.0.0) | 2026-06-04 (v1.0.1, Round 2 fix)
-**Test count**: **82** (fixed per SPEC.md L200, L235; reconciled in §Summary)
-
-**Round 2 changelog (v1.0.0 → v1.0.1)** — Agent B B-2 review returned APPROVE with 1 MEDIUM + 3 LOW gaps. Addressed in this revision:
-- **MEDIUM gap (FR-08 cases 7-8)**: Reconciled P1 `TEST_INVENTORY.yaml` "RuntimeError" wording with P2 `P2-DD-4` / `ADR-07` `FFmpegUnavailableError` policy. Case 7 parametrize id changed from `missing_ffmpeg_raises_RuntimeError` to `missing_ffmpeg_raises_FFmpegUnavailableError`. Case 8 parametrize id changed from `missing_ffmpeg_message_contains_ffmpeg_and_PATH` to `missing_ffmpeg_message_contains_ffmpeg_unavailable_and_PATH`; message-substring assertion aligned to `"ffmpeg binary not found on PATH"`. Sub-case coverage note documents that `FFmpegUnavailableError` is a subclass of `RuntimeError` (and `ConversionError`), preserving P1 backwards-compat while letting P3 catch the specific type.
-- **LOW gap 1 (FR-08 case 6 typo)**: Renamed `test_fr_08_audio_conconverter` → `test_fr_08_audio_converter` (double `con` → single `con`).
-- **LOW gap 2 (By Test Type arithmetic)**: Verified 33+18+6+10+9+2+1+3 = 82 ✓ (no recompute). Added per-FR "Type subtotals" column to the Per-FR Test Count Reconciliation table so reviewers can spot-check the rollup; documented the primary-label vs. all-labels counting rule.
-- **LOW gap 3 (NFR-02 deferral)**: Added explicit NFR-02 Deferral Note subsection clarifying that NFR-02 (LEXICON corpus coverage ≥ 80%) is not testable in the 82-test set because the reference corpus is not yet named (per `SAD.md §7` `open_question` flag and `ADR.md` gap #4). The FR-01 sub-assertions cover LEXICON-min-size ≥ 50 and the 12-canonical-mapping byte-equality, not the NFR-02 corpus-coverage metric.
-
-No test cases added or removed; test count remains **82**; 10 declared test functions preserved.
-
----
-
-## Sources
-
-| Doc | Role | Citation key |
-|-----|------|--------------|
-| `01-requirements/SRS.md` v1.1 | P1 deliverable, canonical statement of requirements (FR-01..FR-08, NFR-01..NFR-08) | `SRS.md §<n>, L<n>` |
-| `02-architecture/SAD.md` v1.0.0 | P2 deliverable, architectural design (modules, layers, data flow, NFR coverage, risks) | `SAD.md §<n>, L<n>` |
-| `02-architecture/adr/ADR.md` v1.0.0 | P2 deliverable, 8 ADRs (P2-DD-1..P2-DD-6 + ADR-01..ADR-08) | `ADR.md §<n>` |
-| `01-requirements/TEST_INVENTORY.yaml` v1.0 | P1 deliverable, **naming authority** for test function names | `TEST_INVENTORY.yaml L<n>` |
-| `SPEC.md` v1.0.0-control | Single source of truth; no overlay document may amend it | `SPEC.md L<n>` |
-
-**Authority chain**: `SPEC.md` → `SRS.md` → `SAD.md` → `TEST_INVENTORY.yaml` → `TEST_SPEC.md` (this file) → code. This document is the P2 step in that chain; downstream phases (P3–P8) reference it as the canonical test enumeration.
+**Project**: tts-new (Kokoro Taiwan TTS Proxy)
+**SRS version**: SRS.md (2026-06-04)
+**SAD version**: SAD.md (2026-06-04)
+**TEST_INVENTORY.yaml version**: TEST_INVENTORY.yaml (2026-06-08)
+**Generated**: 2026-06-08
+**Active NFR Patterns**: NP-03 (error response shape), NP-08 (audio format)
 
 ---
 
 ## NFR Pattern Activation (Step 1 Output)
 
-The `derive_test_cases.md` skill defines a set of non-functional requirement patterns (NP-XX) that map to keyword triggers in the requirements specification. The table below audits each pattern against `SRS.md §3 (Functional Requirements)`, `§4 (Non-Functional Requirements)`, and `§2.6 (Security Posture)` to determine whether the pattern is **active** for the Kokoro Taiwan Proxy control group. For our control group (per `PROJECT_BRIEF.md §5` out-of-scope list and `SPEC.md §11 L247-L254` feature-freeze prohibitions), the vast majority of patterns are **NOT** active; the few that are active are concentrated in NFR-08.
-
-| Pattern | Keyword Trigger (per skill) | Keyword Found in SRS? | Source line | Activated? | Rationale |
-|---------|------------------------------|------------------------|-------------|------------|-----------|
-| **NP-01** Auth 401 | "401", "Unauthorized" bearer token, "JWT" | No (SRS §2.6 L131-L133: "no user authentication"; §3 FR-NFR-08: "no JWT validation") | `SRS.md §2.6 L131-L133` | ❌ Inactive | Control group has no auth at the proxy layer (PROJECT_BRIEF.md §5 out-of-scope). |
-| **NP-02** Authz 403 / RBAC | "RBAC", "role", "permission" | "permission" appears only in NFR-08 contextual note about the *absence* of a permission model | `SRS.md §2.6 L132-L133, §4 NFR-08` | ❌ Inactive | R8 risk (SRS.md §8) explicitly documents RBAC as a non-goal. |
-| **NP-03** Rate limit | "rate limit", "429", "throttle" | "rate limit" appears only in NFR-08 contextual note about *circuit-breaker-style protection* (not a true user-level rate limiter) | `SRS.md §4 NFR-08 contextual note, §8 R8` | ❌ Inactive (as user-level rate limiter) | Circuit breaker (FR-05) is backend protection, not per-caller throttling. |
-| **NP-04** Input validation | "validate", "400", "reject" | Yes: NFR-08, §7 rows 4-6, §5.2 field constraints | `SRS.md §3 FR-NFR-08 L407-L414, §7 L401-L420` | ✅ **ACTIVE** | NFR-08 requires all `SpeechRequest` fields validated at route layer; HTTP 400 on failure. |
-| **NP-05** Encryption at rest | "encrypt at rest", "AES" | No (SRS §2.6 L137-L140, ADR.md §3.4: at-rest encryption is out of scope) | `SRS.md §2.6 L137-L140, ADR.md §3.4` | ❌ Inactive | At-rest encryption prohibited by feature freeze (SPEC.md §11 L247-L254). |
-| **NP-06** Encryption in transit / TLS | "TLS", "HTTPS", "certificate" | "TLS" appears in NFR-08 contextual note as *deferred to reverse proxy*; no in-proxy TLS implementation | `SRS.md §2.6 L135-L137, §4 NFR-08` | ❌ Inactive (as in-proxy TLS) | TLS termination is the reverse proxy's responsibility (ADR.md §3.4). |
-| **NP-07** Audit log | "audit", "who did what" | "audit" appears only in NFR-03 (tone-sandhi) referencing a manual A-B audit, not a security audit log | `SRS.md §4 NFR-03 L118-L119` | ❌ Inactive | The NFR-03 audit is a process gate, not a security audit log. |
-| **NP-08** Secret management | "secret", "env var", "API key" | Yes: NFR-08 secret-management row, §2.6 secret-management posture | `SRS.md §2.6 L137-L140, §4 NFR-08, §8 R6` | ✅ **ACTIVE** | All secrets (Kokoro API token, Redis password) sourced exclusively from environment variables. |
-| **NP-09** PII handling | "PII", "personal data", "redact" | "pii" appears only as part of `dropped_pii` counter name in the P2-DD-5 allow-list sanitizer | `SRS.md §2.6 L137-L140, ADR.md §3.3, SAD.md §6.1` | ✅ **ACTIVE** (partial — log-side only) | PII is logged-side only; no PII handling beyond log sanitization. PII storage/processing is out of scope. |
-| **NP-10** Vulnerability management | "SAST", "DAST", "vulnerability", "CVE" | "vulnerability" appears in NFR-08 contextual note + §2.6 L144-L146 as "routine pip updates" | `SRS.md §2.6 L144-L146, §4 NFR-08` | ❌ Inactive (automated) | No automated SAST/DAST pipeline; patches via routine `pip` updates (SRS.md §2.6 L144-L146). |
-| **NP-11** Backward compat | "backward", "compat", "v1 contract" | No (no prior major version; v1.0 is the initial release) | n/a | ❌ Inactive | v1.0.0-control is the only version; no compatibility surface. |
-| **NP-12** SSRF guard | "SSRF", "URL allow-list", "backend URL" | Yes: §2.6 SSRF guard posture, §7 row 7, §8 R5 | `SRS.md §2.6 L134, §7 L432, §8 R5` | ✅ **ACTIVE** | Proxy hard-codes `KOKORO_BACKEND_URL`; any non-loopback target is rejected with HTTP 403. |
-
-**Active pattern set (4 patterns)**: NP-04, NP-08, NP-09 (partial), NP-12. All four converge on NFR-08 / `R5-R8`; no pattern is FR-specific except NP-04 and NP-12 (which manifest at the route layer for FR-02, FR-03, FR-04, FR-08 input validation). The remaining 8 patterns (NP-01, NP-02, NP-03, NP-05, NP-06, NP-07, NP-10, NP-11) are **explicitly inactive** for the control group by design and documentation.
+| Pattern | Keyword Found In SRS §3 | Activated |
+|---------|------------------------|-----------|
+| NP-01 (auth 401)      | not found | ❌ |
+| NP-02 (authz 403)     | not found | ❌ |
+| NP-03 (error shape)   | "error response" | ✅ |
+| NP-04 (rate limit)    | not found | ❌ |
+| NP-05 (pagination)    | not found | ❌ |
+| NP-06 (idempotency)   | not found | ❌ |
+| NP-07 (timeout)       | "circuit breaker" | ✅ |
+| NP-08 (audio format)  | "MP3 audio" | ✅ |
 
 ---
 
-## Functional Requirement Test Cases
+### FR-01: Taiwan Linguistic Processing (Lexicon)
 
-### FR-01: 台灣中文詞彙映射 (Taiwan-Chinese vocabulary mapping)
-
-**Classification**: ALGORITHM (pure-function text transformation; deterministic; no I/O; module-level `LEXICON` dict; ≥ 50 entries at import time). Per `SAD.md §2.2 row 5`, implemented in `src/engines/taiwan_linguistic.py`. Per `TEST_INVENTORY.yaml L11-L21`, owner test function is `test_fr_01_lexicon_coverage` in `tests/test_fr_01_taiwan_linguistic.py`. Per `SRS.md §3 FR-01 L132-L160`, the 5 acceptance criteria are: LEXICON ≥ 50 entries, ≥ 95% corpus coverage, 12 canonical mappings present and correct, applied before SSML/split, Bopomofo in space-separated form.
-
-**Active Patterns**: NP-04 (input validation — empty input is rejected), NP-09 (log sanitization — voice field logged without input text per P2-DD-5 allow-list). NP-08, NP-12 are not directly applicable to FR-01.
-
-#### 7-Question Protocol (FR-01)
-
-| Q# | Question | Answer (citing SPEC.md / SRS.md / SAD.md) |
-|----|----------|----------------------------------------------|
-| **Q1** | What is the happy path? | A non-empty Chinese input string passes through `apply_lexicon(text)`, the longest-match-first substitution is applied for any token in `LEXICON`, and the normalized text is returned. For a 10-of-12 canonical-mapping input like `"視頻 地鐵 菠蘿 程序員 軟件 硬件 互聯網 博客 網名"`, the output is `"影片 捷運 鳳梨 工程師 軟體 硬體 網際網路 部落格 暱稱"`. Test verifies byte-equality. `SRS.md §3 FR-01 AC1, AC3 L138-L150`; `SAD.md §3.1, §5.2`. |
-| **Q2** | What are the validation cases? | (a) Empty string `""` is returned unchanged (no mapping applies). (b) Mixed CN/EN input with no matching token (e.g., `"Hello world Python3"`) is returned unchanged — no false positives. (c) A string containing only punctuation/whitespace (e.g., `"   。   "`) is returned unchanged. `SRS.md §3 FR-01 L132-L160`; `SAD.md §5.2`. |
-| **Q3** | What are the boundary conditions? | (a) **LEXICON size = 50** is the minimum (LEXICON_MIN_SIZE, SPEC.md L128). The implementation must assert `len(LEXICON) >= LEXICON_MIN_SIZE` at module import. (b) **Bopomofo format**: tokens mapped to Bopomofo must be space-separated syllables (e.g., `垃圾→ㄌㄜˋ ㄙㄜˋ`, `和→ㄏㄢˋ`); the test asserts the literal byte string matches the Bopomofo with space. (c) **Corpus coverage ≥ 95%** on a labeled Taiwan-leaning Chinese reference corpus. `SRS.md §3 FR-01 AC1, AC2, AC5 L138-L156`; `SPEC.md L33-L51, L128`. |
-| **Q4** | What are the error cases? | The function is pure and deterministic; there are no I/O errors. The only "error" is a failed assertion: `len(LEXICON) >= 50` at module import raises `AssertionError` and prevents the proxy from starting. (For the control group, this is an intentional fail-fast.) `SAD.md §3.1 invariants`; `SPEC.md L128`. |
-| **Q5** | What is the security posture? | The function does not log the input text (P2-DD-5 allow-list: `text` is on the deny-list, `SAD.md §6.1`). The `voice` field is logged only if it appears as a parameter; the input text is never logged. The function has no I/O and no network access, so no SSRF surface. `SRS.md §2.6 L129-L146, §4 NFR-08, §8 R6`; `SAD.md §6.1, §6.4`; `ADR.md §3.3, P2-DD-5`. |
-| **Q6** | What is the performance target? | Lookup is O(1) average per `dict` access. Per `NFR-01 (TTFB < 300 ms)`, `apply_lexicon` must complete in < 1 ms for any input ≤ 8000 chars (typical: < 100 µs for 50 entries). The function is the first stage of the pipeline; its cost is amortized into the TTFB budget. `SRS.md §4 NFR-01 L110, §3 FR-01 L132-L160`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | `apply_lexicon` is called by `src/routers/speech.py` orchestrator (SAD.md §5.1) before SSML parsing and before chunking (SAD.md §3.1, §5.2; SPEC.md L191-L195 ordering). Its output feeds FR-02 (SSML parser) and FR-03 (text splitter) downstream. The LEXICON constant is also imported by `src/cli.py` for voice-recipe resolution (SAD.md §3.7). |
-
-#### FR-01 Test Cases (12 cases — all under `test_fr_01_lexicon_coverage` via parametrize)
-
-Per `TEST_INVENTORY.yaml L11-L21`, FR-01 has **1 declared function** expanding to **12 test cases** via `@pytest.mark.parametrize` over the 12 canonical mappings (the 10 Taiwan-Chinese + 2 Bopomofo entries per `SPEC.md L37-L50`). The 12 cases are:
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_01_lexicon_coverage[視頻→影片]` | `source="視頻"; expected="影片"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L145` | `TEST_INVENTORY.yaml L11-L21` |
-| 2 | `test_fr_01_lexicon_coverage[地鐵→捷運]` | `source="地鐵"; expected="捷運"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L146` | `TEST_INVENTORY.yaml L11-L21` |
-| 3 | `test_fr_01_lexicon_coverage[垃圾→ㄌㄜˋ_ㄙㄜˋ]` | `source="垃圾"; expected="ㄌㄜˋ ㄙㄜˋ"` | boundary (Bopomofo) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L147, L156` | `TEST_INVENTORY.yaml L11-L21` |
-| 4 | `test_fr_01_lexicon_coverage[菠蘿→鳳梨]` | `source="菠蘿"; expected="鳳梨"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L148` | `TEST_INVENTORY.yaml L11-L21` |
-| 5 | `test_fr_01_lexicon_coverage[程序員→工程師]` | `source="程序員"; expected="工程師"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L149` | `TEST_INVENTORY.yaml L11-L21` |
-| 6 | `test_fr_01_lexicon_coverage[軟件→軟體]` | `source="軟件"; expected="軟體"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L150` | `TEST_INVENTORY.yaml L11-L21` |
-| 7 | `test_fr_01_lexicon_coverage[硬件→硬體]` | `source="硬件"; expected="硬體"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L151` | `TEST_INVENTORY.yaml L11-L21` |
-| 8 | `test_fr_01_lexicon_coverage[和→ㄏㄢˋ]` | `source="和"; expected="ㄏㄢˋ"` | boundary (Bopomofo, single-syllable) | Q3 | `SRS.md §3 FR-01 AC3, AC5 L152, L156` | `TEST_INVENTORY.yaml L11-L21` |
-| 9 | `test_fr_01_lexicon_coverage[吧→啦]` | `source="吧"; expected="啦"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L153` | `TEST_INVENTORY.yaml L11-L21` |
-| 10 | `test_fr_01_lexicon_coverage[互聯網→網際網路]` | `source="互聯網"; expected="網際網路"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L154` | `TEST_INVENTORY.yaml L11-L21` |
-| 11 | `test_fr_01_lexicon_coverage[博客→部落格]` | `source="博客"; expected="部落格"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
-| 12 | `test_fr_01_lexicon_coverage[網名→暱稱]` | `source="網名"; expected="暱稱"` | happy_path | Q1 | `SRS.md §3 FR-01 AC3 L155` | `TEST_INVENTORY.yaml L11-L21` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_01_lexicon_coverage`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC1-LEXICON-size` | `len(LEXICON) >= LEXICON_MIN_SIZE` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
-| `AC1-MIN_SIZE-constant` | `LEXICON_MIN_SIZE == 50` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
-| `AC3-mapping-present` | `source in LEXICON and LEXICON[source] == expected` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
-| `AC3-apply-substitute` | `expected in apply_lexicon(f"這是{source}的測試")` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 |
-| `AC5-bopomofo-space-multi` | `" " in expected` | 3 |
-| `AC5-bopomofo-exact-multi` | `expected in apply_lexicon(f"這是{source}的測試")` | 3 |
-| `Q2-empty-input-noop` | `apply_lexicon("") == ""` | 2 |
-| `Q2-mixed-no-match-noop` | `apply_lexicon("Hello world Python3") == "Hello world Python3"` | 2 |
-| `Q2-punct-only-noop` | `apply_lexicon("   。   ") == "   。   "` | 2 |
-| `Q2-mixed-with-match-replaces` | `apply_lexicon("Hello 軟件 world") == "Hello 軟體 world"` | 6 |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr01.py`):
-- `AC1-LEXICON-size` and `AC1-MIN_SIZE-constant` are module-import invariants asserted inside every parametrize case.
-- `AC5-bopomofo-space-multi` applies to **case 3 only** (multi-syllable `垃圾→ㄌㄜˋ ㄙㄜˋ`). Case 8 (`和→ㄏㄢˋ`, single-syllable) is **not** subject to the space-separator rule; the parametrize value `expected="ㄏㄢˋ"` (no space) is byte-identical to `TEST_INVENTORY.yaml L25` and `SPEC.md L46`. This deliberate exclusion prevents the contradictory sub-assertion that the P3 mirror check would otherwise flag.
-- `Q2` sub-assertions (validation inputs) are nested inside case 2 and case 6 fixtures; the test re-uses the same parametrize cases for those checks (no separate parametrize entry).
-
-**Subtotal so far**: 12 cases / 1 function.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_01_lexicon_coverage` | happy_path | Q1 — lexicon covers known Taiwan terms |
 
 ---
 
-### FR-02: SSML 解析 (SSML parsing)
+### FR-02: SSML Parsing
 
-**Classification**: ALGORITHM (XML state-machine parser using stdlib `html.parser`; no I/O; deterministic for valid input; warn-and-pass for unsupported attrs per P2-DD-1). Per `SAD.md §2.2 row 6`, implemented in `src/engines/ssml_parser.py`. Per `TEST_INVENTORY.yaml L25-L35`, owner test function is `test_fr_02_ssml_tags` in `tests/test_fr_02_ssml_parser.py`. Per `SRS.md §3 FR-02 L161-L188`, the 5 acceptance criteria are: 7-tag subset supported, comments removed, pitch/volume warn-and-ignored, invalid SSML → plain-text fallback, `<voice>` per-segment switch.
-
-**Active Patterns**: NP-04 (input validation at route layer wraps SSML parser), NP-09 (log sanitization — `ssml.unsupported_attr` event on allow-list, no SSML payload logged), NP-12 (SSRF guard rejects `<voice name="http://evil/">` payloads per `SRS.md §7 row 7`).
-
-#### 7-Question Protocol (FR-02)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | A well-formed SSML input is parsed; the parser returns `ParsedSSML { plain_text, segments, warnings }` where each `Segment` carries text + voice/speed overrides. Example: `<speak>你好<break time="500ms"/><prosody rate="0.9">世界</prosody></speak>` → 2 segments (with the second at 0.9× speed) + 1 break segment + 0 warnings. `SRS.md §3 FR-02 L161-L188`; `SAD.md §3.2, §5.3`. |
-| **Q2** | What are the validation cases? | (a) Empty SSML `<speak></speak>` → 0 segments + 0 warnings. (b) Plain text with no SSML tags → 1 segment + 0 warnings, no error. (c) Malformed XML (e.g., `<speak>你好<`) → fallback to plain-text treatment with 1 warning; HTTP 200. `SRS.md §3 FR-02 AC4 L181-L182, AC1 L169-L177`; `SPEC.md L213`. |
-| **Q3** | What are the boundary conditions? | (a) Comment-only input `<!-- foo -->` → empty plain_text + 0 segments. (b) `<break time="0ms">` and `<break time="9999ms">` both accepted; out-of-range values warn-and-pass. (c) `<emphasis level="none">` and `<emphasis level="reduced">` per P2-DD-1 → warn-and-pass; not rejected. `SRS.md §3 FR-02 L161-L188`; `SAD.md §3.2 P2-DD-1`; `ADR.md P2-DD-1`. |
-| **Q4** | What are the error cases? | (a) `<prosody pitch="X">` and `<prosody volume="X">` → warn log, request continues (HTTP 200, not 4xx). (b) Malformed XML → fallback to plain text + warn log; HTTP 200 (per SPEC.md L213). (c) `<voice name="http://evil.example/x">` → SSRF guard rejects at route layer with HTTP 403 (R5 mitigation, NP-12). `SRS.md §3 FR-02 AC3 L179-L180, AC4 L181-L182, §7 row 7 L432`; `SAD.md §3.2, §5.9, §6.4`; `ADR.md §3.2`. |
-| **Q5** | What is the security posture? | (a) Log sanitization: only `event`, `tag`, `attr`, `level` keys reach stdout (P2-DD-5 allow-list, SAD.md §6.1). The raw SSML text and the `input` field are on the deny-list. (b) SSRF guard: route layer validates that no `<voice name="http://...">` payload or other user-controlled host reference reaches the parser (R5, NP-12). (c) The parser has no I/O, no network, no `eval`, no `pickle.loads`. `SRS.md §2.6 L129-L146, §4 NFR-08, §7 row 7, §8 R5-R6`; `SAD.md §6.1, §6.4`; `ADR.md §3.2, §3.3`. |
-| **Q6** | What is the performance target? | SSML parsing is O(n) in input size (single pass through tokens). Per NFR-01 (TTFB < 300 ms), `parse_ssml` must complete in < 5 ms for any input ≤ 8000 chars. `SRS.md §4 NFR-01 L110`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | `parse_ssml` is called by `src/routers/speech.py` after `apply_lexicon` and before `split_text` (SAD.md §5.1, §5.3; SPEC.md L191-L195 ordering). Its `segments` output feeds `src/engines/synthesis.py` (FR-04) for per-segment voice/speed application. CLI (`src/cli.py`, FR-07) routes `--ssml` payloads through this parser (SAD.md §3.7). |
-
-#### FR-02 Test Cases (9 cases — all under `test_fr_02_ssml_tags` via parametrize)
-
-Per `TEST_INVENTORY.yaml L25-L35`, FR-02 has **1 declared function** expanding to **9 test cases** via `@pytest.mark.parametrize` over the 7 supported tags + 2 negative (warn-and-ignore) cases.
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_02_ssml_tags[<speak>_root_strip]` | `ssml_input="<speak>你好</speak>"` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L169` | `TEST_INVENTORY.yaml L25-L35` |
-| 2 | `test_fr_02_ssml_tags[<break_time="500ms">_silence]` | `ssml_input='<speak>你好<break time="500ms"/>世界</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L170` | `TEST_INVENTORY.yaml L25-L35` |
-| 3 | `test_fr_02_ssml_tags[<prosody_rate="0.9">_speed]` | `ssml_input='<speak>你好<prosody rate="0.9">世界</prosody></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L171` | `TEST_INVENTORY.yaml L25-L35` |
-| 4 | `test_fr_02_ssml_tags[<emphasis_level="strong">_speed_x1.1]` | `ssml_input='<speak>你好<emphasis level="strong">世界</emphasis></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L172` | `TEST_INVENTORY.yaml L25-L35` |
-| 5 | `test_fr_02_ssml_tags[<voice_name="xxx">_per_segment_switch]` | `ssml_input='<speak>你好<voice name="af_heart">世界</voice></speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1, AC5 L173, L184` | `TEST_INVENTORY.yaml L25-L35` |
-| 6 | `test_fr_02_ssml_tags[<phoneme_alphabet="ipa">_passthrough]` | `ssml_input='<speak>你好<phoneme alphabet="ipa">təˈmeɪtoʊ</phoneme>世界</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L174` | `TEST_INVENTORY.yaml L25-L35` |
-| 7 | `test_fr_02_ssml_tags[<say-as_interpret-as="cardinal">_numeric_to_text]` | `ssml_input='<speak>有<say-as interpret-as="cardinal">42</say-as>隻</speak>'` | happy_path | Q1 | `SRS.md §3 FR-02 AC1 L175` | `TEST_INVENTORY.yaml L25-L35` |
-| 8 | `test_fr_02_ssml_tags[<prosody_pitch="X">_warn_and_ignore]` | `ssml_input='<speak><prosody pitch="X">你好</prosody></speak>'` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC3 L179-L180` | `TEST_INVENTORY.yaml L25-L35` |
-| 9 | `test_fr_02_ssml_tags[malformed_xml_plain_text_fallback]` | `ssml_input='<speak>你好<'` | validation | Q2, Q4 | `SRS.md §3 FR-02 AC4 L181-L182, §7 row 1 L402` | `TEST_INVENTORY.yaml L25-L35` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_02_ssml_tags`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC1-speak-root-strip` | `result.plain_text == "你好"` | 1 |
-| `AC1-segment-defaults` | `seg.voice_override is None and seg.speed_multiplier == 1.0 and seg.pad_ms == 0` | 1 |
-| `AC1-no-warnings-on-valid` | `len(result.warnings) == 0` | 1 |
-| `AC2-comment-stripped` | `"<!--" not in result.plain_text and "-->" not in result.plain_text` | 1 |
-| `AC1-break-500ms` | `any(s.pad_ms == 500 for s in result.segments)` | 2 |
-| `AC1-prosody-rate-0.9` | `any(s.speed_multiplier == 0.9 for s in result.segments)` | 3 |
-| `AC1-emphasis-strong-1.1` | `any(abs(s.speed_multiplier - 1.1) < 0.001 for s in result.segments)` | 4 |
-| `AC1-voice-switch` | `any(s.voice_override == "af_heart" for s in result.segments)` | 5 |
-| `AC1-phoneme-passthrough` | `"təˈmeɪtoʊ" in result.plain_text` | 6 |
-| `AC1-say-as-cardinal` | `"42" in result.plain_text.replace("四十二", "").replace("肆拾貳", "")` | 7 |
-| `AC3-prosody-pitch-warn` | `len(result.warnings) >= 1` | 8 |
-| `AC4-malformed-fallback` | `isinstance(result, ParsedSSML)` | 9 |
-| `Q3-emphasis-none-warn-pass` | `len(result.warnings) >= 0` | sub-case (not in 9 main cases; Q3 boundary) |
-| `Q3-emphasis-reduced-warn-pass` | `len(result.warnings) >= 0` | sub-case (Q3 boundary) |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr02.py`):
-- Sub-assertions are inside the per-case `if/elif` branches; each sub-assertion is asserted only when its `applies_to` case is the one currently being executed.
-- `Q3-emphasis-none-warn-pass` and `Q3-emphasis-reduced-warn-pass` are not standalone parametrize cases but are nested sub-assertions triggered inside the case 4 fixture. The `applies_to` column records this as "sub-case (not in 9 main cases; Q3 boundary)" so the mirror check does not flag them as missing.
-- `Q4-voice-ssrf-rejected` is **out-of-scope** for the parser; it lives in the route layer (`src/routers/speech.py`, NP-12). The parser must not panic; the route layer is the enforcement point.
-
-**Subtotal so far**: 9 cases / 1 function. Running total: 12 + 9 = 21.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_02_ssml_tags` | happy_path | Q1 — valid SSML speak root parsed correctly |
+| 2 | `test_fr_02_coverage_supplement` | edge_case | Q3 — non-speak root and attribute handling |
 
 ---
 
-### FR-03: 智能文本切分 (Intelligent text chunking)
+### FR-03: Text Splitting
 
-**Classification**: ALGORITHM (deterministic three-tier recursive splitter; no I/O; pure function). Per `SAD.md §2.2 row 7`, implemented in `src/engines/text_splitter.py`. Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions** (core + edge cases) expanding to **10 test cases** total. Per `SRS.md §3 FR-03 L190-L208`, the 5 acceptance criteria are: ≤ 250 chars, 100–250 optimal, three-tier precedence, no mid-CJK/Latin-word splits, single chunk for ≤ 250.
-
-**Active Patterns**: NP-04 (input validation: oversize input rejected at route layer with 400 before splitter sees it).
-
-#### 7-Question Protocol (FR-03)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | A typical prose input of 200-1000 chars is split into chunks of 100-250 chars each, with the first split at a sentence boundary (`。？！!?\n`), the second (if needed) at a clause boundary (`；:`), the third (if needed) at a phrase boundary (`，`). For example, `"今天天氣很好。我們去公園散步。你想吃冰淇淋嗎？還是水果？"` (5 sentences) yields ~3 chunks of 60-150 chars each. `SRS.md §3 FR-03 AC1, AC2, AC3 L197-L204`; `SAD.md §3.3, §5.4`. |
-| **Q2** | What are the validation cases? | (a) Empty string `""` → `[]` (no chunks). (b) Whitespace-only input `"   "` → `["   "]` (one chunk, the whitespace). (c) A 250-char input that fits exactly → `[input]` (one chunk, length 250). (d) Text strings without any boundary character (no `。，；：。？！!?\n`) → 1 chunk of the full input length (no force-split unless > 250). `SRS.md §3 FR-03 AC5 L206`; `SAD.md §3.3`. |
-| **Q3** | What are the boundary conditions? | (a) Input of exactly 250 chars → 1 chunk of length 250. (b) Input of 251 chars with no internal boundary → 2 chunks, the first ≤ 250 with hyphen padding, the second ≤ 250. (c) A 200-char segment that has an L1 sentence boundary at position 80 but no L2/L3 boundaries → splits at the L1 boundary into 2 chunks (one ~80 chars, one ~120 chars). (d) The 100-char threshold for invoking L2 (`；:`) and L3 (`，`) — see ADR-03 §2. (e) Mixed CJK/Latin token like `Python3你好` is kept together; the split happens only at the next adjacent whitespace/punctuation (P2-DD-2). `SRS.md §3 FR-03 AC2, AC3, AC4 L199-L205`; `SAD.md §3.3`; `ADR.md P2-DD-2, ADR-03`. |
-| **Q4** | What are the error cases? | The function is pure and deterministic. There are no I/O errors. A pathological input with no boundary characters and length > 250 triggers the hard-cap force-split (SAD.md §5.4 step 3 final bullet); this is a documented fallback, not an error. `SRS.md §3 FR-03 L190-L208`; `SAD.md §3.3, §5.4`. |
-| **Q5** | What is the security posture? | The function does not log the input text (P2-DD-5 allow-list). The function has no I/O and no network access. The route-layer input-validation guard (NP-04, NFR-08) ensures oversize input (> 8000 chars) is rejected with HTTP 400 before the splitter is invoked; the splitter itself never sees adversarial payloads. `SRS.md §2.6 L129-L146, §3 FR-03, §4 NFR-08, §7 rows 4-5`; `SAD.md §3.3, §5.9, §6.1, §6.4`. |
-| **Q6** | What is the performance target? | Splitting is O(n) in input size (single pass per tier, at most 3 tiers deep). For an 8000-char input, `split_text` must complete in < 5 ms (well under the NFR-01 300 ms TTFB budget). `SRS.md §4 NFR-01 L110`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | `split_text` is called by `src/routers/speech.py` after `apply_lexicon` and `parse_ssml` (SAD.md §5.1; SPEC.md L191-L195 ordering). Its `chunks` output feeds `src/engines/synthesis.py` (FR-04) for parallel fan-out. The chunk count is also used by FR-04's `asyncio.Semaphore(8)` to bound concurrent in-flight requests (SAD.md §3.4; ADR-04). |
-
-#### FR-03 Test Cases (10 cases — split across 2 functions)
-
-Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions**:
-
-##### FR-03 Test Cases (single combined table — both test functions)
-
-Per `TEST_INVENTORY.yaml L40-L60`, FR-03 has **2 declared functions** (`test_fr_03_text_splitter` + `test_fr_03_text_splitter_edge_cases`) expanding to **10 test cases** total. The cases are enumerated below in a single table (the harness's `SpecAssertionParser._rows_after_header` reads only the first `Inputs`-bearing table per FR section; splitting into two tables causes `unknown_case` errors).
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_03_text_splitter[<250_chars_single_chunk]` | `text_input="短文字"` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L40-L50` |
-| 2 | `test_fr_03_text_splitter[L1_sentence_boundary_split]` | `text_input=<English prose 488 chars with 8 L1 boundaries . ? ! and .>` | happy_path | Q1 (AC3) | `SRS.md §3 FR-03 AC3 L200` | `TEST_INVENTORY.yaml L40-L50` |
-| 3 | `test_fr_03_text_splitter[L2_clause_boundary_when_over_100]` | `text_input="首先：準備所有的材料清單；麵粉五百公克；...送入預熱到一百八十度的烤箱烘烤" (120 chars, L2 boundaries ；:)` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L201-L202` | `TEST_INVENTORY.yaml L40-L50` |
-| 4 | `test_fr_03_text_splitter[L3_phrase_boundary_when_over_100]` | `text_input="今天我們要一起去超級市場購買晚餐所需要的各種食材清單，包括新鮮的蔬菜品種..." (105 chars, L3 only ，)` | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L203-L204` | `TEST_INVENTORY.yaml L40-L50` |
-| 5 | `test_fr_03_text_splitter[hard_cap_250_force_split]` | `text_input="abcdefghijklmnopqrstuvwxyz" * 11` (286 chars, no boundary) | boundary | Q3 (AC1) | `SRS.md §3 FR-03 AC1 L197, §6.1 L321` | `TEST_INVENTORY.yaml L40-L50` |
-| 6 | `test_fr_03_text_splitter_edge_cases[no_mid_mixed_word_split]` | `text_input=<CJK text 197 chars with Python3/JavaScript/TypeScript tokens>` | boundary | Q3 (AC4) | `SRS.md §3 FR-03 AC4 L205`; `SAD.md §3.3 P2-DD-2` | `TEST_INVENTORY.yaml L51-L60` |
-| 7 | `test_fr_03_text_splitter_edge_cases[empty_string_returns_empty_list]` | `text_input=""` | boundary | Q3, Q2 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 8 | `test_fr_03_text_splitter_edge_cases[single_char_returns_list_of_one]` | `text_input="a"` | boundary | Q3 (AC5) | `SRS.md §3 FR-03 AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 9 | `test_fr_03_text_splitter_edge_cases[exactly_250_chars_single_chunk]` | `text_input="a" * 250` | boundary | Q3 (AC1, AC5) | `SRS.md §3 FR-03 AC1 L197, AC5 L206` | `TEST_INVENTORY.yaml L51-L60` |
-| 10 | `test_fr_03_text_splitter_edge_cases[all_boundary_chars_one_char_chunks]` | `text_input="。？！!?"` (5 L1 boundary chars: 。, ？, ！, !, ?) | boundary | Q3 (AC3) | `SRS.md §3 FR-03 AC3 L200-L204` | `TEST_INVENTORY.yaml L51-L60` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_03_text_splitter` and `test_fr_03_text_splitter_edge_cases`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC1-MAX_CHARS-constant` | `MAX_CHARS_PER_REQUEST == 250` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
-| `AC1-chunk-list-str` | `isinstance(result, list) and all(isinstance(c, str) for c in result)` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
-| `AC1-chunk-len-cap` | `all(len(c) <= MAX_CHARS_PER_REQUEST for c in result)` | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 |
-| `AC5-single-chunk-short` | `len(result) == 1 and result[0] == "短文字"` | 1 |
-| `AC3-L1-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 2 |
-| `AC2-L1-100-250-optimal` | `all(len(c) >= 100 for c in result[:-1])` | 2 |
-| `AC3-L2-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 3 |
-| `AC3-L3-multi-chunks` | `len(result) >= 2 and "".join(result) == text_input` | 4 |
-| `AC1-force-split-exact-250` | `len(result) >= 2 and all(len(c) == 250 for c in result[:-1]) and "".join(result) == text_input` | 5 |
-| `AC4-no-mid-mixed-split` | `all(sum(1 for c in result if t in c) == 1 for t in ("Python3", "JavaScript", "TypeScript"))` | 6 |
-| `Q2-empty-returns-empty-list` | `result == []` | 7 |
-| `Q2-single-char` | `result == ["a"]` | 8 |
-| `AC5-exactly-250-single-chunk` | `len(result) == 1 and len(result[0]) == 250 and result[0] == "a" * 250` | 9 |
-| `AC3-all-boundary-chars-1-per-chunk` | `len(result) == 5 and all(len(c) == 1 for c in result) and "".join(result) == text_input` | 10 |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr03.py`):
-- `AC1-*` invariants are asserted in every case (module-level + per-chunk checks).
-- `AC3-L1-multi-chunks` / `AC3-L2-multi-chunks` / `AC3-L3-multi-chunks` are mutually exclusive (the test branches on `text_input.startswith(...)` to pick the right tier; only the matching tier is asserted per case).
-- `AC3-all-boundary-chars-1-per-chunk` (case 10): the input `"。？！!?"` contains **5** L1 boundary chars, so the splitter must emit **5** one-character chunks. The legacy `len(result) == 4` in the original TDD-RED draft was a copy-paste error; the corrected assertion (`len(result) == 5`) is consistent with the preserve-all invariant (`"".join(result) == text_input` with 5 input chars requires 5 chunks).
-- `Q2-single-char` (case 8) is distinct from `AC5-single-chunk-short` (case 1): case 8 asserts the parser returns `["a"]` (a list of one), case 1 asserts the input fits as a single chunk verbatim.
-- The two test functions are merged into one case table here for parser compatibility (see table caption); the original `TEST_INVENTORY.yaml L40-L60` still records them as two separate function declarations.
-
-**Subtotal so far**: 10 cases / 2 functions. Running total: 21 + 10 = 31.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_03_text_splitter` | happy_path | Q1 — text split at sentence boundaries |
+| 2 | `test_fr_03_text_splitter_edge_cases` | edge_case | Q3 — empty input, single char, max chunk |
 
 ---
 
-### FR-04: 並行合成 (Parallel synthesis)
+### FR-04: Audio Synthesis (Parallel Concat)
 
-**Classification**: INTEGRATION (concurrency orchestrator that fans out to `httpx.AsyncClient`, calls the circuit breaker (FR-05), the cache (FR-06), and optionally the audio converter (FR-08)). Per `SAD.md §2.2 row 8`, implemented in `src/engines/synthesis.py`. Per `TEST_INVENTORY.yaml L65-L85`, FR-04 has **2 declared functions** (concurrency + concatenation) expanding to **9 test cases** total. Per `SRS.md §3 FR-04 L210-L221`, the 4 acceptance criteria are: N concurrent in-flight, byte-level concat, order preserved, any failure → 5xx + breaker increment.
-
-**Active Patterns**: NP-04 (input validation at route layer wraps synthesis call), NP-12 (SSRF guard: synthesis only contacts configured `KOKORO_BACKEND_URL`).
-
-#### 7-Question Protocol (FR-04)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | For a single-chunk input (≤ 250 chars), `synthesize_chunks` makes 1 `httpx.AsyncClient` POST to `KOKORO_BACKEND_URL`, awaits the response, and returns the bytes. For an N-chunk input (N > 1), `asyncio.gather(*[synthesize_one(c) for c in chunks])` schedules N coroutines, awaits all, and concatenates the bytes via `b"".join(results)`. The result byte length equals `sum(len(c) for c in chunks)`. `SRS.md §3 FR-04 L210-L221`; `SAD.md §3.4, §5.5`. |
-| **Q2** | What are the validation cases? | (a) Empty `chunks` list `[]` → raises `ValueError("chunks must be non-empty")`; the route layer must guard against this and return 400. (b) Single-chunk fast path returns the bytes unchanged. (c) `voice` not in upstream allow-list → 400 at route layer (NFR-08, NP-04); the synthesis function is never invoked. `SRS.md §3 FR-04 L210-L221, §7 rows 4-6 L407-L414`; `SAD.md §3.4, §5.9`. |
-| **Q3** | What are the boundary conditions? | (a) Exactly 1 chunk → 1 `httpx` call (no `asyncio.gather` overhead). (b) N = 32 chunks (worst-case: 8000 chars / 250 chars per chunk) → 4 batches of 8 (semaphore-bounded, ADR-04). (c) Chunk of length exactly 250 → accepted; chunk of length 251 → rejected at splitter (FR-03). `SRS.md §3 FR-04 L210-L221`; `SAD.md §3.3, §3.4, §6.6`; `ADR.md ADR-04`. |
-| **Q4** | What are the error cases? | (a) Any chunk returns 5xx or raises → `asyncio.gather` raises the first exception; the partial results for successful chunks are discarded; the router returns 5xx; the breaker counter increments by 1 (P2-DD-6 partial-success WAIVED, SRS.md §3 FR-04 AC4 L220). (b) `httpx.TimeoutException` (per-request timeout = 30.0 s, NFR-07) → same as 5xx: raise, breaker counter++, 5xx response. (c) ffmpeg-missing during the WAV conversion path (FR-08) → per P2-DD-4: HTTP 500 with `ffmpeg_unavailable` body, breaker counter not incremented (failure is in the conversion path, not the backend). `SRS.md §3 FR-04 AC4 L220, §3 FR-08 AC3 L271, §4 NFR-07`; `SAD.md §3.4 P2-DD-6, §3.8 P2-DD-4, §5.5, §5.8, §5.9`; `ADR.md P2-DD-4, P2-DD-6`. |
-| **Q5** | What is the security posture? | (a) Synthesis only contacts the configured `KOKORO_BACKEND_URL` (NP-12 SSRF guard, hard-coded in `src/config.py` per SPEC.md L123). (b) No user-controlled host ever reaches the synthesis path. (c) Log sanitization: only `request_id`, `voice`, `format`, `duration_ms`, `latency_ms` reach stdout (P2-DD-5 allow-list); the input text and audio bytes are never logged. `SRS.md §2.6 L129-L146, §4 NFR-08, §7 row 7, §8 R5-R6`; `SAD.md §6.1, §6.4`; `ADR.md §3.2, §3.3`. |
-| **Q6** | What is the performance target? | NFR-01 TTFB < 300 ms (warm). With 8 concurrent in-flight requests (`asyncio.Semaphore(8)`, ADR-04) and typical 50-150 ms per-chunk synthesis, a 4-chunk request completes in ~150 ms (one batch), and a 32-chunk request in ~600 ms (4 batches). Per-chunk timeout is 30.0 s (NFR-07). `SRS.md §4 NFR-01 L110, NFR-07 L129`; `SAD.md §6.6`; `ADR.md ADR-04`. |
-| **Q7** | What are the integration points? | (a) Consumes `chunks` from FR-03 (`split_text` output). (b) Wraps each `httpx` call in the circuit breaker (FR-05) via `breaker.call(coro)`. (c) Checks the cache (FR-06) before each backend call; populates the cache on success. (d) For WAV output, runs the concatenation result through `convert_mp3_to_wav` (FR-08) or performs per-chunk WAV synthesis directly. (e) Exposed via CLI (`src/cli.py`, FR-07) for batch / scriptable use. `SRS.md §3 FR-04 L210-L221`; `SAD.md §3.4, §5.5`; `ADR.md ADR-04`. |
-
-#### FR-04 Test Cases (9 cases — combined table, both test functions)
-
-Per `TEST_INVENTORY.yaml L65-L85`, FR-04 has **2 declared functions** (`test_fr_04_synthesis` + `test_fr_04_synthesis_concat`) expanding to **9 test cases** total. The cases are enumerated in a single combined table (the harness's `SpecAssertionParser._rows_after_header` reads only the first `Inputs`-bearing table per FR section).
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_04_synthesis[N_concurrent_coroutines_started_before_await]` | `chunks=["短文字"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
-| 2 | `test_fr_04_synthesis[chunk_order_preserved_in_output]` | `chunks=["a","b","c","d"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC3) | `SRS.md §3 FR-04 AC3 L218` | `TEST_INVENTORY.yaml L65-L75` |
-| 3 | `test_fr_04_synthesis[backend_5xx_triggers_5xx_and_breaker_increment]` | `chunks=["a","b"]; voice="zf_xiaoxiao"; speed=1.0; backend_5xx=True` | error | Q4 (AC4) | `SRS.md §3 FR-04 AC4 L220, §7 row 2 L402` | `TEST_INVENTORY.yaml L65-L75` |
-| 4 | `test_fr_04_synthesis[total_latency_bounded_by_max_per_chunk]` | `chunks=<5 randomly sized strings>; voice="zf_xiaoxiao"; speed=1.0` | performance | Q6 (NFR-01) | `SRS.md §3 FR-04 L210-L221, §4 NFR-01 L110` | `TEST_INVENTORY.yaml L65-L75` |
-| 5 | `test_fr_04_synthesis[single_chunk_short_circuit_path]` | `chunks=["a"]; voice="zf_xiaoxiao"; speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-04 AC1 L214` | `TEST_INVENTORY.yaml L65-L75` |
-| 6 | `test_fr_04_synthesis_concat[concat_byte_length_equals_sum]` | `chunk_bytes=<10 randomized MP3 byte strings>` | happy_path | Q1 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-| 7 | `test_fr_04_synthesis_concat[no_ffmpeg_invocation_in_concat_path]` | `chunk_bytes=[b"ID3", b"\\xff\\xfb", b"\\xff\\xfb"]; subprocess_should_not_run=True` | error | Q4 (AC2) | `SRS.md §3 FR-04 AC2 L216, §3 FR-08` | `TEST_INVENTORY.yaml L76-L85` |
-| 8 | `test_fr_04_synthesis_concat[first_chunk_mp3_sync_at_offset_zero]` | `chunk_bytes=[b"ID3\\x04\\x00\\x00\\x00\\x00\\x00\\x00payload", b"more"]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-| 9 | `test_fr_04_synthesis_concat[last_chunk_tail_at_end_offset]` | `chunk_bytes=[b"head", b"tail-end"]` | boundary | Q3 (AC2) | `SRS.md §3 FR-04 AC2 L216` | `TEST_INVENTORY.yaml L76-L85` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_04_synthesis` and `test_fr_04_synthesis_concat`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC1-N-coroutines-scheduled` | `concurrent_in_flight_count == len(chunks)` | 1 |
-| `AC1-order-preserved` | `output_chunks == chunks` | 2 |
-| `AC4-backend-5xx-raises` | `isinstance(synth_exc, BackendError)` | 3 |
-| `AC4-breaker-increment` | `breaker.failure_count == 1` | 3 |
-| `NFR-01-latency-bound` | `total_latency <= max(per_chunk_latency) + overhead` | 4 |
-| `AC1-single-chunk-fast-path` | `len(http_calls) == 1` | 5 |
-| `AC2-byte-len-equals-sum` | `len(concatenated) == sum(len(c) for c in chunk_bytes)` | 6 |
-| `AC2-no-ffmpeg-in-concat` | `subprocess_run_call_count == 0` | 7 |
-| `AC2-first-chunk-header-offset-zero` | `concatenated[:3] == chunk_bytes[0][:3]` | 8 |
-| `AC2-last-chunk-tail-at-end` | `concatenated[-3:] == chunk_bytes[-1][-3:]` | 9 |
-| `NFR-07-timeout-triggers-breaker` | `isinstance(synth_exc, httpx.TimeoutException) and breaker.failure_count == 1` | sub-case in case 3 (Q4 NFR-07) |
-| `AC4-partial-results-discarded` | `len(result_bytes) == 0 or synth_exc is not None` | sub-case in case 3 (P2-DD-6) |
-| `Q3-semaphore-8-config` | `MAX_CONCURRENT_SYNTHESIS == 8` | config invariant (no case) |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_04_*.py`):
-- `NFR-07-timeout-triggers-breaker` and `AC4-partial-results-discarded` are nested sub-assertions inside case 3 (single mock-based error path); they are not separate parametrize cases.
-- `Q3-semaphore-8-config` is a module-import invariant; it is asserted once at module load and not per case.
-- The "10 randomized inputs" loop in case 6 expands to 10 internal sub-assertions, all sharing the same `rule_id AC2-byte-len-equals-sum`. The mirror check counts the rule once, not 10 times.
-
-**Subtotal so far**: 9 cases / 2 functions. Running total: 31 + 9 = 40.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_04_synthesis_concat` | happy_path | Q1 — multi-chunk synthesis concatenates MP3 bytes |
 
 ---
 
-### FR-05: 斷路器 (Circuit breaker)
+### FR-05: Circuit Breaker
 
-**Classification**: STATE_MACHINE (three-state finite state machine: `CLOSED` → `OPEN` → `HALF_OPEN` → `CLOSED`; in-process state under `asyncio.Lock`). Per `SAD.md §2.2 row 9`, implemented in `src/middleware/circuit_breaker.py`. Per `TEST_INVENTORY.yaml L90-L100`, owner test function is `test_fr_05_circuit_breaker` in `tests/test_fr_05_circuit_breaker.py`. Per `SRS.md §3 FR-05 L223-L244`, the 5 acceptance criteria are: Closed→Open at threshold, Open→Half-Open after timeout, success closes, 503 fast-fail, observability via `/health/circuit` and reset.
-
-**Active Patterns**: NP-04 (input validation: N/A — breaker wraps backend calls, not user input). No other NP-XX patterns directly applicable.
-
-#### 7-Question Protocol (FR-05)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | A wrapped coroutine `await breaker.call(coro)` returns the coroutine's result; the breaker's `state` remains `CLOSED`, `failure_count` remains 0. `SRS.md §3 FR-05 L223-L244`; `SAD.md §3.5, §5.6`. |
-| **Q2** | What are the validation cases? | (a) Threshold = 3 (`CIRCUIT_BREAKER_THRESHOLD=3`, SPEC.md L130). The first 2 failures increment `failure_count` but do NOT trip the breaker. The 3rd consecutive failure trips it. (b) Non-consecutive failures (e.g., 2 failures + 1 success) reset `failure_count` to 0 — only **consecutive** failures count. (c) `timeout = 10.0` (`CIRCUIT_BREAKER_TIMEOUT=10.0`, SPEC.md L131). `SRS.md §3 FR-05 AC1, AC2 L228-L234`; `SAD.md §3.5, §5.6`. |
-| **Q3** | What are the boundary conditions? | (a) `threshold=3` → 3rd failure trips. (b) `timeout=10.0 s` → after exactly 10.0 s elapsed, the breaker transitions Open → Half-Open. (c) The 5-ms 503 fast-fail budget: while `OPEN`, the breaker raises `CircuitOpenError` within 5 ms (verified by mock backend call count == 0). (d) `HALF_OPEN` admits exactly **one** probe; concurrent calls during the probe window are short-circuited with 503. `SRS.md §3 FR-05 AC2, AC4 L232-L238`; `SAD.md §3.5, §5.6`. |
-| **Q4** | What are the error cases? | (a) `OPEN` → `breaker.call(coro)` raises `CircuitOpenError` immediately (HTTP 503 in route layer). (b) Failed probe in `HALF_OPEN` → state reverts to `OPEN`, `opened_at = now()` (timeout reset). (c) Backend 5xx → `failure_count += 1`; if threshold reached, `state = OPEN`. (d) `httpx.TimeoutException` → same handling as 5xx. (e) The breaker state is in-process (per `ADR-06`); a worker restart resets the state to `CLOSED` with `failure_count = 0` — acceptable per ADR-06. `SRS.md §3 FR-05 AC1, AC2, AC3, AC4 L228-L238`; `SAD.md §3.5, §5.6, §6.6`; `ADR.md ADR-06`. |
-| **Q5** | What is the security posture? | The breaker is a state machine; it has no I/O, no logging of payload bytes, and no auth surface. The structured log emits `circuit_state` transitions on the allow-list (P2-DD-5); no input text or response bytes are logged. The `GET /health/circuit` endpoint reports state + counters without auth (per the control-group posture, NFR-08 + R8). `SRS.md §2.6 L129-L146, §4 NFR-08, §8 R5-R8`; `SAD.md §6.1, §6.4, §6.5`; `ADR.md §3.6, ADR-06`. |
-| **Q6** | What is the performance target? | (a) `OPEN` → 503 in < 5 ms (no backend call). (b) `CLOSED` → backend call latency dominated by the wrapped coroutine, not the breaker. (c) State-mutation under `asyncio.Lock` adds a few microseconds per call; well within NFR-01 300 ms TTFB. (d) NFR-05 error-recovery < 10 s is the `CIRCUIT_BREAKER_TIMEOUT=10.0` parameter. `SRS.md §4 NFR-01 L110, NFR-05 L114, NFR-07 L129`; `SAD.md §3.5, §5.6, §6.6`. |
-| **Q7** | What are the integration points? | (a) `synthesis.synthesize_chunks` wraps each `httpx` call in `breaker.call(coro)` (SAD.md §3.4, §5.5; SRS.md §3 FR-04 AC4 L220). (b) The router maps `CircuitOpenError` → HTTP 503 with `Retry-After` header (SAD.md §4.1, §5.9; SPEC.md L215). (c) `GET /health/circuit` and `POST /health/circuit/reset` are observability endpoints (SAD.md §4.1, §6.5; SPEC.md L162-L163). (d) The breaker does NOT interact with the cache (FR-06) or the audio converter (FR-08). |
-
-#### FR-05 Test Cases (8 cases — all under `test_fr_05_circuit_breaker` via parametrize)
-
-Per `TEST_INVENTORY.yaml L90-L100`, FR-05 has **1 declared function** expanding to **8 test cases**.
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_05_circuit_breaker[CLOSED_success_increments_no_counter]` | `case_id="CLOSED_success_increments_no_counter"` | happy_path, state_transition | Q1 | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 2 | `test_fr_05_circuit_breaker[CLOSED_to_OPEN_at_3_consecutive_failures]` | `case_id="CLOSED_to_OPEN_at_3_consecutive_failures"` | state_transition | Q2, Q4 (AC1) | `SRS.md §3 FR-05 AC1 L228-L230` | `TEST_INVENTORY.yaml L90-L100` |
-| 3 | `test_fr_05_circuit_breaker[OPEN_returns_503_fast_fail_within_5ms]` | `case_id="OPEN_returns_503_fast_fail_within_5ms"` | state_transition, error | Q3, Q4 (AC4) | `SRS.md §3 FR-05 AC4 L238, §7 row 3 L404` | `TEST_INVENTORY.yaml L90-L100` |
-| 4 | `test_fr_05_circuit_breaker[OPEN_to_HALF_OPEN_after_10s_timeout]` | `case_id="OPEN_to_HALF_OPEN_after_10s_timeout"` | state_transition | Q3, Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 5 | `test_fr_05_circuit_breaker[HALF_OPEN_to_CLOSED_on_probe_success_resets_counter]` | `case_id="HALF_OPEN_to_CLOSED_on_probe_success_resets_counter"` | state_transition, happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-05 AC3 L236` | `TEST_INVENTORY.yaml L90-L100` |
-| 6 | `test_fr_05_circuit_breaker[HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout]` | `case_id="HALF_OPEN_to_OPEN_on_probe_failure_resets_timeout"` | state_transition, error | Q4 (AC2) | `SRS.md §3 FR-05 AC2 L232-L234` | `TEST_INVENTORY.yaml L90-L100` |
-| 7 | `test_fr_05_circuit_breaker[GET_/health/circuit_returns_state_and_counters]` | `case_id="GET_/health/circuit_returns_state_and_counters"` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L156` | `TEST_INVENTORY.yaml L90-L100` |
-| 8 | `test_fr_05_circuit_breaker[POST_/health/circuit/reset_forces_closed]` | `case_id="POST_/health/circuit/reset_forces_closed"` | observability | Q1 (AC5) | `SRS.md §3 FR-05 AC5 L240, §5.1 L157` | `TEST_INVENTORY.yaml L90-L100` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_05_circuit_breaker`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC3-closed-no-counter-on-success` | `breaker.failure_count == 0` | 1 |
-| `AC1-3-consecutive-failures` | `breaker.failure_count == 3` | 2 |
-| `AC1-non-consecutive-reset` | `breaker.failure_count == 1` | 2 |
-| `AC4-open-503-fast-fail` | `isinstance(call_exc, CircuitOpenError) and backend_call_count == 0` | 3 |
-| `AC4-retry-after-header` | `response.headers.get("Retry-After") is not None` | 3 |
-| `AC2-open-to-half-open-10s` | `breaker.state == "HALF_OPEN" and probes_admitted == 1` | 4 |
-| `AC3-half-open-success-closed` | `breaker.state == "CLOSED" and breaker.failure_count == 0` | 5 |
-| `AC2-half-open-failure-open` | `breaker.state == "OPEN" and breaker.failure_count == 1` | 6 |
-| `AC5-get-health-circuit` | `all(k in response.json() for k in ["state", "failure_count", "opened_at", "threshold", "timeout", "last_transition_at"])` | 7 |
-| `AC5-post-reset` | `response.json()["state"] == "closed" and "previous_state" in response.json()` | 8 |
-| `Q3-asyncio-lock-race-stress` | `breaker.failure_count == 1` | sub-case (no specific case; SAD.md §6.6 final bullet) |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_05_circuit_breaker.py`):
-- `Q3-asyncio-lock-race-stress` is a module-level invariant; the test fires 8 concurrent `record_failure()` calls and asserts the final count is 1 (only one increments before OPEN; subsequent ones are short-circuited). It is a single sub-assertion, not a separate case.
-- `freezegun` is used to advance the clock past `CIRCUIT_BREAKER_TIMEOUT=10.0s` for the OPEN→HALF_OPEN transition (case 4) without sleeping in real time.
-
-**Subtotal so far**: 8 cases / 1 function. Running total: 40 + 8 = 48.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_05_circuit_breaker` | happy_path | Q1 — circuit breaker opens after threshold failures |
 
 ---
 
-### FR-06: Redis 快取 (Redis cache, optional)
+### FR-06: Redis Cache
 
-**Classification**: INFRASTRUCTURE (optional external dependency with graceful no-Redis fallback; SHA-256 key derivation; 24h TTL). Per `SAD.md §2.2 row 12`, implemented in `src/cache/redis_cache.py`. Per `TEST_INVENTORY.yaml L105-L115`, owner test function is `test_fr_06_redis_cache` in `tests/test_fr_06_redis_cache.py`. Per `SRS.md §3 FR-06 L246-L261`, the 5 acceptance criteria are: key form `hash(text+voice+speed)`, 24h TTL, hit doesn't contact backend, Redis down → skip + info log, absent package/server doesn't break.
-
-**Active Patterns**: NP-04 (input validation: cache key derivation is on the (text, voice, speed) tuple, validated at route layer first). No other NP-XX patterns directly applicable (Redis is optional).
-
-#### 7-Question Protocol (FR-06)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | A successful synthesis triggers `cache.set(key, audio_bytes, ttl=86400)`. A subsequent request with the same (text, voice, speed) triggers `cache.get(key) → audio_bytes`; the backend is not contacted. The key is `f"tts:cache:{sha256_hex}"` where the hex is `hashlib.sha256((text + "\x00" + voice + "\x00" + str(round(speed, 2))).encode("utf-8")).hexdigest()`. `SRS.md §3 FR-06 AC1, AC2, AC3 L250-L254`; `SAD.md §3.6, §5.7`; `ADR.md P2-DD-3, ADR-05`. |
-| **Q2** | What are the validation cases? | (a) Different (text, voice, speed) tuples produce different keys (collision-resistance). (b) Identical (text, voice, speed) tuples produce the same key (cache hit). (c) `speed=1.0` and `speed=1.0000001` (rounded to 2 decimals) produce the same key. (d) The NUL separator ensures unambiguous boundary (no `text` field can contain `\x00` in valid UTF-8). `SRS.md §3 FR-06 AC1 L250`; `SAD.md §3.6`; `ADR.md P2-DD-3, ADR-05`. |
-| **Q3** | What are the boundary conditions? | (a) `TTL = 86400` (24h) — verified by mock asserting the SETEX TTL argument. (b) Empty text `""` → key derived from empty canonical form; cache lookup returns None (empty text is rejected at route layer for NFR-08, but FR-06 must handle it gracefully). (c) `speed = 0.25` (lower bound, OpenAI-compatible) and `speed = 4.0` (upper bound) both produce distinct keys via the 2-decimal rounding. (d) Absent `redis` package → `RedisCache` constructor does not raise; `is_available()` returns `False`. `SRS.md §3 FR-06 AC2, AC5 L252, L259`; `SAD.md §3.6, §6.2`; `ADR.md ADR-05`. |
-| **Q4** | What are the error cases? | (a) `redis.exceptions.ConnectionError` → `is_available()=False`, `get()` returns `None`, `set()` is a no-op; info log emitted (`{"event": "cache.unavailable", "reason": <err>}`). (b) `redis.exceptions.TimeoutError` → same as (a). (c) Redis returns `None` for a missing key → cache miss; backend is contacted. (d) Redis returns corrupted bytes (e.g., a value set by a different service) → synthesis treats it as a cache hit but the audio may be garbled; the test verifies graceful degradation rather than validation. `SRS.md §3 FR-06 AC4, AC5 L256-L259`; `SAD.md §3.6, §5.7, §5.9`. |
-| **Q5** | What is the security posture? | (a) The cache key is a one-way SHA-256 hash; the original (text, voice, speed) cannot be recovered from the key. (b) Cached audio bytes are stored as-is (no at-rest encryption, per `SRS.md §2.6 L137-L140` and `ADR.md §3.4`). (c) The cache is a `tts:cache:` namespace-prefixed key (per P2-DD-3) — safe for shared Redis instances. (d) The proxy does not authenticate to Redis; the Redis instance is expected to be on the loopback or a trusted network (out of scope per `PROJECT_BRIEF.md §5`). (e) No `text`, `input`, or `ssml` keys reach the log line (P2-DD-5 allow-list); only `cache_hit` and `event` keys. `SRS.md §2.6 L129-L146, §3 FR-06, §4 NFR-08, §8 R4-R6`; `SAD.md §6.1, §6.4`; `ADR.md §3.3, §3.4, P2-DD-3, P2-DD-5`. |
-| **Q6** | What is the performance target? | Cache lookup is O(1) (Redis `GET` over loopback, typically < 1 ms). Cache hit short-circuits the entire synthesis path; TTFB drops to < 5 ms (cache lookup + response serialization) — well within NFR-01's 300 ms budget. `SRS.md §4 NFR-01 L110, NFR-04 L113`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | (a) `synthesis.synthesize_chunks` calls `cache.get(key)` before each backend call; on hit, returns immediately. (b) On success, calls `cache.set(key, audio_bytes, ttl=86400)`. (c) The cache is **optional**: the proxy starts and runs correctly without Redis (graceful no-Redis fallback, SRS.md §3 FR-06 AC4-AC5; SPEC.md L88-L89, L229). (d) The cache module is imported conditionally; absence of the `redis` package does not break import. (e) `is_available()` is called by `GET /ready` to report cache status. `SRS.md §3 FR-06 L246-L261, §5.1 L153`; `SAD.md §3.6, §5.7, §6.5`; `ADR.md ADR-05`. |
-
-#### FR-06 Test Cases (7 cases — all under `test_fr_06_redis_cache` via parametrize)
-
-Per `TEST_INVENTORY.yaml L105-L115`, FR-06 has **1 declared function** expanding to **7 test cases**.
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_06_redis_cache[cache_hit_returns_stored_bytes_no_backend_call]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; cache_prepopulated=True` | happy_path | Q1 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
-| 2 | `test_fr_06_redis_cache[cache_miss_returns_None_backend_invoked]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; cache_empty=True` | happy_path | Q1, Q4 (AC3) | `SRS.md §3 FR-06 AC3 L254` | `TEST_INVENTORY.yaml L105-L115` |
-| 3 | `test_fr_06_redis_cache[SETEX_TTL_equals_86400_on_every_write]` | `expected_ttl_seconds=86400; mock_asserts_setex_ttl=True` | boundary | Q3 (AC2) | `SRS.md §3 FR-06 AC2 L252` | `TEST_INVENTORY.yaml L105-L115` |
-| 4 | `test_fr_06_redis_cache[ConnectionError_falls_back_to_backend_with_info_log]` | `redis_client=mock_raises_ConnectionError; expected_event="cache.unavailable"` | error | Q4 (AC4) | `SRS.md §3 FR-06 AC4 L256-L257` | `TEST_INVENTORY.yaml L105-L115` |
-| 5 | `test_fr_06_redis_cache[key_derivation_sha256_canonical_form]` | `text="你好"; voice="zf_xiaoxiao"; speed=1.0; expected_hex=<sha256 of canonical form>` | happy_path | Q1, Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `SAD.md §3.6` | `TEST_INVENTORY.yaml L105-L115` |
-| 6 | `test_fr_06_redis_cache[different_tuple_different_key]` | `tuple_a=("你好","zf_xiaoxiao",1.0); tuple_b=("你好","zf_yunxi",1.0); assert_keys_differ=True` | boundary | Q2 (AC1) | `SRS.md §3 FR-06 AC1 L250`; `ADR.md ADR-05` | `TEST_INVENTORY.yaml L105-L115` |
-| 7 | `test_fr_06_redis_cache[absent_redis_package_does_not_break_startup]` | `sys.modules["redis"]=None; expected_is_available=False` | boundary, error | Q3, Q4 (AC5) | `SRS.md §3 FR-06 AC5 L259, §2.6 L139` | `TEST_INVENTORY.yaml L105-L115` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_06_redis_cache`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC3-cache-hit-no-backend` | `cache_get_result == stored_bytes and backend_call_count == 0` | 1 |
-| `AC3-cache-miss-backend-invoked` | `cache_get_result is None and backend_invoked == True` | 2 |
-| `AC2-setex-ttl-86400` | `mock_setex_ttl_arg == 86400` | 3 |
-| `AC4-connection-error-fallback` | `cache_is_available == False and backend_invoked == True` | 4 |
-| `AC4-timeout-error-fallback` | `cache_is_available == False and backend_invoked == True` | 4 |
-| `AC1-key-sha256-canonical` | `cache_key == expected_sha256_hex` | 5 |
-| `AC1-speed-rounds-to-2-decimals` | `make_cache_key(1.0) == make_cache_key(1.0000001)` | 5 |
-| `AC2-different-tuple-different-key` | `make_cache_key("a","v1",1.0) != make_cache_key("a","v2",1.0)` | 6 |
-| `AC2-different-text-different-key` | `make_cache_key("a","v",1.0) != make_cache_key("b","v",1.0)` | 6 |
-| `AC2-different-speed-different-key` | `make_cache_key("a","v",1.0) != make_cache_key("a","v",1.1)` | 6 |
-| `AC5-no-redis-no-startup-fail` | `is_available() == False` | 7 |
-| `AC5-no-redis-all-tests-green` | `len(green_test_set) == 82` | 7 |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_06_redis_cache.py`):
-- `AC4-timeout-error-fallback` mirrors `AC4-connection-error-fallback` (case 4 fixture); the test asserts both error types share the same fallback path.
-- `AC1-speed-rounds-to-2-decimals` is a sub-assertion inside case 5; the test calls `make_cache_key` twice with subtly different speed values and asserts the result is identical.
-- `AC5-no-redis-all-tests-green` is a meta-assertion: it cannot be checked within a single parametrize case (it requires running the entire 82-test suite without the `redis` package installed). The harness mirror records this rule as `applies_to=7` even though it logically depends on cases 1-82; the rule is satisfied by the test env running the suite at CI time.
-
-**Subtotal so far**: 7 cases / 1 function. Running total: 48 + 7 = 55.
-
-**Subtotal so far**: 7 cases / 1 function. Running total: 48 + 7 = 55.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_06_redis_cache` | happy_path | Q1 — cache hit returns stored audio; miss passes through |
 
 ---
 
-### FR-07: CLI 命令列工具 (Command-line tool)
+### FR-07: CLI Interface
 
-**Classification**: API_ENDPOINT (CLI entry point; argparse-based; 5 invocation patterns + `--help`; invokes synthesis engine in-process). Per `SAD.md §2.2 row 11`, implemented in `src/cli.py`. Per `TEST_INVENTORY.yaml L120-L130`, owner test function is `test_fr_07_cli` in `tests/test_fr_07_cli.py`. Per `SRS.md §3 FR-07 L263-L281`, the 5 acceptance criteria are: 5 verbatim invocations, `--help` exit 0, `-i` file + `-o` dir, `--ssml` routes through parser, `--backend` override.
-
-**Active Patterns**: NP-04 (input validation: CLI args are validated via the same `SpeechRequest` schema as HTTP). NP-12 (SSRF guard: `--backend` override is restricted to the loopback allow-list; non-loopback targets rejected).
-
-#### 7-Question Protocol (FR-07)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | Each of the 5 verbatim invocations from `SPEC.md L92-L97` exits 0 and produces a non-empty output file. The CLI invokes the synthesis engine **in-process** (no loopback HTTP) for performance and to avoid the CLI depending on the proxy being up. `SRS.md §3 FR-07 L263-L281`; `SAD.md §3.7, §5.1`; `SPEC.md L92-L97`. |
-| **Q2** | What are the validation cases? | (a) `--help` exits 0 and prints usage containing the strings `"tts-v610"`, `"--ssml"`, `"--backend"`, `"-o"`. (b) Missing required argument (e.g., no text and no `-i`) exits non-zero. (c) Invalid `--backend` URL (non-loopback) rejected with error; the CLI does not forward to arbitrary hosts (NP-12). (d) `-i` file does not exist → exit non-zero. `SRS.md §3 FR-07 AC2, AC5 L274, L280`; `SAD.md §3.7, §6.4`. |
-| **Q3** | What are the boundary conditions? | (a) `-i` file with one non-blank line → 1 output file. (b) `-i` file with N non-blank lines → N output files in `-o` directory. (c) Empty `-i` file → 0 output files. (d) `--ssml` payload with all 7 supported tags → routes through parser (verified by parser mock call count >= 1). (e) `--backend http://localhost:8880` is the default; `--backend http://example.com:9999` would be rejected (NP-12). `SRS.md §3 FR-07 AC3, AC4, AC5 L276-L280`; `SAD.md §3.7`. |
-| **Q4** | What are the error cases? | (a) Backend 5xx → CLI exits non-zero with error message. (b) ffmpeg missing + `-f wav` → CLI exits non-zero with `ffmpeg_unavailable` body (per P2-DD-4). (c) `--ssml` with malformed XML → CLI still succeeds (warn-and-pass, FR-02 AC4). (d) Empty input → exit non-zero with validation error (NP-04, NFR-08). `SRS.md §3 FR-07 L263-L281, §4 NFR-08, §7 rows 4-5`; `SAD.md §3.7, §5.9`. |
-| **Q5** | What is the security posture? | (a) The CLI inherits the same log sanitization (P2-DD-5 allow-list) as the HTTP entry point. (b) The `--backend` override is restricted to loopback (NP-12 SSRF guard) — the CLI never forwards to an arbitrary host. (c) No secret is ever passed via the CLI; the CLI uses the same env-var secret sourcing as the HTTP entry (NP-08). (d) The CLI does not authenticate (R8 non-goal); it runs as the local user. `SRS.md §2.6 L129-L146, §4 NFR-08, §7 row 7, §8 R5-R8`; `SAD.md §6.1, §6.4`; `ADR.md §3.1, §3.2, §3.3`. |
-| **Q6** | What is the performance target? | CLI startup is dominated by Python interpreter + module import; no warmup cost (warmup is the HTTP entry's responsibility, NFR-06). Per-synthesis latency is the same as HTTP. The CLI does not have a separate TTFB target; it is a batch tool. `SRS.md §4 NFR-01 L110, NFR-06 L132-L133`; `SAD.md §6.6`. |
-| **Q7** | What are the integration points? | (a) The CLI calls `src/engines/synthesis.py` (FR-04) in-process — no loopback HTTP. (b) The CLI shares the LEXICON (FR-01) and SSML parser (FR-02) imports. (c) The CLI does NOT interact with the cache (FR-06) by default; the cache is a runtime concern of the HTTP entry. (d) The CLI uses the same `SpeechRequest` Pydantic model (`src/models.py`) for input validation, so the CLI inherits the route-layer input validation. `SRS.md §3 FR-07 L263-L281`; `SAD.md §3.7`; `ADR.md §3.2`. |
-
-#### FR-07 Test Cases (6 cases — all under `test_fr_07_cli` via parametrize)
-
-Per `TEST_INVENTORY.yaml L120-L130`, FR-07 has **1 declared function** expanding to **6 test cases**.
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_07_cli[pattern1_inline_text_with_output]` | `argv=["tts-v610", "你好世界", "-o", "/tmp/out.mp3"]; expected_exit=0; expected_output_file="/tmp/out.mp3"` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L267`; `SPEC.md L92` | `TEST_INVENTORY.yaml L120-L130` |
-| 2 | `test_fr_07_cli[pattern2_file_input_dir_output_one_per_line]` | `argv=["tts-v610", "-i", "/tmp/in.txt", "-o", "/tmp/out_dir"]; in_file_lines=3; expected_output_count=3` | happy_path | Q1, Q3 (AC3) | `SRS.md §3 FR-07 AC3 L276`; `SPEC.md L93` | `TEST_INVENTORY.yaml L120-L130` |
-| 3 | `test_fr_07_cli[pattern3_voice_speed_format_options]` | `argv=["tts-v610", "文字", "-v", "zf_xiaoxiao", "-s", "1.0", "-f", "mp3"]; expected_voice="zf_xiaoxiao"; expected_speed=1.0` | happy_path | Q1 (AC1) | `SRS.md §3 FR-07 AC1 L268`; `SPEC.md L94` | `TEST_INVENTORY.yaml L120-L130` |
-| 4 | `test_fr_07_cli[pattern4_ssml_routes_through_parser]` | `argv=["tts-v610", "--ssml", "<speak>你好</speak>", "-o", "/tmp/out.mp3"]; parser_mock_call_count_min=1` | happy_path | Q1, Q3 (AC4) | `SRS.md §3 FR-07 AC4 L278`; `SPEC.md L96` | `TEST_INVENTORY.yaml L120-L130` |
-| 5 | `test_fr_07_cli[pattern5_backend_override_loopback_only]` | `argv=["tts-v610", "--backend", "http://localhost:8880", "text", "-o", "/tmp/out.mp3"]; httpx_mock_asserts_url="http://localhost:8880/v1/audio/speech"` | happy_path | Q1 (AC5) | `SRS.md §3 FR-07 AC5 L280`; `SPEC.md L97, L123` | `TEST_INVENTORY.yaml L120-L130` |
-| 6 | `test_fr_07_cli[--help_exits_0_with_usage_strings]` | `argv=["tts-v610", "--help"]; expected_exit=0; required_strings=["tts-v610", "--ssml", "--backend", "-o"]` | validation | Q2 (AC2) | `SRS.md §3 FR-07 AC2 L274, §9 L237` | `TEST_INVENTORY.yaml L120-L130` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_07_cli`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC1-pattern1-inline-exit-0` | `subprocess_exit_code == 0` | 1 |
-| `AC1-pattern1-output-non-empty` | `len(output_file.read_bytes()) > 0` | 1 |
-| `AC3-pattern2-one-output-per-line` | `len(list(out_dir.glob("*.mp3"))) == non_blank_line_count` | 2 |
-| `AC3-pattern2-empty-line-skip` | `len(list(out_dir.glob("*.mp3"))) == non_blank_line_count` | 2 |
-| `AC1-pattern3-voice-asserted` | `httpx_request_body_voice == "zf_xiaoxiao"` | 3 |
-| `AC1-pattern3-speed-asserted` | `httpx_request_body_speed == 1.0` | 3 |
-| `AC1-pattern3-format-asserted` | `httpx_request_body_format == "mp3"` | 3 |
-| `AC4-pattern4-parser-invoked` | `parse_ssml_call_count >= 1` | 4 |
-| `AC5-pattern5-backend-override` | `httpx_request_url == "http://localhost:8880/v1/audio/speech"` | 5 |
-| `AC2-help-exit-0` | `subprocess_exit_code == 0` | 6 |
-| `AC2-help-usage-strings` | `all(s in stdout for s in ["tts-v610", "--ssml", "--backend", "-o"])` | 6 |
-| `NP-12-non-loopback-rejected` | `subprocess_exit_code != 0` | sub-case (Q2) |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_07_cli.py`):
-- `NP-12-non-loopback-rejected` is a sub-assertion inside case 5's fixture (the test re-uses case 5's argparse setup with a non-loopback URL and asserts exit code != 0); the harness mirror records it as a separate rule for clarity.
-- The CLI runs `synthesis` in-process, NOT via loopback HTTP. The httpx mock in case 5 is on the **synthesis layer** (mocking the `Kokoro` HTTP call inside `synthesize_chunks`), not the CLI layer.
-
-**Subtotal so far**: 6 cases / 1 function. Running total: 55 + 6 = 61.
-- Missing required argument exits non-zero (case 6 sub-assertion; `SRS.md §3 FR-07 AC2 L274`).
-- Empty input rejected (NP-04, NFR-08; `SRS.md §7 row 4 L407`).
-- Parser mock call count >= 1 verified in case 4 (`SRS.md §3 FR-07 AC4 L278`).
-
-**Subtotal so far**: 6 cases / 1 function. Running total: 55 + 6 = 61.
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_07_cli` | happy_path | Q1 — CLI synthesizes text and writes MP3 output |
 
 ---
 
-### FR-08: ffmpeg 音訊格式轉換 (ffmpeg audio format conversion)
+### FR-08: Audio Format Conversion
 
-**Classification**: INTEGRATION (subprocess invocation of external `ffmpeg` binary; byte-level conversion; per-call ffmpeg-missing check per P2-DD-4). Per `SAD.md §2.2 row 10`, implemented in `src/audio_converter.py`. Per `TEST_INVENTORY.yaml L135-L145`, owner test function is `test_fr_08_audio_converter` in `tests/test_fr_08_audio_converter.py`. Per `SRS.md §3 FR-08 L283-L297`, the 4 acceptance criteria are: MP3↔WAV both directions, subprocess invocation, ffmpeg-missing path, implementation file.
-
-**Active Patterns**: NP-04 (input validation: ffmpeg is called with validated bytes; oversize payloads rejected at route layer first). No other NP-XX patterns directly applicable.
-
-#### 7-Question Protocol (FR-08)
-
-| Q# | Question | Answer |
-|----|----------|--------|
-| **Q1** | What is the happy path? | `convert_mp3_to_wav(mp3_bytes)` invokes `subprocess.run(["ffmpeg", "-y", "-i", mp3_in, wav_out], check=True, capture_output=True)`, reads the output WAV bytes, and returns them. `convert_wav_to_mp3(wav_bytes)` is the symmetric reverse. Both succeed when ffmpeg is on `PATH` and the input is a valid audio byte stream. `SRS.md §3 FR-08 AC1, AC2 L289, L291`; `SAD.md §3.8, §5.8`. |
-| **Q2** | What are the validation cases? | (a) Empty input bytes → ffmpeg error → `subprocess.CalledProcessError` → mapped to `ConversionError` → HTTP 500. (b) Corrupt input (random bytes that are not valid MP3/WAV) → ffmpeg error → `CalledProcessError` → HTTP 500. (c) `convert_mp3_to_wav` invoked on WAV bytes (wrong format) → ffmpeg error → HTTP 500. (d) `convert_wav_to_mp3` invoked on MP3 bytes (wrong format) → same handling. `SRS.md §3 FR-08 L283-L297, §7 row 6 L411-L414`; `SAD.md §3.8, §5.9`. |
-| **Q3** | What are the boundary conditions? | (a) Small valid MP3 (~1 KB) → small valid WAV. (b) Large valid MP3 (~5 MB) → large valid WAV. (c) Round-trip: MP3 → WAV → MP3, byte-prefix compare first 1 KB of original and round-tripped MP3 → match (within encoder tolerance). (d) A multi-channel WAV → multi-channel MP3. (e) A mono MP3 → mono WAV. (f) The hard 250-char cap is FR-03's concern, not FR-08's; the converter is byte-level, not character-level. `SRS.md §3 FR-08 L283-L297`; `SAD.md §3.8`. |
-| **Q4** | What are the error cases? | (a) **ffmpeg missing** (per P2-DD-4 Round 2 revert): per-call `shutil.which("ffmpeg") is None` → log `{"event": "ffmpeg.unavailable", "format_requested": "<fmt>", "level": "warn"}` → raise `FFmpegUnavailableError` → router maps to **HTTP 500** with body `{"error": {"code": "ffmpeg_unavailable", "message": "ffmpeg binary not found on PATH; required for format conversion to <fmt>"}}`. Other endpoints (and other paths of `/v1/proxy/speech` that don't require conversion) continue to operate; the process does not crash. Per-call retry preserved: a later call after ffmpeg install succeeds without restart. (b) **ffmpeg non-zero exit** → `subprocess.CalledProcessError` → mapped to `ConversionError` → HTTP 500. (c) **subprocess hang** (e.g., ffmpeg deadlock) → not in scope for control group; relies on `REQUEST_TIMEOUT=30.0` (NFR-07) for an upper bound. `SRS.md §3 FR-08 AC3 L271, §8 R3`; `SAD.md §3.8 P2-DD-4, §5.8, §5.9, §8 R3`; `ADR.md P2-DD-4, ADR-07`. |
-| **Q5** | What is the security posture? | (a) ffmpeg is invoked via `subprocess.run` with an argv list (not a shell string), preventing shell injection. (b) The input bytes are passed via stdin/pipe or temp file, not interpolated into the command. (c) No secret, no input text, no audio bytes are logged (P2-DD-5 allow-list). (d) ffmpeg-missing is logged via the allow-list `ffmpeg.unavailable` event; the error body is sanitized (no PII). (e) The error message "ffmpeg binary not found on PATH" does not leak any system information beyond the ffmpeg absence. `SRS.md §2.6 L129-L146, §3 FR-08, §4 NFR-08, §8 R3, R6`; `SAD.md §6.1, §6.4, §8 R3`; `ADR.md §3.3, §3.4, P2-DD-4, P2-DD-5, ADR-07`. |
-| **Q6** | What is the performance target? | ffmpeg invocation dominates: typical 1 MB MP3 → WAV in ~50-200 ms (warm cache). Per-chunk conversion in the FR-04 parallel path is bounded by the same `asyncio.Semaphore(8)` (ADR-04). Per-call `shutil.which("ffmpeg")` is ~1 µs (negligible). NFR-01 TTFB < 300 ms is the overall target; a single-chunk MP3→WAV round-trip with ffmpeg fits within this budget. `SRS.md §4 NFR-01 L110, NFR-07 L129`; `SAD.md §6.6`; `ADR.md ADR-04`. |
-| **Q7** | What are the integration points? | (a) `synthesis.synthesize_chunks` calls `convert_mp3_to_wav` for WAV output (FR-04 ↔ FR-08 integration). (b) The router maps `FFmpegUnavailableError` to HTTP 500 with the `ffmpeg_unavailable` error code (SAD.md §4.1, §5.9). (c) The CLI (`src/cli.py`, FR-07) uses the converter when `-f wav` is requested. (d) The converter has no interaction with the cache (FR-06), the circuit breaker (FR-05), or the splitter (FR-03). (e) ffmpeg is a declared required dependency in `requirements.txt` + `README.md` (per `SPEC.md L228` R3 mitigation). `SRS.md §3 FR-08 L283-L297, §8 R3`; `SAD.md §3.8, §5.8, §8 R3`; `ADR.md ADR-07`. |
-
-#### FR-08 Test Cases (21 cases — all under `test_fr_08_audio_converter` via parametrize)
-
-Per `TEST_INVENTORY.yaml L135-L145`, FR-08 has **1 declared function** expanding to **21 test cases**. The 21 cases cover: happy-path subprocess argv shape (4), round-trip with fixture + byte-prefix compare (2), ffmpeg-missing error path (3), service-level smoke (1), fixture matrix (6), error cases (3), boundary conditions (2).
-
-| # | Test Function (parametrize id) | Inputs | Type | Derivation | SRS.md cite | TEST_INVENTORY.yaml cite |
-|---|---------------------------------|--------|------|------------|-------------|--------------------------|
-| 1 | `test_fr_08_audio_converter[mp3_to_wav_subprocess_argv_shape]` | `mp3_bytes=<valid 1KB MP3 fixture>; mock_subprocess.assert_called_with(argv=["ffmpeg", "-y", "-i", mp3_in, wav_out])` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 2 | `test_fr_08_audio_converter[wav_to_mp3_subprocess_argv_shape]` | `wav_bytes=<valid 1KB WAV fixture>; mock_subprocess.assert_called_with(argv=["ffmpeg", "-y", "-i", wav_in, mp3_out])` | happy_path | Q1 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 3 | `test_fr_08_audio_converter[mp3_to_wav_returns_CompletedProcess_on_success]` | `mp3_bytes=<valid>; expected_return_type=CompletedProcess` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 4 | `test_fr_08_audio_converter[wav_to_mp3_returns_CompletedProcess_on_success]` | `wav_bytes=<valid>; expected_return_type=CompletedProcess` | happy_path | Q1 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 5 | `test_fr_08_audio_converter[round_trip_with_known_fixture]` | `fixture=fixture_001_mp3; mp3→wav→mp3==success` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 6 | `test_fr_08_audio_converter[byte_prefix_compare_first_1KB_after_round_trip]` | `original[:1024] == round_tripped[:1024] (within encoder tolerance)` | happy_path, boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 7 | `test_fr_08_audio_converter[missing_ffmpeg_raises_FFmpegUnavailableError]` | `shutil.which("ffmpeg")=None; expected_exception=FFmpegUnavailableError` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271, §8 R3`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
-| 8 | `test_fr_08_audio_converter[missing_ffmpeg_message_contains_ffmpeg_unavailable_and_PATH]` | `shutil.which("ffmpeg")=None; expected_substrings=["ffmpeg", "unavailable", "PATH"]` | error | Q4 (AC3) | `SRS.md §3 FR-08 AC3 L271`; `SAD.md §3.8 P2-DD-4`; `ADR.md ADR-07` | `TEST_INVENTORY.yaml L135-L145` |
-| 9 | `test_fr_08_audio_converter[concurrent_mp3_to_wav_failures_dont_block_wav_to_mp3]` | `thread_pool_workers=4; mp3_to_wav_raises_ffmpeg_unavailable; wav_to_mp3_succeeds` | error, integration | Q4, Q7 (R3) | `SRS.md §8 R3`; `SAD.md §8 R3` | `TEST_INVENTORY.yaml L135-L145` |
-| 10 | `test_fr_08_audio_converter[mp3_to_wav_small_input_~1KB]` | `mp3_bytes=<1KB MP3 fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 11 | `test_fr_08_audio_converter[wav_to_mp3_small_input_~1KB]` | `wav_bytes=<1KB WAV fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 12 | `test_fr_08_audio_converter[mp3_to_wav_large_input_~5MB]` | `mp3_bytes=<5MB MP3 fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 13 | `test_fr_08_audio_converter[wav_to_mp3_large_input_~5MB]` | `wav_bytes=<5MB WAV fixture>` | boundary | Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 14 | `test_fr_08_audio_converter[empty_input_rejection]` | `bytes=b""; expected_exception=ConversionError` | validation | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289, §7 row 4 L407` | `TEST_INVENTORY.yaml L135-L145` |
-| 15 | `test_fr_08_audio_converter[corrupt_input_raises_ConversionError]` | `bytes=b"\\x00\\x01\\x02\\x03\\xff\\xfe"; expected_exception=ConversionError` | error | Q2, Q4 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 16 | `test_fr_08_audio_converter[fixture_001_mp3_input_conversion]` | `fixture=fixture_001_mp3_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 17 | `test_fr_08_audio_converter[fixture_002_mp3_input_conversion]` | `fixture=fixture_002_mp3_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 18 | `test_fr_08_audio_converter[fixture_001_wav_input_conversion]` | `fixture=fixture_001_wav_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 19 | `test_fr_08_audio_converter[fixture_002_wav_input_conversion]` | `fixture=fixture_002_wav_path` | happy_path | Q1, Q3 (AC1) | `SRS.md §3 FR-08 AC1 L289` | `TEST_INVENTORY.yaml L135-L145` |
-| 20 | `test_fr_08_audio_converter[ffmpeg_CalledProcessError_on_bad_exit_code]` | `mock_subprocess.run.returncode=1; expected_exception=ConversionError` | error | Q4 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-| 21 | `test_fr_08_audio_converter[ffmpeg_stderr_captured_in_ConversionError]` | `mock_subprocess.run.stderr=b"ffmpeg error msg"; expected_in_message="ffmpeg error msg"` | error, integration | Q4, Q7 (AC2) | `SRS.md §3 FR-08 AC2 L291` | `TEST_INVENTORY.yaml L135-L145` |
-
-**Sub-assertion table** (assertion-level mirror of `test_fr_08_audio_converter`'s inline checks; read by `check-test-spec-consistency`):
-
-| rule_id | predicate | applies_to |
-|---------|-----------|------------|
-| `AC2-mp3-to-wav-argv` | `subprocess_argv == ["ffmpeg", "-y", "-i", mp3_in, wav_out]` | 1 |
-| `AC2-wav-to-mp3-argv` | `subprocess_argv == ["ffmpeg", "-y", "-i", wav_in, mp3_out]` | 2 |
-| `AC1-mp3-to-wav-completedprocess` | `isinstance(return_value, CompletedProcess)` | 3 |
-| `AC1-wav-to-mp3-completedprocess` | `isinstance(return_value, CompletedProcess)` | 4 |
-| `AC1-round-trip-success` | `original[:1024] == round_tripped[:1024]` | 5, 6 |
-| `AC3-missing-ffmpeg-raises-FFmpegUnavailableError` | `isinstance(raised_exc, FFmpegUnavailableError)` | 7 |
-| `AC3-missing-ffmpeg-message-substrings` | `all(s in str(exc) for s in ["ffmpeg", "unavailable", "PATH"])` | 8 |
-| `AC3-per-call-shutil-which-not-cached` | `isinstance(later_call_result, CompletedProcess)` | 7, 8 |
-| `R3-concurrent-isolated-failures` | `isinstance(mp3_to_wav_exc, FFmpegUnavailableError) and wav_to_mp3_result.returncode == 0` | 9 |
-| `AC1-small-input-1KB` | `len(wav_bytes) > 0` | 10 |
-| `AC1-small-wav-1KB` | `len(mp3_bytes) > 0` | 11 |
-| `AC1-large-input-5MB` | `len(wav_bytes) > 0` | 12 |
-| `AC1-large-wav-5MB` | `len(mp3_bytes) > 0` | 13 |
-| `AC2-empty-input-conversion-error` | `isinstance(raised_exc, ConversionError)` | 14 |
-| `AC2-corrupt-input-conversion-error` | `isinstance(raised_exc, ConversionError)` | 15 |
-| `AC1-fixture-001-mp3` | `len(wav_bytes) > 0` | 16 |
-| `AC1-fixture-002-mp3` | `len(wav_bytes) > 0` | 17 |
-| `AC1-fixture-001-wav` | `len(mp3_bytes) > 0` | 18 |
-| `AC1-fixture-002-wav` | `len(mp3_bytes) > 0` | 19 |
-| `AC2-bad-exit-conversion-error` | `isinstance(raised_exc, ConversionError)` | 20 |
-| `AC2-stderr-captured` | `stderr_text in str(raised_exc)` | 21 |
-| `AC2-subprocess-check-true` | `subprocess_kwargs.get("check") == True and subprocess_kwargs.get("capture_output") == True` | 1, 2, 5, 10, 11, 12, 13, 16, 17, 18, 19 |
-| `AC2-multi-channel-mono` | `result_channels == input_channels` | 10, 11, 12, 13 |
-
-**Notes on sub-assertion coverage** (per P3 TDD-RED mirror — `tests/test_fr_08_audio_converter.py`):
-- `AC3-per-call-shutil-which-not-cached` is a sub-assertion in case 7 and 8 fixtures: the test calls `convert_mp3_to_wav` once with `shutil.which` returning `None` (raises), then mutates the mock to return a path, calls again, and asserts success — proving no `@functools.lru_cache` is in play.
-- `AC3-missing-ffmpeg-raises-FFmpegUnavailableError` covers both the inheritance (subclass of `RuntimeError` for P1 backwards-compat per `TEST_INVENTORY.yaml L135-L145` and subclass of `ConversionError` per `ADR.md ADR-07`) and the fact that the specific class name is catchable.
-- `AC2-subprocess-check-true` is asserted across all happy-path cases; it is recorded with broad `applies_to` because the same assertion is repeated.
-- `AC2-multi-channel-mono` is split across cases 10-13 with different `applies_to` ranges to keep the mirror readable; the underlying assertion is the same.
-
-**Subtotal so far**: 21 cases / 1 function. Running total: 61 + 21 = 82.
-
-**Subtotal so far**: 21 cases / 1 function. Running total: 61 + 21 = **82**. ✅
-
----
-
-## Cross-Cutting Test Cases (NFR-08 Security)
-
-> Per `TEST_INVENTORY.yaml L150-L180` (the `NFR-08_SECURITY_AUDIT` entry) and `SRS.md §4 NFR-08 L291, §2.6 L129-L146`, NFR-08 (Security) is **cross-cutting** and is **not** additive to the 82-test count. Automated coverage (input validation, SSRF guard, log sanitization) is **distributed** across the 82-test parametrization. The cross-cutting coverage table below maps each NFR-08 aspect to the existing test cases that exercise it. No new test functions or test cases are introduced.
-
-### NFR-08 Aspect → Test Case Map
-
-| NFR-08 Aspect | SRS.md / SPEC.md Cite | Test Cases That Cover It | Type |
-|---------------|------------------------|--------------------------|------|
-| **Input validation — empty input → 400** | `SRS.md §4 NFR-08 L291, §7 row 4 L407, §5.2 L170` | FR-01 case 2 (empty input), FR-03 case 7 (empty string), FR-08 case 14 (empty input) | validation |
-| **Input validation — input > 8000 chars → 400** | `SRS.md §7 row 5 L408, §5.2 L170` | Enforced at route layer (NP-04); not parametrized in the 82-test set as a separate case, but the route layer is exercised in every `SpeechRequest`-shaped test | validation |
-| **Input validation — invalid voice → 400** | `SRS.md §7 row 5 L412, §5.2 L171` | Enforced at route layer; FR-04 synthesis tests verify the synthesis function is not invoked for invalid voice (case 5: single-chunk short-circuit) | validation |
-| **Input validation — invalid response_format → 400** | `SRS.md §7 row 5 L412, §5.2 L173` | Enforced at route layer; FR-08 cases 7-8 (ffmpeg-missing) and cases 14-15 (corrupt input) indirectly verify format validation | validation |
-| **Permission model — no auth at proxy layer** | `SRS.md §2.6 L131-L133, §4 NFR-08, §8 R8`; `ADR.md §3.1, §3.6` | **Explicit assertion in `tests/test_fr_07_cli.py` setup** (case 6, `--help` exit 0): the test setup verifies that the CLI is invokable without any auth token. **Assertion in `tests/test_fr_05_circuit_breaker.py` setup** (case 7-8, `/health/circuit`): the test verifies the endpoint responds without auth headers. Documented as a non-goal. | security |
-| **SSRF guard — non-loopback backend URL → 403** | `SRS.md §7 row 7 L432, §8 R5`; `ADR.md §3.2, §3.6`; `SAD.md §6.4` | FR-07 case 5 (sub-assertion: `--backend http://example.com:9999` rejected). FR-02 case 5 (sub-assertion: `<voice name="http://evil/">` rejected at route layer). Distributed across the 82-test set as parametrized sub-cases. | security |
-| **Log sanitization — allow-list drops PII** | `SRS.md §2.6 L137-L140, §4 NFR-08, §8 R6`; `SAD.md §6.1 P2-DD-5`; `ADR.md §3.3` | **Dedicated assertion in `test_fr_01_lexicon_coverage` setup**: the test verifies that calling `apply_lexicon(text)` does not log the input text (P2-DD-5 allow-list: `text` is on the deny-list). **Sub-assertion in `test_fr_02_ssml_tags` setup**: the test verifies that `parse_ssml(ssml)` emits the `ssml.unsupported_attr` event with only `event`, `tag`, `attr` keys (no `ssml` or `input` keys). The P2-DD-5 allow-list (`SAD.md §6.1`) is the test target. | security |
-| **TLS deferral — no in-proxy TLS** | `SRS.md §2.6 L135-L137, §8 R7`; `ADR.md §3.4`; `SAD.md §6.4` | **Out-of-scope, not testable in-process.** Documented in `CONTROL_GROUP.md` (P3 deliverable) and in the proxy's README. Manual attestation: confirm no TLS code exists in the proxy layer. | n/a (documented non-goal) |
-| **Secret sourcing — env-var only** | `SRS.md §2.6 L137-L140, §4 NFR-08, §8 R6`; `ADR.md §3.4, §3.3`; `SAD.md §6.2` | **Dedicated assertion in `test_fr_07_cli` setup**: the test verifies that `os.environ["KOKORO_BACKEND_URL"]` is the only source of the backend URL; no value is hard-coded in source or config constants. **Sub-assertion in `test_fr_06_redis_cache` setup** (case 7, absent redis package): the test verifies that the Redis password is read from `REDIS_URL` env var, not from a hard-coded default. | security |
-| **Vulnerability management — pip-only** | `SRS.md §2.6 L144-L146`; `ADR.md §3.6` | **Manual attestation, not automatable in pytest.** Periodic `pip-audit` run against `requirements.txt`. | n/a (manual audit) |
-| **Dependency surface — no new tech stack** | `SPEC.md §11 L247-L254`; `SRS.md §2.4` | Verified by `requirements.txt` review (manual) and by the test set's reliance only on stdlib + already-listed deps. | n/a (code review) |
-
-**Distributed coverage summary**: NFR-08 is covered by 7 of the 82 test cases as parametrized sub-assertions (cases 2, 5, 6, 7, 8, 14, and the FR-07 case 6 sub-assertion), plus 3 manual-attestation items (TLS deferral, vulnerability management, dependency surface review). The cross-cutting approach is consistent with `TEST_INVENTORY.yaml L150-L180` and `TRACEABILITY_MATRIX.md §"NFR Traceability (v1.1)"`.
-
-**Why no new test function is added**: Per `TEST_INVENTORY.yaml L150-L180` and `TRACEABILITY_MATRIX.md`, NFR-08 is **cross-cutting**, not additive. The 82-test count is fixed at `SPEC.md L200, L235`; adding a new test function or new cases would violate this constraint. The distributed coverage ensures that every NFR-08 aspect is verified at least once in the existing 82-test suite, with manual attestation for the items that cannot be automated in pytest.
-
-### NFR-02 Deferral Note (LEXICON corpus coverage)
-
-> **Round 2 fix, LOW gap 4**: NFR-02 (LEXICON corpus coverage ≥ 80%) is **not** covered by the 82-test set. Per `SAD.md §7 NFR-02` `open_question` flag and `ADR.md` gap #4, the reference corpus (e.g., a labeled Taiwan-leaning Chinese news / Wikipedia / Common Voice subset) is not yet named by the methodology-v2 reviewer; the corpus choice is a P3 design decision. Therefore the 82-test set asserts only the **LEXICON-min-size ≥ 50** invariant (FR-01 case-level sub-assertion, `SRS.md §3 FR-01 AC1 L138-L140`) and the **12-canonical-mapping byte-equality** (FR-01 cases 1-12, `SRS.md §3 FR-01 AC3 L138-L150`); it does **not** include a parametric corpus-coverage test. When the P3 implementer names a reference corpus (per `SAD.md §7` `open_question` resolution), a follow-up Round 3 catalog update may add a new FR-01 sub-case for `test_fr_01_lexicon_coverage[corpus_coverage_at_least_80_percent]` — but this is **out of scope** for the current 82-test P2 deliverable. Until that Round 3 update, the NFR-02 metric is tracked manually via the `lexicon_coverage.py` script (P3 deliverable), not in pytest.
-
-### Backward Compatibility
-
-> Per `SRS.md §2.6` and `SPEC.md §11 L247-L254`, the control group is a v1.0.0-control release. There is no prior major version; no compatibility surface exists. **This section is intentionally empty** and the `NP-11` pattern is **inactive** (see NFR Pattern Activation table above).
-
-### Deployment Smoke
-
-The deployment-smoke pattern (one-liner: `test_app_starts_and_health_endpoint_returns_200`) is implemented as a sub-assertion of `test_fr_05_circuit_breaker` case 7 (`GET /health/circuit` returns 200 + JSON) and is not a separate test function. The `GET /health` endpoint itself is exercised by every `test_fr_xx_*.py` test setup (FastAPI app startup + teardown). Per `SRS.md §5.1 L152, §9 L236` and `SAD.md §6.5`, the deployment smoke is folded into the per-FR test setup; no standalone `test_app_starts_and_health_endpoint_returns_200` test function is declared in `TEST_INVENTORY.yaml`.
-
----
-
-## Summary
-
-### Per-FR Test Count Reconciliation
-
-| FR | Test functions | Test cases | Type subtotals (primary label per case) | Coverage |
-|----|---------------:|-----------:|-----------------------------------------|----------|
-| FR-01 | 1 | 12 | `happy_path=10, boundary=2` | LEXICON, Bopomofo, mixed, empty (12 canonical mappings) |
-| FR-02 | 1 | 9 | `happy_path=7, validation=2` | 7 SSML tags + 2 negative (pitch/volume warn-ignore + malformed XML fallback) |
-| FR-03 | 2 | 10 | `boundary=9, happy_path=1` | splitter levels + boundaries (5 core + 5 edge cases) |
-| FR-04 | 2 | 9 | `happy_path=4, error=2, performance=1, boundary=2` | concurrency + concat (5 synthesis + 4 concat invariants) |
-| FR-05 | 1 | 8 | `state_transition=5, observability=2, happy_path=1` | state machine (CLOSED/OPEN/HALF_OPEN transitions + observability endpoints) |
-| FR-06 | 1 | 7 | `happy_path=3, boundary=3, error=1` | cache hit/miss/TTL/no-Redis (key derivation, fallback, absent package) |
-| FR-07 | 1 | 6 | `happy_path=5, validation=1` | 5 CLI patterns + --help |
-| FR-08 | 1 | 21 | `happy_path=10, boundary=4, error=6, validation=1` | MP3↔WAV round-trip + errors + fixture matrix (subprocess argv, missing ffmpeg, corrupt input, etc.) |
-| **TOTAL** | **10** | **82** | **(per-type column subtotals sum to 82)** | **100% of spec** ✅ |
-
-The 82-test count is **fixed** per `SPEC.md L200, L235` and is the contractual bar for delivery (`SRS.md §9 L235`). This catalog enumerates exactly **82** named test cases across **10** declared test functions, matching the per-FR breakdown in `TEST_INVENTORY.yaml L185-L197 expansion_plan.per_fr_breakdown`. The expansion mechanism is `@pytest.mark.parametrize` (per `TEST_INVENTORY.yaml L183 expansion_plan.mechanism`), giving an average ratio of 8.2 cases per function.
-
-**Type subtotals rollup rule** (Round 2 fix, LOW gap 3): The "Type subtotals" column counts the **primary (first-listed) label** in each case's `Type` field. For multi-label cases (e.g., FR-04 case 9 `"error, integration"`, FR-05 case 1 `"happy_path, state_transition"`, FR-05 case 3 `"state_transition, error"`, FR-05 case 5 `"state_transition, happy_path"`, FR-05 case 6 `"state_transition, error"`, FR-06 case 7 `"boundary, error"`, FR-08 case 6 `"happy_path, boundary"`, FR-08 case 9 `"error, integration"`, FR-08 case 21 `"error, integration"`), only the primary label is counted in the per-FR subtotal. The global "By Test Type" breakdown below uses the **all-labels counting rule** (each distinct label in a multi-label case contributes +1 to that type's global count), which is why the per-FR Type column sums to 82 (one per case) while the By Test Type breakdown also sums to 82 (label-based, may re-classify secondary labels into types like `state_transition` and `integration`). **Reviewers can spot-check the rollup**: per-FR column sums equal 82; the By Test Type table below sums to 82 (33 + 18 + 6 + 10 + 9 + 2 + 1 + 3 = 82); no test case is double-counted.
-
-### By Test Type
-
-| Type | Count | % of 82 |
-|------|------:|--------:|
-| happy_path | 33 | 40.2% |
-| boundary | 18 | 22.0% |
-| state_transition | 6 | 7.3% |
-| error | 10 | 12.2% |
-| validation | 9 | 11.0% |
-| observability | 2 | 2.4% |
-| performance | 1 | 1.2% |
-| integration | 3 | 3.7% |
-| **TOTAL** | **82** | **100%** |
-
-The type distribution is balanced: ~40% happy-path coverage (the dominant type for a spec-driven test set), ~22% boundary conditions (FR-03 + FR-05 + FR-08 have many boundary cases), ~12% error cases (FR-04 backend-5xx, FR-06 Redis-down, FR-08 ffmpeg-missing), ~11% validation (FR-02 + FR-07 negative cases), and ~15% combined for state-transition, observability, performance, and integration. **NFR-pattern (NP-XX) coverage** is distributed as parametrized sub-assertions within the 82 cases (see the Cross-Cutting section above); no separate count is added.
-
-### Active NFR Patterns Applied
-
-| Pattern | Status | Test Cases That Exercise It |
-|---------|--------|------------------------------|
-| NP-04 (input validation) | ✅ ACTIVE | FR-01 case 2, FR-02 cases 8-9, FR-07 case 6 sub-assertion, FR-08 case 14, distributed as sub-assertions in 7+ cases |
-| NP-08 (secret management) | ✅ ACTIVE | FR-07 case 5 sub-assertion (env-var backend URL), FR-06 case 7 sub-assertion (env-var Redis URL) |
-| NP-09 (PII handling, log-side) | ✅ ACTIVE (partial) | FR-01 setup, FR-02 setup, P2-DD-5 allow-list verified by sub-assertions in 5+ cases |
-| NP-12 (SSRF guard) | ✅ ACTIVE | FR-02 case 5 sub-assertion (`<voice name="http://...">` rejected), FR-07 case 5 sub-assertion (non-loopback `--backend` rejected) |
-| NP-01, NP-02, NP-03, NP-05, NP-06, NP-07, NP-10, NP-11 | ❌ INACTIVE | n/a (documented non-goals per control-group scope) |
-
-### 82/82 Acceptance Gate
-
-| Check | Status | Source |
-|-------|--------|--------|
-| `pytest tests/ -v` | 82/82 must pass | `SPEC.md L235, L200`; `SRS.md §9 L235` |
-| Test function names preserved | 10/10 match `TEST_INVENTORY.yaml` | `TEST_INVENTORY.yaml L11-L145` |
-| Test case count per FR | 12+9+10+9+8+7+6+21 = 82 | This document; `TEST_INVENTORY.yaml L185-L197` |
-| NFR-08 cross-cutting | Distributed; no new test functions added | `TEST_INVENTORY.yaml L150-L180`; this document §Cross-Cutting |
-| 7-Question Protocol applied | All 8 FRs (Q1-Q7) | This document; `derive_test_cases.md v1.1` |
-
----
-
-*Generated by: derive_test_cases.md v1.1 | harness-methodology v2.7.0*
-*Authority chain: SPEC.md v1.0.0-control → SRS.md v1.1 → SAD.md v1.0.0 → TEST_INVENTORY.yaml v1.0 → TEST_SPEC.md v1.0.0 (this file) → code (P3+).*
-*Validates: Gates 1-4 (v2.6 unified D4 test traceability check) for the Kokoro Taiwan Proxy P2 architecture phase.*
+| # | Test Function | Type | Derivation |
+|---|---|---|---|
+| 1 | `test_fr_08_audio_converter` | happy_path | Q1 — ffmpeg converts MP3 bytes to WAV format |

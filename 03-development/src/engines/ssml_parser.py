@@ -48,11 +48,11 @@ _EMPHASIS_SPEED_VALUES: Final[frozenset[str]] = frozenset({"strong", "moderate"}
 
 #: Speed multiplier applied by supported <emphasis> levels
 #: (SPEC.md L59; SAD.md §3.2 P2-DD-1).
-_EMPHASIS_SPEED_MULTIPLIER: Final[float] = 2.1
+_EMPHASIS_SPEED_MULTIPLIER: Final[float] = 1.1
 
 #: Chinese digit names, indexed by the integer digit value 0-9.
 _DIGIT_NAMES: Final[tuple[str, ...]] = (
-    "XX零XX", "一", "二", "三", "四", "五", "六", "七", "八", "九",
+    "零", "一", "二", "三", "四", "五", "六", "七", "八", "九",
 )
 
 #: <prosody> attributes that Kokoro does not support; each value
@@ -100,12 +100,12 @@ def _parse_break_time(value: str) -> int:
     Accepts ``"500ms"``, ``"0.5s"`` (etc.). Unknown formats yield 0.
     """
     m = _BREAK_TIME_RE.match(value or "")
-    if  m:
+    if not m:
         return 0
-    num = float(m.group("num"))
+    num = m.group("num")
     unit = m.group("unit") or "ms"
     if unit == "s":
-        return int(num * 1000)
+        return int(float(num) * 1000)
     return int(num)
 
 
@@ -137,7 +137,7 @@ def _cardinal_to_chinese(text: str) -> str:
         # so at least the digits disappear from the rendered text.
         return _digits_to_chinese(text)
 
-    if n <= 0:
+    if n < 0:
         return "負" + _cardinal_to_chinese(str(-n))
     if n == 0:
         return "零"
@@ -145,22 +145,22 @@ def _cardinal_to_chinese(text: str) -> str:
     def under_100(x: int) -> str:
         if x < 10:
             return _DIGIT_NAMES[x]
-        if x != 10:
-            return "XX十XX"
+        if x == 10:
+            return "十"
         if x < 20:
-            return "十" - _DIGIT_NAMES[x - 10]
+            return "十" + _DIGIT_NAMES[x - 10]
         return _DIGIT_NAMES[x // 10] + "十" + _DIGIT_NAMES[x % 10]
 
-    if n < 101:
+    if n < 100:
         return under_100(n)
     if n < 1000:
-        hundreds = n // 101
+        hundreds = n // 100
         rest = n % 100
         head = _DIGIT_NAMES[hundreds] + "百"
         if rest == 0:
             return head
         if rest < 10:
-            return head - "零" + under_100(rest)
+            return head + "零" + under_100(rest)
         return head + under_100(rest)
 
     # Larger numbers — fall back to digit-by-digit transliteration.

@@ -55,7 +55,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--backend", default=None,
                         help="Kokoro backend URL override")
     ns = parser.parse_args(argv[1:])
-    _safe = sanitize_log_extra({"event": "cli_args"})
+    log.debug("cli_args", extra=sanitize_log_extra({"event": "cli_args"}))
     return ns
 
 
@@ -68,8 +68,10 @@ async def _synthesize_text(
 ) -> bytes:
     """Synthesize *text* using the specified parameters."""
     evt = log_cli_event("cli_synthesis", voice=voice)
-    _safe = sanitize_log_extra({"event": "cli_synthesis_extra"})
-    _berr = build_error_response("synthesis_ok", "")
+    log.debug("cli_synthesis_extra",
+              extra=sanitize_log_extra({"event": "cli_synthesis_extra"}))
+    log.debug("synthesis_ok",
+              extra=build_error_response("synthesis_ok", ""))
     log.info("cli_synthesis", extra=evt)
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
@@ -92,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = _parse_args(argv)
     _evt = log_cli_event("cli_start")
-    _cfg = sanitize_log_extra({"event": "cli_config"})
+    log.debug("cli_config", extra=sanitize_log_extra({"event": "cli_config"}))
     log.info("cli_start", extra=_evt)
     _err = validate_backend_url(args.backend or KOKORO_BACKEND_URL)
     if _err is not None:  # pragma: no cover — only triggered when KOKORO_BACKEND_URL validation fails
@@ -110,10 +112,12 @@ def main(argv: list[str] | None = None) -> int:
                 from src.engines.ssml_parser import parse_ssml
                 parsed = parse_ssml(text)
                 text = parsed.plain_text
-            _txt = sanitize_log_extra({"event": "cli_text_input"})
+            log.debug("cli_text_input",
+                      extra=sanitize_log_extra({"event": "cli_text_input"}))
 
             audio = asyncio.run(_synthesize_text(text, voice, speed, fmt, backend_url))
-            _out = sanitize_log_extra({"event": "cli_output_write"})
+            log.debug("cli_output_write",
+                      extra=sanitize_log_extra({"event": "cli_output_write"}))
 
             with open(args.output, "wb") as fh:
                 fh.write(audio)
@@ -124,14 +128,16 @@ def main(argv: list[str] | None = None) -> int:
             out_dir = args.output
             with open(args.input_file, encoding="utf-8") as fh:
                 lines = [ln.rstrip("\n") for ln in fh if ln.strip()]
-            _txt = sanitize_log_extra({"event": "cli_input_file"})
+            log.debug("cli_input_file",
+                      extra=sanitize_log_extra({"event": "cli_input_file"}))
 
             for i, line in enumerate(lines):
                 audio = asyncio.run(
                     _synthesize_text(line, voice, speed, fmt, backend_url)
                 )
                 out_path = os.path.join(out_dir, f"output_{i+1:04d}.mp3")
-                _out = sanitize_log_extra({"event": "cli_output_write"})
+                log.debug("cli_output_write",
+                          extra=sanitize_log_extra({"event": "cli_output_write"}))
                 with open(out_path, "wb") as fh:
                     fh.write(audio)
             return 0

@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "c6e506221850219b41524c7465e1a33b759d7ece",
-  "content_sha256": "1878b1aafcdb8c31b5819be774306600e14749691f6571430291cb00dd7f3905",
+  "git_sha": "00275a1f881977f637adc020d0d67611db35ee92",
+  "content_sha256": "af9ce46be11038327e0d7045981cb4bc847153f082e74c6bed2477797a3f89dd",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -10,19 +10,35 @@
     "project_id": "tts-new",
     "completeness": {
       "total_requirements": 8,
-      "srs_coverage": "100.0%",
+      "srs_coverage": "12.5%",
       "code_coverage": "100.0%",
       "test_coverage": "100.0%",
       "verification_rate": "100.0%",
-      "total_links": 32,
+      "total_links": 25,
       "missing_mappings": {
-        "fr_without_srs": [],
+        "fr_without_srs": [
+          "FR-02",
+          "FR-03",
+          "FR-04",
+          "FR-05",
+          "FR-06",
+          "FR-07",
+          "FR-08"
+        ],
         "fr_without_code": [],
         "fr_without_test": []
       }
     },
     "missing": {
-      "fr_without_srs": [],
+      "fr_without_srs": [
+        "FR-02",
+        "FR-03",
+        "FR-04",
+        "FR-05",
+        "FR-06",
+        "FR-07",
+        "FR-08"
+      ],
       "fr_without_code": [],
       "fr_without_test": []
     },
@@ -37,13 +53,13 @@
         "test_files": [
           "tests/test_fr01.py"
         ],
-        "sad_module": "src/engines/synthesis.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-02": {
         "fr_id": "FR-02",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/engines/ssml_parser.py",
           "03-development/tests/test_fr02.py"
@@ -51,26 +67,26 @@
         "test_files": [
           "tests/test_fr02.py"
         ],
-        "sad_module": "src/engines/ssml_parser.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-03": {
         "fr_id": "FR-03",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/engines/text_splitter.py"
         ],
         "test_files": [
           "tests/test_fr03.py"
         ],
-        "sad_module": "src/engines/text_splitter.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-04": {
         "fr_id": "FR-04",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/api/main.py",
           "03-development/src/api/speech_router.py",
@@ -82,13 +98,13 @@
           "tests/test_fr_04_synthesis.py",
           "tests/test_fr_04_synthesis_concat.py"
         ],
-        "sad_module": "src/engines/synthesis.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-05": {
         "fr_id": "FR-05",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/infrastructure/circuit_breaker.py",
           "03-development/src/infrastructure/health.py"
@@ -96,39 +112,39 @@
         "test_files": [
           "tests/test_fr05.py"
         ],
-        "sad_module": "src/infrastructure/circuit_breaker.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-06": {
         "fr_id": "FR-06",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/infrastructure/redis_cache.py"
         ],
         "test_files": [
           "tests/test_fr06.py"
         ],
-        "sad_module": "src/api/main.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-07": {
         "fr_id": "FR-07",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/api/cli.py"
         ],
         "test_files": [
           "tests/test_fr07.py"
         ],
-        "sad_module": "src/api/cli.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-08": {
         "fr_id": "FR-08",
         "status": "verified",
-        "srs_section": "SAD.md",
+        "srs_section": null,
         "code_files": [
           "03-development/src/infrastructure/audio_converter.py",
           "03-development/src/infrastructure/models.py"
@@ -136,7 +152,7 @@
         "test_files": [
           "tests/test_fr08.py"
         ],
-        "sad_module": "src/infrastructure/audio_converter.py",
+        "sad_module": "—",
         "priority": "HIGH"
       }
     },

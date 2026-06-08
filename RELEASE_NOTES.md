@@ -1,7 +1,7 @@
 # Release Notes
 
-> **Generated**: 2026-06-08 03:09:11
-> **Version**: harness-v4-20260608-score96.9
+> **Generated**: 2026-06-08 19:14:29
+> **Version**: gate4-20260607-score97
 
 ---
 
@@ -10,9 +10,23 @@
 
 ---
 
+## Features
+
+- feat(p7): add Phase 7 risk artifacts and fix TEST_SPEC structure
+
+## Bug Fixes
+
+- fix(gate4): remove redundant da_waiver, correct composite_score to 97.1288
+- fix(sad): populate fr_module_traceability FR-01..FR-08 for SAD↔SPEC parity
+- fix(harness): update submodule to fefd440 + regenerate wrapper with __file__ path fix
+
 ## Other
 
-- docs(quality): update Gate 4 report with corrected dynamic dimensions
+- chore(trace): update attestation git_sha to current commit
+- chore(p6→p7): advance phase to 7 — mutation precheck passes, all blockers resolved
+- chore(harness): update submodule to ac77cee + add harness_cli.py root wrapper
+- chore(harness): update submodule to 4d4b9cf + regenerate phase 1-8 plans
+- chore(methodology): advance phase to 6
 
 ---
 

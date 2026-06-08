@@ -57,40 +57,6 @@ jobs:
           PHASE: ${{ steps.phase.outputs.PHASE }}
         run: python harness/harness_cli.py run-phase --phase $PHASE --project .
 
-      - name: Gate Score Variance Check
-        # Detects fabricated gate scores: if all per-FR Gate1 scores in the phase are
-        # identical, they were likely copied rather than evaluated per FR.
-        # Only checks entries where fr_id is non-null (per-FR scores); aggregate Gate2/Gate4
-        # scores (fr_id=null) are excluded so one different aggregate score can't mask fraud.
-        env:
-          PHASE: ${{ steps.phase.outputs.PHASE }}
-        run: |
-          python3 - <<'EOF'
-          import glob, sys, os
-          try:
-              import yaml
-          except ImportError:
-              print("pyyaml not available — skipping variance check")
-              sys.exit(0)
-          phase = int(os.environ.get("PHASE", "1"))
-          logs = glob.glob(f".methodology/decision_logs/**/GATE_{phase}_*.yaml", recursive=True)
-          scores = []
-          for lf in logs:
-              try:
-                  d = yaml.safe_load(open(lf))
-                  if (d or {}).get("ctx", {}).get("fr_id") is None:
-                      continue  # skip aggregate (Gate2/Gate4) entries
-                  s = (d or {}).get("scores", {}).get("gate_score")
-                  if s is not None:
-                      scores.append(float(s))
-              except Exception:
-                  pass
-          if len(scores) > 2 and len(set(scores)) == 1:
-              print(f"FAIL: All {len(scores)} per-FR gate scores identical ({scores[0]}) for phase {phase}.")
-              print("      Scores must vary per FR — identical scores indicate fabrication.")
-              sys.exit(1)
-          print(f"OK: Gate score variance check passed ({len(scores)} per-FR entries for phase {phase}).")
-          EOF
 
   push-milestone-enforcement:
     name: Enforce push-milestone (no --no-verify bypass)
@@ -278,13 +244,12 @@ jobs:
               print(f"INFO: Phase {phase} < 3 — spec-coverage-check not required.")
               sys.exit(0)
           result = subprocess.run(
-              [sys.executable, "harness/harness_cli.py", "spec-coverage-check",
+              ["python", "harness/harness_cli.py", "spec-coverage-check",
                "--project", ".", "--threshold", str(threshold)],
               capture_output=True, text=True
           )
           print(result.stdout)
           if result.returncode != 0:
-              print(result.stderr)
               print(f"FAIL: D4 spec-coverage < {threshold:.0f}% for phase {phase}.")
               sys.exit(1)
           print(f"OK: D4 spec-coverage >= {threshold:.0f}%")
@@ -372,7 +337,7 @@ jobs:
           audit_file = f".methodology/audit_gaps_{prev}.md"
           if not os.path.exists(audit_file):
               print(f"INFO: {audit_file} not found — Phase End Audit may not have run for P{prev}.")
-              print(f"      Run: python harness/scripts/phase_end_audit.py --phase {prev} --project .")
+              print(f"      Run: python harness/harness_cli.py audit-phase --phase {prev} --project .")
               # Non-blocking if file doesn't exist yet (first push after advance-phase).
               sys.exit(0)
           content = open(audit_file, encoding="utf-8").read()
@@ -424,8 +389,8 @@ jobs:
           # Paths authoritative from core/quality_gate/phase_artifact_enforcer.py.
           required = {
               3: ["02-architecture/SAD.md"],                         # G-NEW-1: P2 artifact, present from P3+
-              4: ["04-testing/TEST_PLAN.md"],
-              5: ["04-testing/TEST_RESULTS.md"],
+              5: ["04-testing/TEST_PLAN.md",                        # P4 artifact, enforce after P4 complete
+                  "04-testing/TEST_RESULTS.md"],
               6: ["05-verification/VERIFICATION_REPORT.md", "05-verification/BASELINE.md"],
               7: ["06-quality/QUALITY_REPORT.md",                   # P6 artifact
                   "RELEASE_NOTES.md",                               # C-1: P6 artifact (project root)

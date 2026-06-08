@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "c6e506221850219b41524c7465e1a33b759d7ece",
-  "content_sha256": "1878b1aafcdb8c31b5819be774306600e14749691f6571430291cb00dd7f3905",
+  "git_sha": "2c43a42d3a4dd746b403e024455df9d8c6404977",
+  "content_sha256": "7c26f894451832c64df9a1344812bd17a3450b78b068968e8b95b6e0eb9833b3",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -37,7 +37,7 @@
         "test_files": [
           "tests/test_fr01.py"
         ],
-        "sad_module": "src/engines/synthesis.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-02": {
@@ -51,7 +51,7 @@
         "test_files": [
           "tests/test_fr02.py"
         ],
-        "sad_module": "src/engines/ssml_parser.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-03": {
@@ -64,7 +64,7 @@
         "test_files": [
           "tests/test_fr03.py"
         ],
-        "sad_module": "src/engines/text_splitter.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-04": {
@@ -82,7 +82,7 @@
           "tests/test_fr_04_synthesis.py",
           "tests/test_fr_04_synthesis_concat.py"
         ],
-        "sad_module": "src/engines/synthesis.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-05": {
@@ -96,7 +96,7 @@
         "test_files": [
           "tests/test_fr05.py"
         ],
-        "sad_module": "src/infrastructure/circuit_breaker.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-06": {
@@ -109,7 +109,7 @@
         "test_files": [
           "tests/test_fr06.py"
         ],
-        "sad_module": "src/api/main.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-07": {
@@ -122,7 +122,7 @@
         "test_files": [
           "tests/test_fr07.py"
         ],
-        "sad_module": "src/api/cli.py",
+        "sad_module": "—",
         "priority": "HIGH"
       },
       "FR-08": {
@@ -136,7 +136,7 @@
         "test_files": [
           "tests/test_fr08.py"
         ],
-        "sad_module": "src/infrastructure/audio_converter.py",
+        "sad_module": "—",
         "priority": "HIGH"
       }
     },

@@ -210,7 +210,7 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
   - **[B-DISPATCH]** Dispatch Agent B:
     ```bash
     python3 harness_cli.py dispatch --role reviewer --fr-id HR-01 \
-      --prompt "Review Phase 6 Gate 4 deliverables" --phase 6 --project . --max-turns 15
+      --prompt "Review Phase 6 Gate 4 deliverables" --phase 6 --project . --max-turns 30
     ```
 
 - **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase

@@ -1,7 +1,7 @@
 # Release Notes
 
 > **Generated**: 2026-06-08 19:14:29
-> **Version**: gate4-20260607-score97
+> **Version**: gate4-20260608-score97.13
 
 ---
 
@@ -10,9 +10,24 @@
 
 ---
 
+## Functional Requirements Delivered
+
+| FR ID | Description | Module | Gate 1 Score | Status |
+|-------|-------------|--------|--------------|--------|
+| FR-01 | Taiwan Lexicon | src/engines/taiwan_linguistic.py | 95.0 | ✓ PASS |
+| FR-02 | SSML Parser | src/engines/ssml_parser.py | 95.0 | ✓ PASS |
+| FR-03 | Text Splitter | src/engines/text_splitter.py | 95.0 | ✓ PASS |
+| FR-04 | Synthesis (parallel + concat) | src/engines/synthesis.py | 95.0 | ✓ PASS |
+| FR-05 | Circuit Breaker | src/infrastructure/circuit_breaker.py | 95.0 | ✓ PASS |
+| FR-06 | Redis Cache (optional) | src/infrastructure/redis_cache.py | 95.0 | ✓ PASS |
+| FR-07 | CLI | src/api/cli.py | 95.0 | ✓ PASS |
+| FR-08 | Audio Converter (ffmpeg) | src/infrastructure/audio_converter.py | 95.0 | ✓ PASS |
+
+---
+
 ## Features
 
-- feat(p7): add Phase 7 risk artifacts and fix TEST_SPEC structure
+- feat(p7): add Phase 7 risk artifacts (`07-risk/RISK_ASSESSMENT.md`, `07-risk/RISK_REGISTER.md`) and fix TEST_SPEC structure
 
 ## Bug Fixes
 

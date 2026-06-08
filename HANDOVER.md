@@ -14,9 +14,7 @@
 # 1. Clone (if working directory cleared)
 git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git && cd tts-new
 
-# 2. Read plan and start Phase 9
-cat .methodology/phase9_plan.md
-# Follow SKILL.md §0.1 Phase 9 entry check, then execute
+# 2. Pipeline complete — all 8 phases done. Archive the session via /compact.
 ```
 
 ---
@@ -34,7 +32,7 @@ git log --oneline -3
 cat .methodology/state.json   # expected: phase=8 state=RUNNING last_gate=4 last_fr=FR-08
 
 # Read active plan
-cat .methodology/phase9_plan.md
+# (Pipeline complete — Phase 8 is the final phase; no next-phase plan exists.)
 ```
 
 | 欄位 | 值 |
@@ -42,7 +40,7 @@ cat .methodology/phase9_plan.md
 | Remote | `https://github.com/johnnylugm-tech/tts-new.git` |
 | Branch | `main` |
 | State | `phase=8 state=RUNNING last_gate=4 last_fr=FR-08` |
-| Plan | `.methodology/phase9_plan.md` |
+| Plan | (Pipeline complete — Phase 8 is final) |
 
 ---
 

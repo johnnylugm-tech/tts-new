@@ -1,9 +1,10 @@
 {
-  "state": "RUNNING",
+  "state": "COMPLETE",
   "current_phase": 8,
   "last_gate": 4,
   "last_fr": "FR-08",
-  "last_update": "2026-06-08T14:56:40.283735+00:00",
-  "phase_truth_passed": false,
-  "last_milestone_command": "advance-phase --completed-phase 7"
+  "last_update": "2026-06-08T15:33:00Z",
+  "phase_truth_passed": true,
+  "pipeline_complete": true,
+  "last_milestone_command": "push-milestone --type p8"
 }

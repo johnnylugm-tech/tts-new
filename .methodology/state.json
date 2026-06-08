@@ -5,5 +5,5 @@
   "last_fr": null,
   "last_update": "2026-06-08T11:14:29.913396+00:00",
   "phase_truth_passed": false,
-  "last_milestone_command": "finalize-gate --gate 4 --phase 6"
+  "last_milestone_command": "advance-phase --completed-phase 6"
 }

@@ -123,14 +123,39 @@ sab:
   phase: 2  # MUST be int, NOT a string — parser raises on 'phase: "2"'
   project: "{project_name}"
 
-  layers:  # EXAMPLE — replace with your project's layers
-    - name: api
-      modules: ["app.api.webhooks"]
-      allowed_dependencies: ["service"]
+  layers:
+    - name: presentation
+      modules:
+        - "03-development/src/api/main.py"
+        - "03-development/src/api/speech_router.py"
+        - "03-development/src/api/cli.py"
+        - "03-development/src/api/cli_logging.py"
+        - "03-development/src/api/utils.py"
+      allowed_dependencies: ["business", "infrastructure"]
+    - name: business
+      modules:
+        - "03-development/src/engines/taiwan_linguistic.py"
+        - "03-development/src/engines/ssml_parser.py"
+        - "03-development/src/engines/text_splitter.py"
+        - "03-development/src/engines/synthesis.py"
+        - "03-development/src/infrastructure/circuit_breaker.py"
+        - "03-development/src/infrastructure/audio_converter.py"
+      allowed_dependencies: ["infrastructure"]
+    - name: infrastructure
+      modules:
+        - "03-development/src/infrastructure/config.py"
+        - "03-development/src/infrastructure/models.py"
+        - "03-development/src/infrastructure/redis_cache.py"
+        - "03-development/src/infrastructure/health.py"
+      allowed_dependencies: []
 
   allowed_dependencies:
-    - from: api
-      to: service
+    - from: presentation
+      to: business
+    - from: presentation
+      to: infrastructure
+    - from: business
+      to: infrastructure
 
   quality_targets:
     max_complexity: 15

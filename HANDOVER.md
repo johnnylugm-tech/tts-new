@@ -1,8 +1,8 @@
 # Harness Methodology — Session Handover
 
-**Checkpoint**: `P8-entry-20260608`  
+**Checkpoint**: `P8-exit-20260608`  
 **Phase**: P8 — Config & Records  
-**Generated**: 2026-06-08T14:56:40Z
+**Generated**: 2026-06-08T15:31:03Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 
@@ -14,9 +14,9 @@
 # 1. Clone (if working directory cleared)
 git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git && cd tts-new
 
-# 2. Read plan and continue Phase 8
-cat .methodology/phase8_plan.md
-# Follow the active plan and continue from where you left off
+# 2. Read plan and start Phase 9
+cat .methodology/phase9_plan.md
+# Follow SKILL.md §0.1 Phase 9 entry check, then execute
 ```
 
 ---
@@ -34,7 +34,7 @@ git log --oneline -3
 cat .methodology/state.json   # expected: phase=8 state=RUNNING last_gate=4 last_fr=FR-08
 
 # Read active plan
-cat .methodology/phase8_plan.md
+cat .methodology/phase9_plan.md
 ```
 
 | 欄位 | 值 |
@@ -42,22 +42,23 @@ cat .methodology/phase8_plan.md
 | Remote | `https://github.com/johnnylugm-tech/tts-new.git` |
 | Branch | `main` |
 | State | `phase=8 state=RUNNING last_gate=4 last_fr=FR-08` |
-| Plan | `.methodology/phase8_plan.md` |
+| Plan | `.methodology/phase9_plan.md` |
 
 ---
 
 ## 任務背景
 
-Phase 7 complete (8/8 FRs Gate 1 PASS). Gate 4 (score=97.12879999999998). Advancing to Phase 8.
+P8 Config & Records: pipeline fully complete.
 
 ## 目前執行狀況
 
-Phase 7: 8/8 FRs Gate 1 PASS. Gate 4 (score=97.12879999999998) — quality_complete. Ready to begin Phase 8.
+P8 Config & Records complete. All 8 phases done.
 
 ## 接下來的工作
 
-1. Follow SKILL.md §0.1 Phase 8 entry checklist
-2. Read the Phase 8 plan and execute
+1. Pipeline complete — all phases P1–P8 finished
+2. Review final HANDOVER.md and git tag for Gate 4
+3. Archive session via /compact
 
 ## 注意事項
 

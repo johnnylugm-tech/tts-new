@@ -1,0 +1,60 @@
+{
+  "ready": true,
+  "checked_at": "2026-06-08T15:20:58Z",
+  "env_vars": {
+    "required": [],
+    "optional_missing": [
+      "KOKORO_BACKEND_URL",
+      "KOKORO_VOICES_URL",
+      "DEFAULT_VOICE",
+      "DEFAULT_SPEED",
+      "MAX_CHARS_PER_REQUEST",
+      "LEXICON_MIN_SIZE",
+      "REQUEST_TIMEOUT",
+      "CIRCUIT_BREAKER_THRESHOLD",
+      "CIRCUIT_BREAKER_TIMEOUT",
+      "WARMUP_ENABLED",
+      "WARMUP_TEXT",
+      "CACHE_TTL_SECONDS",
+      "REDIS_URL",
+      "MAX_CONCURRENT_SYNTHESIS",
+      "HARNESS_CLAUDE_MODEL",
+      "HARNESS_IMPROVE_MODEL",
+      "HARNESS_NO_GIT",
+      "STEERING_ENABLED",
+      "STEERING_PROVIDER_TYPE"
+    ]
+  },
+  "cli_tools": {
+    "required": [
+      {"name": "python3", "present": true, "version": "3.11.15 (venv) / 3.9.6 (system)", "fix": ""},
+      {"name": "pip3", "present": true, "version": "26.0.1", "fix": ""},
+      {"name": "ffmpeg", "present": true, "version": "8.1.1", "fix": ""},
+      {"name": "docker", "present": true, "version": "present at /usr/local/bin/docker", "fix": ""},
+      {"name": "git", "present": true, "version": "system git", "fix": ""},
+      {"name": "curl", "present": true, "version": "system curl", "fix": ""},
+      {"name": "gh", "present": true, "version": "/opt/homebrew/bin/gh", "fix": ""},
+      {"name": "jq", "present": true, "version": "system jq", "fix": ""}
+    ]
+  },
+  "infra_services": {
+    "required": [
+      {
+        "name": "kokoro-backend",
+        "type": "Kokoro TTS HTTP service (OpenAI-style /v1/audio/voices, /v1/audio/speech)",
+        "reachable": true,
+        "checked_via": "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:8880/v1/audio/voices -> 200",
+        "fix": ""
+      },
+      {
+        "name": "redis",
+        "type": "Redis (optional, FR-06 cache; graceful no-Redis fallback per SPEC.md L88-L89, L229)",
+        "reachable": false,
+        "checked_via": "redis-cli PING via nc localhost:6379 -> no response (FR-06 NOT degraded; cache falls back to no-op)",
+        "fix": "Start Redis if you want to exercise FR-06 cache path: docker run -d --name redis -p 6379:6379 redis:7-alpine  OR  brew install redis && brew services start redis"
+      }
+    ],
+    "docker_compose_services": []
+  },
+  "summary": "Phase 8 environment is READY. All hard requirements are present: (1) venv Python 3.11.15 with fastapi 0.136.3, httpx 0.28.1, uvicorn 0.48.0, pydantic 2.13.4, click 8.4.1, pytest 8.4.2, pytest-asyncio 1.4.0, pytest-cov 7.1.0; (2) CLI tools python3, pip3, ffmpeg (8.1.1), docker, git, gh, jq, curl all on PATH; (3) Kokoro backend HTTP service reachable at http://localhost:8880/v1/audio/voices (200 OK). All 14 app env vars from src/infrastructure/config.py and 5 harness env vars are unset but every one has a safe code default (env vars are optional by design — config.py uses os.environ.get(..., default) for all 14, including REDIS_URL which is intentionally None and triggers the no-Redis fallback path). No env var is strictly required to start the proxy. NOT blocking: redis-server is not installed and Redis is not running — this is acceptable because FR-06 specifies a graceful no-Redis fallback (SPEC.md L88-L89, L229); set REDIS_URL=redis://localhost:6379/0 and start a Redis instance only if you want to exercise the cache-hit path. To install redis-server if desired: brew install redis && brew services start redis. The hiredis pip package is also missing but is not in requirements.txt and is not required by any FR. No docker-compose.yml exists in this project — the Kokoro backend is an external dependency not managed by this repo (per PROJECT_BRIEF.md §1 and SPEC.md L122-L124). All 82 tests previously passed (Gate 1..4 all PASS per CLAUDE.md)."
+}

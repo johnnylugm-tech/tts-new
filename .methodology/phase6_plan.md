@@ -1,13 +1,11 @@
-# Phase 6 Full Execution Plan -- tts-new
+# Phase 6 Full Execution Plan -- 
 
 > **Version**: v2.7.0 (project plan)
-> **Project**: tts-new
+> **Project**: 
 > **Date**: 2026-06-08
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 6 - Quality Assurance
 > **Status**: Full version (including Phase 6 detailed tasks)
-> **Mode**: Dynamic (load-context at execution time)
-
 
 ---
 
@@ -53,19 +51,23 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   4. Phase 6 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 6 --project . --overwrite`
 
-### 🔄 [PHASE-CONTEXT] — Load Before Starting
-
-```bash
-python3 harness_cli.py load-context --phase 6 --project . --json \
-  > .sessi-work/phase6_ctx.json
-```
-> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
-
 ### P6 Phase End Audit (+ A/B Review)
 
 > A/B collaboration is active for Phase 6 deliverables (HR-01).
 > Agent A generates QUALITY_REPORT.md and RELEASE_NOTES.md.
 > Agent B (ARCHITECT) reviews the deliverables and verifies Gate 4 score.
+
+### Existing Quality Metrics (from QUALITY_REPORT.md)
+
+- **Generated**: 2026-06-08 19:14:29
+- **Gate**: 4
+- **Overall Score**: 97.1288/100
+- **Critical**: 0
+- **High**: 0
+- **Medium**: 0
+- **Low**: 0
+- **BASELINE.md**: See `05-verification/BASELINE.md` for performance baseline
+- **VERIFICATION_REPORT.md**: See `05-verification/VERIFICATION_REPORT.md` for verification results
 
 ### Pre-Gate Preparation
 - Confirm all FRs are merged to main branch
@@ -201,17 +203,21 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
   Must reference `BASELINE.md` and `VERIFICATION_REPORT.md` (verification provenance).
 
 - **G4g** Agent B Peer Review (HR-01):
-  Agent B (ARCHITECT) explicitly reviews ALL deliverables.
+  Agent B (reviewer — stateless) explicitly reviews ALL deliverables.
   1. Review `06-quality/QUALITY_REPORT.md`, `RELEASE_NOTES.md`, and `FINAL_SIGN_OFF.md`.
   2. Cross-check `.methodology/quality_manifest.json` Gate 4 scoring logic.
   3. Reference `05-verification/VERIFICATION_REPORT.md` and `BASELINE.md` for historical traceability.
   4. Generate approval JSON files in `.methodology/agent_b_approvals/` with these exact filenames:
      `QUALITY_REPORT.md.json`, `RELEASE_NOTES.md.json`, `FINAL_SIGN_OFF.md.json`, `quality_manifest.json`.
+     **Note:** Agent B must write these 4 files using file-write tools inside the session.
+     The `dispatch` auto-persist keyed by `--fr-id` creates `HR-01.json` only — it does NOT
+     produce the per-deliverable approval files that `advance-phase` checks.
   - **[B-DISPATCH]** Dispatch Agent B:
     ```bash
     python3 harness_cli.py dispatch --role reviewer --fr-id HR-01 \
       --prompt "Review Phase 6 Gate 4 deliverables" --phase 6 --project . --max-turns 30
     ```
+  > AgentSpawner records dispatches to `.methodology/sessions_spawn.log` (non-blocking debug trail).
 
 - **[PHASE-TRUTH]** Phase Truth ≥ 90% (HR-11) — verified by advance-phase
   > **FAIL** → check `phase_truth_verifier` output in `.sessi-work/`
@@ -228,6 +234,11 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 
 ### Phase 6 → Phase 7: Risk Management
 
+- Generate Phase 7 plan:
+  ```bash
+  python3 harness_cli.py plan-phase --phase 7 --project . \
+    --output .methodology/phase7_plan.md
+  ```
 - **[GIT-TAG]** Push Gate 4 git tag (SKILL.md §0.4):
   ```bash
   SCORE=$(python3 -c "import json; d=json.load(open('.sessi-work/gate4_result.json')); print(d.get('composite_score','XX'))" 2>/dev/null || echo 'XX')

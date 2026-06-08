@@ -2282,6 +2282,7 @@ async def test_mutation_kill_circuit_breaker_open_error_message_exact():
     """
     from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
     cb = CircuitBreaker(threshold=1, timeout=999)
+    cb.time_func = lambda: 100.5  # 100.5 - 100.0 = 0.5 < timeout=999 → stays OPEN
     cb.state = "OPEN"
     cb.opened_at = 100.0
     cb.last_transition_at = 100.0

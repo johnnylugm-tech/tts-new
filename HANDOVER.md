@@ -1,8 +1,8 @@
 # Harness Methodology — Session Handover
 
-**Checkpoint**: `P6-gate4-20260608`  
-**Phase**: P6 — Full Review / Gate 4  
-**Generated**: 2026-06-08T11:14:29Z
+**Checkpoint**: `P7-exit-20260608`  
+**Phase**: P7 — Risk Register  
+**Generated**: 2026-06-08T14:54:15Z
 
 > ⚠️  **開始下一個工作階段前，請先執行 `/compact` 壓縮上下文**，再從「接下來的工作」繼續。
 
@@ -14,9 +14,9 @@
 # 1. Clone (if working directory cleared)
 git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git && cd tts-new
 
-# 2. Read plan and start Phase 7
-cat .methodology/phase7_plan.md
-# Follow SKILL.md §0.1 Phase 7 entry check, then execute
+# 2. Read plan and start Phase 8
+cat .methodology/phase8_plan.md
+# Follow SKILL.md §0.1 Phase 8 entry check, then execute
 ```
 
 ---
@@ -31,46 +31,40 @@ git clone --recurse-submodules https://github.com/johnnylugm-tech/tts-new.git /t
 git log --oneline -3
 
 # Confirm FSM state
-cat .methodology/state.json   # expected: phase=7 state=RUNNING last_gate=4
+cat .methodology/state.json   # expected: phase=7 state=RUNNING last_gate=1 last_fr=FR-08
 
 # Read active plan
-cat .methodology/phase7_plan.md
+cat .methodology/phase8_plan.md
 ```
 
 | 欄位 | 值 |
 |------|----|
 | Remote | `https://github.com/johnnylugm-tech/tts-new.git` |
 | Branch | `main` |
-| State | `phase=7 state=RUNNING last_gate=4` |
-| Plan | `.methodology/phase7_plan.md` |
+| State | `phase=7 state=RUNNING last_gate=1 last_fr=FR-08` |
+| Plan | `.methodology/phase8_plan.md` |
 
 ---
 
 ## 任務背景
 
-Gate 4 PASS — quality cycle complete.
+P7 Risk Register: all risks documented.
 
 ## 目前執行狀況
 
-Gate 4 PASS: score=97.1. — pipeline complete
+P7 Risk Register complete. Risk log committed.
 
 ## 接下來的工作
 
-1. Proceed to P7: Risk Register
-2. Document all known risks
-3. On P7 done → call commit_and_push_p7()
-4. On P8 done → call commit_and_push_p8()
+1. Proceed to P8: Config & Records
+2. Finalize all configuration records
+3. On P8 done → call commit_and_push_p8()
 
 ## 注意事項
 
 - 100% follow SKILL.md
 - Do NOT commit `.sessi-work/` or `.methodology/` runtime artifacts
 - Git failures are warnings — they never block the pipeline
-
-## 附加資訊
-
-- **gate**: 4
-- **score**: 97.1
 
 ---
 *由 `HandoverGenerator` 自動生成。下次 push 時此檔案將被覆寫。*

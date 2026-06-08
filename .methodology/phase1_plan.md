@@ -2,12 +2,10 @@
 
 > **Version**: v2.7.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-07
+> **Date**: 2026-06-08
 > **Framework**: harness-methodology v2.7.0
 > **Phase**: 1 - Requirements Specification
 > **Status**: Full version (including Phase 1 detailed tasks)
-> **Mode**: Dynamic (load-context at execution time)
-
 
 ---
 
@@ -54,14 +52,6 @@ Phase 1 is the project starting point. Define complete SRS.
   ```
   Re-verify items 1-3 after running.
   If still failing after `init-project`: escalate to human — provide `init-project` error output.
-
-### 🔄 [PHASE-CONTEXT] — Load Before Starting
-
-```bash
-python3 harness_cli.py load-context --phase 1 --project . --json \
-  > .sessi-work/phase1_ctx.json
-```
-> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -359,6 +349,58 @@ are not re-opened. This bounds backtracking to a single step.
 
   > fr_id uses P1 as phase-level placeholder; replace with FR-XX for FR-specific plans.
 
+### FR Requirements (8 total)
+
+#### FR-01: `src/engines/taiwan_linguistic.py`
+**Task**: `src/engines/taiwan_linguistic.py`
+
+#### FR-02: `src/engines/ssml_parser.py`
+**Task**: `src/engines/ssml_parser.py`
+
+#### FR-03: `src/engines/text_splitter.py`
+**Task**: `src/engines/text_splitter.py`
+
+#### FR-04: `src/engines/synthesis.py`
+**Task**: `src/engines/synthesis.py`
+
+#### FR-05: `src/infrastructure/circuit_breaker.py`
+**Task**: `src/infrastructure/circuit_breaker.py`
+
+#### FR-06: `src/infrastructure/redis_cache.py`
+**Task**: `src/infrastructure/redis_cache.py`
+
+#### FR-07: `src/api/cli.py`
+**Task**: `src/api/cli.py`
+
+#### FR-08: `src/infrastructure/audio_converter.py`
+**Task**: `src/infrastructure/audio_converter.py`
+
+### NFR Non-Functional Requirements (8 total)
+
+#### NFR-01: Performance
+**Requirement**: Time to first byte (TTFB)
+
+#### NFR-02: Linguistic coverage
+**Requirement**: LEXICON coverage of Mainland-leaning tokens
+
+#### NFR-03: Linguistic accuracy
+**Requirement**: Tone (變調) correctness
+
+#### NFR-04: Reliability
+**Requirement**: API availability
+
+#### NFR-05: Reliability
+**Requirement**: Error recovery time
+
+#### NFR-06: Operability
+**Requirement**: Cold-start readiness
+
+#### NFR-07: Robustness
+**Requirement**: Request timeout
+
+#### NFR-08: Security
+**Requirement**: Input validation on all user-supplied fields
+
 ### Phase 1 Deliverables
 - `SRS.md` - Software Requirements Specification (FRs + NFRs)
 - `SPEC_TRACKING.md` - Spec tracking matrix
@@ -449,6 +491,11 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 1 → Phase 2: Architecture Design
 
+- Generate Phase 2 plan:
+  ```bash
+  python3 harness_cli.py plan-phase --phase 2 --project . \
+    --output .methodology/phase2_plan.md
+  ```
 - Advance FSM to Phase 2 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 1 --project .

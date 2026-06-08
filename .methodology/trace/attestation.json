@@ -1,7 +1,7 @@
 {
   "schema": "harness/traceability/attestation/v1",
-  "git_sha": "6d02cf03e8f6d9b4ee5fdf43af14c16c94abcd9c",
-  "content_sha256": "af9ce46be11038327e0d7045981cb4bc847153f082e74c6bed2477797a3f89dd",
+  "git_sha": "13a3008e5bc569432092247b6bb07b11b8650f81",
+  "content_sha256": "7c26f894451832c64df9a1344812bd17a3450b78b068968e8b95b6e0eb9833b3",
   "tool": "scripts/build_trace_attestation.py",
   "overlay_used": null,
   "overlay_errors": [],
@@ -10,35 +10,19 @@
     "project_id": "tts-new",
     "completeness": {
       "total_requirements": 8,
-      "srs_coverage": "12.5%",
+      "srs_coverage": "100.0%",
       "code_coverage": "100.0%",
       "test_coverage": "100.0%",
       "verification_rate": "100.0%",
-      "total_links": 25,
+      "total_links": 32,
       "missing_mappings": {
-        "fr_without_srs": [
-          "FR-02",
-          "FR-03",
-          "FR-04",
-          "FR-05",
-          "FR-06",
-          "FR-07",
-          "FR-08"
-        ],
+        "fr_without_srs": [],
         "fr_without_code": [],
         "fr_without_test": []
       }
     },
     "missing": {
-      "fr_without_srs": [
-        "FR-02",
-        "FR-03",
-        "FR-04",
-        "FR-05",
-        "FR-06",
-        "FR-07",
-        "FR-08"
-      ],
+      "fr_without_srs": [],
       "fr_without_code": [],
       "fr_without_test": []
     },
@@ -59,7 +43,7 @@
       "FR-02": {
         "fr_id": "FR-02",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/engines/ssml_parser.py",
           "03-development/tests/test_fr02.py"
@@ -73,7 +57,7 @@
       "FR-03": {
         "fr_id": "FR-03",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/engines/text_splitter.py"
         ],
@@ -86,7 +70,7 @@
       "FR-04": {
         "fr_id": "FR-04",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/api/main.py",
           "03-development/src/api/speech_router.py",
@@ -104,7 +88,7 @@
       "FR-05": {
         "fr_id": "FR-05",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/infrastructure/circuit_breaker.py",
           "03-development/src/infrastructure/health.py"
@@ -118,7 +102,7 @@
       "FR-06": {
         "fr_id": "FR-06",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/infrastructure/redis_cache.py"
         ],
@@ -131,7 +115,7 @@
       "FR-07": {
         "fr_id": "FR-07",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/api/cli.py"
         ],
@@ -144,7 +128,7 @@
       "FR-08": {
         "fr_id": "FR-08",
         "status": "verified",
-        "srs_section": null,
+        "srs_section": "SAD.md",
         "code_files": [
           "03-development/src/infrastructure/audio_converter.py",
           "03-development/src/infrastructure/models.py"

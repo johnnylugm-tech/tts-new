@@ -112,3 +112,5 @@ pip-debug.log*
 .shims/
 # Added by harness crg_independent
 .code-review-graph/
+# Wiki pages are human-readable architecture docs — version-controlled for agent onboarding
+!.code-review-graph/wiki/

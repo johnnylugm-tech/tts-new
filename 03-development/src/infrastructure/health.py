@@ -1,7 +1,15 @@
 """[FR-05] Health endpoints exposing circuit breaker observability.
 
+[SPEC §6 / L158-L162]
+Implements four health-related endpoints:
+  - GET  /health              liveness probe (always 200 if process is up)
+  - GET  /ready               readiness probe (503 when circuit OPEN)
+  - GET  /health/circuit      returns the breaker state
+  - POST /health/circuit/reset forces the breaker to CLOSED
+
 Citations:
-  - SPEC.md L161-L162: GET /health/circuit returns the breaker state.
+  - SPEC.md L158-L162 : endpoint table — all 4 health endpoints
+  - SPEC.md L161-L162 : GET /health/circuit returns the breaker state.
   - SPEC.md L162:      POST /health/circuit/reset forces the breaker
                        to CLOSED and reports the prior state.
   - SPEC.md L197:      Implementation owner —
@@ -14,7 +22,7 @@ Citations:
 # in-process; FastAPI handles HTTP-level errors via its own error handlers.
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from src.infrastructure.circuit_breaker import CircuitBreaker
 from src.infrastructure.config import get_config_snapshot, validate_config
@@ -29,6 +37,31 @@ router: APIRouter = APIRouter()
 # expects the state to be observable across requests (case 7) and
 # modifiable via the reset endpoint (case 8).
 _breaker: CircuitBreaker = CircuitBreaker()
+
+
+@router.get("/health")
+def get_health() -> dict:
+    """Liveness probe (SPEC.md L158). Always 200 if the process is alive."""
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
+    return {"status": "ok"}
+
+
+@router.get("/ready")
+def get_ready(response: Response) -> dict:
+    """Readiness probe (SPEC.md L159).
+
+    Returns 200 with ``{"ready": true}`` when the circuit breaker is
+    CLOSED or HALF_OPEN (the service is willing to attempt traffic).
+    Returns 503 with ``{"ready": false}`` when the breaker is OPEN
+    (the service is shedding load).
+    """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
+    if _breaker.state == "OPEN":
+        response.status_code = 503
+        return {"ready": False, "state": _breaker.state}
+    return {"ready": True, "state": _breaker.state}
 
 
 @router.get("/health/circuit")

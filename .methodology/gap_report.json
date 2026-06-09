@@ -1,12 +1,12 @@
 {
   "summary": {
-    "total": 40,
+    "total": 45,
     "missing": 0,
     "incomplete": 0,
-    "orphaned": 40,
+    "orphaned": 45,
     "critical": 0,
     "major": 0,
-    "minor": 40
+    "minor": 45
   },
   "gaps": [
     {
@@ -42,6 +42,18 @@
     {
       "type": "ORPHANED",
       "severity": "minor",
+      "reason": "'CircuitOpenResponseMiddleware' has no corresponding specification in SPEC.md",
+      "action": "Add spec for CircuitOpenResponseMiddleware or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'dispatch' has no corresponding specification in SPEC.md",
+      "action": "Add spec for dispatch or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
       "reason": "'create_app' has no corresponding specification in SPEC.md",
       "action": "Add spec for create_app or remove if unnecessary"
     },
@@ -50,6 +62,12 @@
       "severity": "minor",
       "reason": "'global_exception_handler' has no corresponding specification in SPEC.md",
       "action": "Add spec for global_exception_handler or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'get_voices' has no corresponding specification in SPEC.md",
+      "action": "Add spec for get_voices or remove if unnecessary"
     },
     {
       "type": "ORPHANED",
@@ -188,6 +206,18 @@
       "severity": "minor",
       "reason": "'get_config_snapshot' has no corresponding specification in SPEC.md",
       "action": "Add spec for get_config_snapshot or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'get_health' has no corresponding specification in SPEC.md",
+      "action": "Add spec for get_health or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'get_ready' has no corresponding specification in SPEC.md",
+      "action": "Add spec for get_ready or remove if unnecessary"
     },
     {
       "type": "ORPHANED",

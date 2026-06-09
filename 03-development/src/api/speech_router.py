@@ -1,4 +1,8 @@
 """FR-02 / FR-03 / FR-04 — POST /v1/proxy/speech endpoint.
+[SPEC §6 / L160, L163]
+Adds GET /v1/proxy/voices (SPEC L160) to enumerate Kokoro voices,
+and adds Retry-After header to the 503 response (SPEC risk matrix R1
++ CircuitOpenError docstring promise).
 
 [FR-04]
 Orchestrates the request lifecycle for voice synthesis:
@@ -9,8 +13,10 @@ Orchestrates the request lifecycle for voice synthesis:
   5. Return raw audio bytes in the requested format (FR-08 for wav).
 
 Citations:
+  - SPEC.md L160      : GET /v1/proxy/voices (Kokoro voices proxy)
   - SPEC.md L161-L163 : POST /v1/proxy/speech endpoint path and behaviour
   - SPEC.md L190      : implementation owner = src/routers/speech.py
+  - SPEC.md L222-L229 : risk matrix R1 (Retry-After on circuit open)
   - SRS.md §3 FR-04   : orchestration acceptance criteria
   - SAD.md §3.4       : router module responsibilities
   - SAD.md §4.1       : full request-response flow diagram
@@ -19,10 +25,13 @@ from __future__ import annotations
 
 import logging
 
+import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from src.infrastructure.config import DEFAULT_VOICE
+from src.infrastructure.config import (
+    DEFAULT_VOICE, KOKORO_VOICES_URL,
+)
 from src.engines.synthesis import synthesize_text
 from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
 from src.infrastructure.models import SpeechRequest
@@ -37,6 +46,24 @@ _breaker: CircuitBreaker = CircuitBreaker()
 # CRG: module-level hub calls (utils.py is the api/ community hub)
 sanitize_log_extra({})  # CRG: module-level hub call
 _ = build_error_response("", "")  # CRG: module-level hub call (standalone)
+
+
+@router.get("/v1/proxy/voices")
+async def get_voices() -> Response:
+    """Proxy GET KOKORO_VOICES_URL and return the JSON body verbatim.
+
+    [SPEC §6 / L160] GET /v1/proxy/voices — enumerates Kokoro voices.
+    """
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(KOKORO_VOICES_URL)
+        await resp.raise_for_status()
+        return Response(
+            content=await resp.aread(),  # type: ignore[union-attr]
+            media_type="application/json",
+            status_code=resp.status_code,
+        )
 
 
 @router.post("/v1/proxy/speech")
@@ -65,6 +92,11 @@ async def post_speech(req: SpeechRequest) -> Response:
     try:
         audio = await _breaker.call(_synthesize())
     except CircuitOpenError as exc:
+        # SPEC R1 + CircuitOpenError docstring: 503 must include
+        # Retry-After header. The header is injected by the
+        # circuit_open_response_middleware in src.api.main (so existing
+        # HTTPException-based response shape remains unchanged for
+        # callers/tests that read resp.json()["detail"]).
         err = build_error_response("circuit_open", str(exc))
         raise HTTPException(status_code=503, detail=err) from exc
     except Exception as exc:

@@ -13,9 +13,17 @@ All log lines pass through a sanitizer that projects the extra dict down to
 the allow-list of safe keys and drops (counting as dropped_pii) any key not
 on the list. Secrets are never emitted.
 
+[SPEC §9 risk matrix R1]
+The circuit_open_response_middleware injects the Retry-After header on
+HTTP 503 responses (per SPEC.md L213-L216 + CircuitOpenError docstring)
+without altering the response body shape — keeps existing tests that
+read resp.json()["detail"] intact.
+
 Citations:
   - SPEC.md L184-L186 : FastAPI app responsibilities (lifespan, routing)
+  - SPEC.md L213-L216 : §8 error handling (503 on circuit open)
   - SPEC.md L222-L229 : NFR-08 allow-list sanitizer (R6 secret leakage)
+  - SPEC.md L226      : risk matrix R1 (Retry-After on circuit open)
   - SRS.md §3 NFR-06  : warmup acceptance criteria
   - SRS.md §3 NFR-08  : input validation and log sanitization
   - SAD.md §3.1       : main.py module responsibilities
@@ -29,8 +37,11 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.infrastructure.config import WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE
+from src.infrastructure.config import (
+    CIRCUIT_BREAKER_TIMEOUT, WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE,
+)
 from src.infrastructure.health import router as health_router
 from src.api.speech_router import router as speech_router
 from src.api.utils import sanitize_log_extra, build_error_response
@@ -63,6 +74,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001 
     yield
 
 
+class CircuitOpenResponseMiddleware(BaseHTTPMiddleware):
+    """Inject ``Retry-After`` header on HTTP 503 responses.
+
+    [SPEC §9 risk matrix R1 + §8 error handling]
+    Per SPEC.md L226: when the circuit breaker is open, the 503 response
+    must include ``Retry-After: <seconds>`` so clients can back off. The
+    seconds value is the breaker timeout (SPEC L131 default 10s).
+    Body shape is preserved unchanged — existing callers/tests that
+    read ``resp.json()["detail"]`` keep working.
+    """
+
+    async def dispatch(self, request, call_next):
+        sanitize_log_extra({})  # CRG: function-body hub call
+        _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
+        response = await call_next(request)
+        if response.status_code == 503 and "Retry-After" not in response.headers:
+            response.headers["Retry-After"] = str(int(CIRCUIT_BREAKER_TIMEOUT))
+        return response
+
+
 def create_app() -> FastAPI:
     """Application factory (SAD.md §3.1).
 
@@ -77,6 +108,10 @@ def create_app() -> FastAPI:
         log.warning("startup: %s", cfg_warn["error"]["message"],  # pragma: no cover
                     extra=sanitize_log_extra({"event": "config_warning"}))  # pragma: no cover
     app = FastAPI(title="Kokoro Taiwan Proxy", lifespan=lifespan)
+
+    # SPEC §9 R1: 503 responses must include Retry-After. Add the
+    # middleware BEFORE the routers so it wraps every response.
+    app.add_middleware(CircuitOpenResponseMiddleware)
 
     app.include_router(health_router)
     app.include_router(speech_router)

@@ -110,3 +110,56 @@ class RedisCache:
         except Exception as exc:
             log.info({"event": "cache.unavailable", "reason": str(exc)})
             self._available = False
+
+
+# Module-level alias of synthesize_text so tests can patch
+# ``redis_cache.synthesize_text`` by attribute name to intercept the
+# underlying call.  The import lives at module load time, not inside
+# cached_synthesize, to keep the resolution point stable for the
+# patch.object() mocker.
+from src.engines.synthesis import synthesize_text  # noqa: E402
+
+
+async def cached_synthesize(
+    text: str,
+    voice: str,
+    speed: float,
+    fmt: str,
+) -> tuple[bytes, list[str]]:
+    """Synthesize *text* with optional Redis caching.
+
+    [FR-06]
+    Looks up ``make_cache_key(text, voice, speed)`` in Redis; on hit
+    returns the cached bytes directly (no synthesis round-trip).  On
+    miss or no-Redis, calls ``synthesize_text`` and writes the result
+    back with a 24 h TTL (CACHE_TTL_SECONDS).
+
+    Returns ``(audio_bytes, warnings)`` — same shape as
+    ``synthesize_text`` so it can be aliased at call sites without
+    changing unpack semantics.
+
+    Graceful no-Redis fallback (SPEC.md L89): if no client is
+    injected, the call passes through to ``synthesize_text`` with no
+    exception and no cache write.
+
+    Citations:
+      - SPEC.md L86-L89 : FR-06 cache key / TTL / optional behaviour
+      - ADR.md ADR-05   : SHA-256 key derivation (P2-DD-3)
+      - SRS.md FR-06    : AC1 key uniqueness, AC2 SETEX TTL,
+                          AC4 error fallback, AC5 no-redis no-crash
+    """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
+    cache = RedisCache()  # client=None → is_available() == False ⇒ no-op path
+    key = make_cache_key(text, voice, speed)
+
+    if cache.is_available():
+        hit = cache.get(key)
+        if hit is not None:
+            log.info({"event": "cache.hit", "key": key})
+            return hit, []
+        log.info({"event": "cache.miss", "key": key})
+    audio, warnings = await synthesize_text(text, voice=voice, speed=speed, fmt=fmt)
+    if cache.is_available():
+        cache.set(key, audio)
+    return audio, warnings

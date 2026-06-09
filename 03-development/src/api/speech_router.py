@@ -32,10 +32,17 @@ from fastapi.responses import Response
 from src.infrastructure.config import (
     DEFAULT_VOICE, KOKORO_VOICES_URL,
 )
-from src.engines.synthesis import synthesize_text
 from src.infrastructure.circuit_breaker import CircuitBreaker, CircuitOpenError
 from src.infrastructure.models import SpeechRequest
+from src.infrastructure.redis_cache import cached_synthesize
 from src.api.utils import sanitize_log_extra, build_error_response
+
+# Re-export ``synthesize_text`` (aliased to ``cached_synthesize``) at
+# module scope so existing tests that patch
+# ``src.api.speech_router.synthesize_text`` still intercept the call.
+# Without this alias, the FR-06 closure would break those tests
+# (SPEC.md L86-L89: cache is optional, but it MUST be on the call path).
+synthesize_text = cached_synthesize
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +90,14 @@ async def post_speech(req: SpeechRequest) -> Response:
     async def _synthesize() -> bytes:
         sanitize_log_extra({})  # CRG: function-body hub call
         _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
+        # FR-06 closure: route through ``synthesize_text`` which is
+        # aliased to ``cached_synthesize`` at module scope (see top
+        # of file).  The alias keeps existing tests that patch
+        # ``src.api.speech_router.synthesize_text`` working — when
+        # they patch the name, our call goes to their mock; when
+        # they don't, it goes through the real cache wrapper.  When
+        # no Redis is wired, cached_synthesize falls through to the
+        # bare synthesize_text (SPEC L89: 無 Redis 時自動略過).
         audio, warnings = await synthesize_text(req.input, voice=voice, speed=speed, fmt="mp3")
         for w in warnings:  # pragma: no cover — requires SSML parse warnings; test input is always valid SSML
             warn_detail = build_error_response("ssml_warning", w)  # pragma: no cover

@@ -399,3 +399,165 @@ def test_gap_cli_does_not_double_suffix_when_full_path_url():
     # URL must be unchanged — no double suffix.
     assert captured_url["url"] == full_path_url
     assert captured_url["url"].count("/v1/audio/speech") == 1
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FR-06 closure: RedisCache must be wired into the synthesis path
+# (SPEC.md L86-L89 — optional cache, key = hash(text+voice+speed),
+# TTL 24h, no-Redis graceful skip).
+# ════════════════════════════════════════════════════════════════════════════
+
+def test_gap_cached_synthesize_returns_cached_bytes_on_hit():
+    """FR-06 closure: when the cache has a hit, cached_synthesize must
+    return the cached bytes WITHOUT calling synthesize_text at all
+    (the whole point of caching — skip the synthesis round-trip).
+    """
+    from src.infrastructure import redis_cache as _rc
+
+    cached_bytes = b"\xff\xfb\x90already-cached"
+
+    class _StubCache:
+        def __init__(self) -> None:
+            self.get_calls: list[str] = []
+            self.set_calls: list[tuple[str, bytes]] = []
+
+        def is_available(self) -> bool:
+            return True
+
+        def get(self, key: str) -> bytes | None:
+            self.get_calls.append(key)
+            return cached_bytes
+
+        def set(self, key: str, value: bytes, ttl: int = 86400) -> None:
+            self.set_calls.append((key, value))
+
+    stub = _StubCache()
+    synth_calls: list[dict[str, object]] = []
+
+    async def _fake_synthesize(*args: object, **kwargs: object) -> tuple[bytes, list[str]]:
+        synth_calls.append({"args": args, "kwargs": kwargs})
+        return b"\xff\xfb\x90fresh", []
+
+    with patch.object(_rc, "synthesize_text", new=_fake_synthesize), \
+         patch.object(_rc, "RedisCache", return_value=stub):
+        result, _warnings = asyncio.run(
+            _rc.cached_synthesize(
+                text="hi", voice="zf_xiaoxiao", speed=1.0, fmt="mp3"
+            )
+        )
+
+    assert result == cached_bytes, "cache hit must short-circuit to cached bytes"
+    assert synth_calls == [], "synthesize_text must NOT be called on cache hit"
+    assert len(stub.get_calls) == 1, "cache.get must be queried exactly once"
+    assert stub.set_calls == [], "cache.set must NOT be called on cache hit"
+
+
+def test_gap_cached_synthesize_falls_through_and_writes_back_on_miss():
+    """FR-06 closure: on cache miss, cached_synthesize must call
+    synthesize_text and write the result back to the cache.
+    """
+    from src.infrastructure import redis_cache as _rc
+
+    fresh_bytes = b"\xff\xfb\x90fresh-synthesis"
+
+    class _StubCache:
+        def __init__(self) -> None:
+            self.set_calls: list[tuple[str, bytes, int]] = []
+
+        def is_available(self) -> bool:
+            return True
+
+        def get(self, key: str) -> bytes | None:
+            return None  # miss
+
+        def set(self, key: str, value: bytes, ttl: int = 86400) -> None:
+            self.set_calls.append((key, value, ttl))
+
+    stub = _StubCache()
+
+    async def _fake_synthesize(*args: object, **kwargs: object) -> tuple[bytes, list[str]]:
+        return fresh_bytes, []
+
+    with patch.object(_rc, "synthesize_text", new=_fake_synthesize), \
+         patch.object(_rc, "RedisCache", return_value=stub):
+        result, _warnings = asyncio.run(
+            _rc.cached_synthesize(
+                text="hi", voice="zf_xiaoxiao", speed=1.0, fmt="mp3"
+            )
+        )
+
+    assert result == fresh_bytes, "miss path must return synthesize_text output"
+    assert len(stub.set_calls) == 1, "cache.set must be called exactly once on miss"
+    _key, _value, ttl = stub.set_calls[0]
+    assert ttl == 86400, "TTL must be 24h (CACHE_TTL_SECONDS) per SPEC L88"
+
+
+def test_gap_cached_synthesize_works_without_redis():
+    """FR-06 closure: when no Redis client is available, cached_synthesize
+    must degrade gracefully — call synthesize_text and return its result
+    without raising (SPEC L89: 無 Redis 時自動略過).
+    """
+    from src.infrastructure import redis_cache as _rc
+
+    fresh_bytes = b"\xff\xfb\x90no-redis-path"
+
+    # No client passed → RedisCache().is_available() == False
+    with patch.object(_rc, "RedisCache", return_value=_rc.RedisCache(client=None)):
+        async def _fake_synthesize(*args: object, **kwargs: object) -> tuple[bytes, list[str]]:
+            return fresh_bytes, []
+
+        with patch.object(_rc, "synthesize_text", new=_fake_synthesize):
+            result, _warnings = asyncio.run(
+                _rc.cached_synthesize(
+                    text="hi", voice="zf_xiaoxiao", speed=1.0, fmt="mp3"
+                )
+            )
+
+    assert result == fresh_bytes, "no-Redis path must still return synthesized bytes"
+
+
+def test_gap_speech_router_uses_cached_synthesize(client):
+    """FR-06 closure (integration): POST /v1/proxy/speech must route through
+    cached_synthesize, not bare synthesize_text — otherwise the cache
+    is dead code.
+    """
+    import src.infrastructure.redis_cache as _rc
+    from src.api import speech_router as _sr
+
+    # Spy on cached_synthesize by patching RedisCache — if the router
+    # bypasses the cache wrapper and calls synthesize_text directly,
+    # our stub will never see a get() call.
+    class _SpyCache:
+        def __init__(self) -> None:
+            self.get_calls = 0
+
+        def is_available(self) -> bool:
+            return True  # pretend Redis is up so the wrapper enters the branch
+
+        def get(self, key: str) -> bytes | None:
+            self.get_calls += 1
+            return b"\xff\xfb\x90router-cache-hit"
+
+        def set(self, key: str, value: bytes, ttl: int = 86400) -> None:
+            pass
+
+    spy = _SpyCache()
+    with patch.object(_rc, "RedisCache", return_value=spy):
+        # Bypass circuit breaker to isolate the cache path.  The
+        # real breaker awaits the coroutine it receives; our stub
+        # must do the same so ``audio`` is bytes, not a coroutine.
+        async def _passthrough(coro):  # noqa: ANN001
+            return await coro
+
+        with patch.object(_sr._breaker, "call", new=AsyncMock(side_effect=_passthrough)):
+            resp = client.post(
+                "/v1/proxy/speech",
+                json={"input": "hello", "voice": "zf_xiaoxiao", "speed": 1.0, "response_format": "mp3"},
+            )
+
+    assert resp.status_code == 200, f"expected 200 on cache hit, got {resp.status_code}"
+    assert resp.content == b"\xff\xfb\x90router-cache-hit", (
+        "router must serve cached bytes; got fresh synthesis instead — "
+        "speech_router is NOT routed through cached_synthesize"
+    )
+    assert spy.get_calls >= 1, "RedisCache.get must have been called by the router"

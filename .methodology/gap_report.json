@@ -1,12 +1,12 @@
 {
   "summary": {
-    "total": 45,
+    "total": 51,
     "missing": 0,
     "incomplete": 0,
-    "orphaned": 45,
+    "orphaned": 51,
     "critical": 0,
     "major": 0,
-    "minor": 45
+    "minor": 51
   },
   "gaps": [
     {
@@ -44,6 +44,18 @@
       "severity": "minor",
       "reason": "'CircuitOpenResponseMiddleware' has no corresponding specification in SPEC.md",
       "action": "Add spec for CircuitOpenResponseMiddleware or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'dispatch' has no corresponding specification in SPEC.md",
+      "action": "Add spec for dispatch or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'MetricsMiddleware' has no corresponding specification in SPEC.md",
+      "action": "Add spec for MetricsMiddleware or remove if unnecessary"
     },
     {
       "type": "ORPHANED",
@@ -222,6 +234,12 @@
     {
       "type": "ORPHANED",
       "severity": "minor",
+      "reason": "'get_metrics' has no corresponding specification in SPEC.md",
+      "action": "Add spec for get_metrics or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
       "reason": "'get_circuit_state' has no corresponding specification in SPEC.md",
       "action": "Add spec for get_circuit_state or remove if unnecessary"
     },
@@ -230,6 +248,24 @@
       "severity": "minor",
       "reason": "'post_circuit_reset' has no corresponding specification in SPEC.md",
       "action": "Add spec for post_circuit_reset or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'reset' has no corresponding specification in SPEC.md",
+      "action": "Add spec for reset or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'record' has no corresponding specification in SPEC.md",
+      "action": "Add spec for record or remove if unnecessary"
+    },
+    {
+      "type": "ORPHANED",
+      "severity": "minor",
+      "reason": "'snapshot' has no corresponding specification in SPEC.md",
+      "action": "Add spec for snapshot or remove if unnecessary"
     },
     {
       "type": "ORPHANED",

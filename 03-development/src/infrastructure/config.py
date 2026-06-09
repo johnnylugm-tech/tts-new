@@ -62,6 +62,12 @@ MODEL_MAP: Final[dict[str, str]] = {
 # (configurable for capacity tuning without code change).
 MAX_CONCURRENT_SYNTHESIS: Final[int] = int(os.environ.get("MAX_CONCURRENT_SYNTHESIS", "8"))
 
+# --- SPEC.md §9 R2 mitigation: retry transient connection errors ---
+# httpx.AsyncHTTPTransport(retries=N) retries on ConnectError /
+# ReadError / WriteError; HTTPStatusError is NOT retried (4xx/5xx
+# fail-fast, no point in retrying a server-confirmed error).
+HTTPX_MAX_RETRIES: Final[int] = int(os.environ.get("HTTPX_MAX_RETRIES", "3"))
+
 # --- Config validation & query functions (hub for infrastructure/) ---
 
 

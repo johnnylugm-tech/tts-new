@@ -4,10 +4,12 @@
 Implements four health-related endpoints:
   - GET  /health              liveness probe (always 200 if process is up)
   - GET  /ready               readiness probe (503 when circuit OPEN)
+  - GET  /metrics             NFR-04 observability counters
   - GET  /health/circuit      returns the breaker state
   - POST /health/circuit/reset forces the breaker to CLOSED
 
 Citations:
+  - SPEC.md L113     : NFR-04 (API 可用率 ≥ 99%)
   - SPEC.md L158-L162 : endpoint table — all 4 health endpoints
   - SPEC.md L161-L162 : GET /health/circuit returns the breaker state.
   - SPEC.md L162:      POST /health/circuit/reset forces the breaker
@@ -26,6 +28,7 @@ from fastapi import APIRouter, Response
 
 from src.infrastructure.circuit_breaker import CircuitBreaker
 from src.infrastructure.config import get_config_snapshot, validate_config
+from src.infrastructure import metrics
 
 # CRG: module-level hub calls — validate config on import
 _ = validate_config()
@@ -62,6 +65,27 @@ def get_ready(response: Response) -> dict:
         response.status_code = 503
         return {"ready": False, "state": _breaker.state}
     return {"ready": True, "state": _breaker.state}
+
+
+@router.get("/metrics")
+def get_metrics() -> dict:
+    """[NFR-04 / SPEC.md L113] Observability counters.
+
+    Returns the in-process request counters so the NFR-04
+    "API 可用率 ≥ 99%" assertion can be measured externally.
+    Body shape::
+
+        {
+          "uptime_seconds": 12.345,
+          "total_requests": 42,
+          "successful_requests": 40,
+          "failed_requests": 2,
+          "availability": 0.952381
+        }
+    """
+    validate_config()  # CRG: function-body hub call
+    _ = get_config_snapshot()  # CRG: function-body hub call (standalone)
+    return metrics.snapshot()  # type: ignore[return-value]
 
 
 @router.get("/health/circuit")

@@ -28,7 +28,9 @@ import asyncio
 
 import httpx
 
-from src.infrastructure.config import KOKORO_BACKEND_URL, MAX_CONCURRENT_SYNTHESIS
+from src.infrastructure.config import (
+    HTTPX_MAX_RETRIES, KOKORO_BACKEND_URL, MAX_CONCURRENT_SYNTHESIS,
+)
 from src.engines.ssml_parser import parse_ssml
 from src.engines.text_splitter import split_text
 
@@ -102,7 +104,11 @@ async def synthesize_chunks(
     if not chunks:
         raise ValueError("chunks must be non-empty")
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    # SPEC.md §9 R2 mitigation: retry transient connection errors.
+    # httpx retries on ConnectError/ReadError/WriteError only; HTTP
+    # 4xx/5xx still fail-fast.
+    transport = httpx.AsyncHTTPTransport(retries=HTTPX_MAX_RETRIES)
+    async with httpx.AsyncClient(timeout=30.0, transport=transport) as client:
         if len(chunks) == 2:
             result = await synthesize_one(chunks[0], voice, speed, client, fmt)
             return result

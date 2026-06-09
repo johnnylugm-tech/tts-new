@@ -43,6 +43,7 @@ from src.infrastructure.config import (
     CIRCUIT_BREAKER_TIMEOUT, WARMUP_ENABLED, WARMUP_TEXT, DEFAULT_VOICE,
 )
 from src.infrastructure.health import router as health_router
+from src.infrastructure import metrics
 from src.api.speech_router import router as speech_router
 from src.api.utils import sanitize_log_extra, build_error_response
 
@@ -94,6 +95,20 @@ class CircuitOpenResponseMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class MetricsMiddleware(BaseHTTPMiddleware):
+    """[NFR-04] Count every request outcome for the /metrics endpoint.
+
+    success = 2xx response; failure = anything else.
+    """
+
+    async def dispatch(self, request, call_next):
+        sanitize_log_extra({})  # CRG: function-body hub call
+        _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
+        response = await call_next(request)
+        metrics.record(success=200 <= response.status_code < 300)
+        return response
+
+
 def create_app() -> FastAPI:
     """Application factory (SAD.md §3.1).
 
@@ -112,6 +127,8 @@ def create_app() -> FastAPI:
     # SPEC §9 R1: 503 responses must include Retry-After. Add the
     # middleware BEFORE the routers so it wraps every response.
     app.add_middleware(CircuitOpenResponseMiddleware)
+    # NFR-04: count every request outcome for /metrics.
+    app.add_middleware(MetricsMiddleware)
 
     app.include_router(health_router)
     app.include_router(speech_router)

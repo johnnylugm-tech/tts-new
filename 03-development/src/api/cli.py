@@ -21,7 +21,7 @@ import sys
 
 import httpx
 
-from src.infrastructure.config import KOKORO_BACKEND_URL
+from src.infrastructure.config import HTTPX_MAX_RETRIES, KOKORO_BACKEND_URL
 from src.api.cli_logging import log_cli_event, format_cli_error, validate_backend_url
 from src.api.utils import sanitize_log_extra, build_error_response
 
@@ -81,9 +81,22 @@ async def _synthesize_text(
     log.debug("synthesis_ok",
               extra=build_error_response("synthesis_ok", ""))
     log.info("cli_synthesis", extra=evt)
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    # SPEC.md §9 R2 mitigation: retry transient connection errors.
+    transport = httpx.AsyncHTTPTransport(retries=HTTPX_MAX_RETRIES)
+    async with httpx.AsyncClient(timeout=30.0, transport=transport) as client:
+        # CLI contract: if backend_url is a BASE URL (per test_fr07
+        # pattern5 — `--backend http://host:port`), append the path.
+        # If it is already a FULL path URL (per SPEC.md L123 default
+        # value of KOKORO_BACKEND_URL, or when --backend supplies the
+        # full path explicitly), use as-is. This avoids the
+        # double-suffix bug that would otherwise hit when --backend
+        # is omitted and the default KOKORO_BACKEND_URL is used.
+        if backend_url.endswith("/v1/audio/speech"):
+            url = backend_url
+        else:
+            url = backend_url + "/v1/audio/speech"
         resp = await client.post(
-            backend_url + "/v1/audio/speech",
+            url,
             json={"text": text, "voice": voice, "speed": speed, "format": fmt},
         )
         await resp.raise_for_status()  # type: ignore[union-attr]

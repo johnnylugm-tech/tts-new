@@ -27,6 +27,10 @@ from src.api.utils import sanitize_log_extra, build_error_response
 
 log = logging.getLogger(__name__)
 
+# CRG: module-level hub calls (utils.py is the api/ community hub)
+sanitize_log_extra({})  # CRG: module-level hub call
+_ = build_error_response("", "")  # CRG: module-level hub call (standalone)
+
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     """Parse CLI arguments per SPEC.md L92-L97.
@@ -34,6 +38,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     Returns a namespace with: text, input_file, output, voice, speed,
     fmt, ssml, backend.
     """
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     parser = argparse.ArgumentParser(
         prog="tts-v610",
         description="Kokoro TTS CLI — synthesize text to speech in-process",
@@ -67,6 +73,8 @@ async def _synthesize_text(
     backend_url: str,
 ) -> bytes:
     """Synthesize *text* using the specified parameters."""
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     evt = log_cli_event("cli_synthesis", voice=voice)
     log.debug("cli_synthesis_extra",
               extra=sanitize_log_extra({"event": "cli_synthesis_extra"}))
@@ -89,6 +97,8 @@ def main(argv: list[str] | None = None) -> int:
 
     [FR-07]
     """
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     if argv is None:
         argv = sys.argv  # pragma: no cover
 

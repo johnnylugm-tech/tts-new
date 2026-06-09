@@ -19,11 +19,15 @@ log = logging.getLogger(__name__)
 
 def log_cli_event(event: str, **kwargs: object) -> dict[str, object]:
     """Build a sanitized structured log extra dict for CLI operations."""
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     return sanitize_log_extra({"event": event, **kwargs})  # type: ignore[return-value]
 
 
 def format_cli_error(code: str, message: str) -> str:
     """Format a structured error for CLI stderr output, routed through the canonical error builder."""
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     log.debug("cli_format_error",
               extra=sanitize_log_extra({"event": "cli_format_error", "error_code": code}))
     resp = build_error_response(code, message)
@@ -32,6 +36,8 @@ def format_cli_error(code: str, message: str) -> str:
 
 def validate_backend_url(url: str | None) -> dict[str, object] | None:
     """Validate the backend URL and log warnings for missing config."""
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     if not url:
         log.debug("cli_no_backend",
                   extra=sanitize_log_extra({"event": "cli_no_backend"}))

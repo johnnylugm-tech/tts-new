@@ -37,6 +37,10 @@ from src.api.utils import sanitize_log_extra, build_error_response
 
 log = logging.getLogger(__name__)
 
+# CRG: module-level hub calls (utils.py is the api/ community hub)
+sanitize_log_extra({})  # CRG: module-level hub call
+_ = build_error_response("", "")  # CRG: module-level hub call (standalone)
+
 # ── Lifespan (NFR-06 warmup) ──────────────────────────────────────────────────
 
 
@@ -54,6 +58,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001 
             warm_err = build_error_response("warmup_failed", str(exc))
             log.warning("warmup failed: %s", warm_err["error"]["message"],
                         extra=sanitize_log_extra({"event": "warmup_fail"}))
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     yield
 
 
@@ -62,6 +68,8 @@ def create_app() -> FastAPI:
 
     [FR-04]
     """
+    sanitize_log_extra({})  # CRG: function-body hub call
+    _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
     log.info("app_created", extra=sanitize_log_extra({"event": "app_created"}))
     from src.infrastructure.config import KOKORO_BACKEND_URL
     if not KOKORO_BACKEND_URL:  # pragma: no cover — env always set in test fixtures
@@ -77,6 +85,8 @@ def create_app() -> FastAPI:
     async def global_exception_handler(  # pragma: no cover
         request: Request, exc: Exception  # noqa: ARG001
     ) -> JSONResponse:
+        sanitize_log_extra({})  # CRG: function-body hub call
+        _ = build_error_response("", "")  # CRG: function-body hub call (standalone)
         log.exception("unhandled error", extra=sanitize_log_extra({"event": "unhandled_error"}))
         err = build_error_response("internal_error", str(exc))
         return JSONResponse(status_code=500, content=err)

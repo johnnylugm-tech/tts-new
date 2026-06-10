@@ -63,14 +63,19 @@ def record(success: bool) -> None:
 def snapshot() -> dict[str, object]:
     """Return a point-in-time snapshot of all counters."""
     uptime = time.monotonic() - STARTED_AT_MONOTONIC
-    availability = (
-        (_success / _total) if _total > 0 else 1.0
-    )
+    # [P2 fix #48] When no requests have been recorded, emit ``None``
+    # instead of a fabricated 1.0 — the latter would falsely advertise
+    # 100% availability for an idle process. When at least one request
+    # has been recorded, normalise to a float in [0.0, 1.0].
+    if _total > 0:
+        availability: float | None = round(_success / _total, 6)
+    else:
+        availability = None
     return {
         "started_at_monotonic": STARTED_AT_MONOTONIC,
         "uptime_seconds": round(uptime, 3),
         "total_requests": _total,
         "successful_requests": _success,
         "failed_requests": _failed,
-        "availability": round(availability, 6),
+        "availability": availability,
     }

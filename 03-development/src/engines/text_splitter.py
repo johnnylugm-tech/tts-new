@@ -33,8 +33,27 @@ _OPTIMAL_THRESHOLD: Final[int] = 100
 
 
 def _force_split(text: str, cap: int) -> list[str]:
-    """Hard-cap force-split: slice *text* into pieces of exactly *cap* chars."""
-    return [text[i : i + cap] for i in range(0, len(text), cap)]
+    """Hard-cap force-split: slice *text* into pieces of exactly *cap* chars.
+
+    [P1 fix #45] When the trailing slice is a single boundary
+    punctuation char (e.g. ``。``, ``,``, ``!``), merge it into the
+    previous slice rather than emitting a one-char pseudo-chunk that
+    the TTS backend would render as a phantom pause.  This only
+    affects the force-split path (segments with no L1/L2/L3
+    boundary) so the all-boundary short-input case (FR-03 case 10)
+    is untouched.
+    """
+    pieces = [text[i : i + cap] for i in range(0, len(text), cap)]
+    if len(pieces) >= 2 and len(pieces[-1]) == 1 and pieces[-1] in _BOUNDARY_CHARS:
+        tail = pieces.pop()
+        pieces[-1] = pieces[-1] + tail
+    return pieces
+
+
+#: Set of single-char boundary punctuation that should never be
+#: emitted as its own chunk under the force-split path.  Mirrors the
+#: union of L1/L2/L3 patterns.
+_BOUNDARY_CHARS: frozenset[str] = frozenset("。？！!?\n；:，")
 
 
 def _simple_split(text: str, pattern: re.Pattern[str]) -> list[str]:

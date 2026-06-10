@@ -69,35 +69,91 @@ def _run_ffmpeg(input_bytes: bytes, output_suffix: str) -> bytes:
     if shutil.which("ffmpeg") is None:
         raise FFmpegUnavailableError()
 
-    in_fd, in_path = tempfile.mkstemp()
-    out_fd, out_path = tempfile.mkstemp(suffix=output_suffix)
+    in_fd = -1
+    in_path = ""
+    out_fd = -1
+    out_path = ""
+    # [P2 fix #18 / #24] Both mkstemps must be inside the try so a
+    # failure on the second (resource exhaustion, EEXIST on weird
+    # filesystems, etc.) closes the first in_fd via the finally block.
     try:
+        in_fd, in_path = tempfile.mkstemp()
+        out_fd, out_path = tempfile.mkstemp(suffix=output_suffix)
+        # Close out_fd immediately (we only need the path); leave
+        # in_fd open for the write below.
         os.close(out_fd)
+        out_fd = -1
         with os.fdopen(in_fd, "wb") as fh:
+            in_fd = -1  # os.fdopen takes ownership; close path goes via fh
             fh.write(input_bytes)
 
+        # [P1 fix #16] subprocess.run is documented to wait() and
+        # reap the child on every exit path (including timeout and
+        # signal-induced cancellation), so the orphan-process concern
+        # the report raised does not apply to this call site.  We
+        # retain the wrapper for its readable kwargs surface and the
+        # well-defined exception types below.
         try:
             subprocess.run(  # nosec
                 ["ffmpeg", "-y", "-i", in_path, out_path],
                 check=True,
                 capture_output=True,
+                timeout=30.0,
             )
+        except subprocess.TimeoutExpired as exc:
+            # [P0 fix #15 + covers P2 #21] ffmpeg hung: map to
+            # ConversionError, not raw.  The 30 s timeout also stops
+            # the worker thread from being permanently occupied by a
+            # single hung ffmpeg invocation, which the report flagged
+            # as P2 #21.  subprocess.run cleans up the child even on
+            # timeout, so there is no orphan-process leak (the
+            # report's P1 #16 orphan-ffmpeg concern does not apply
+            # to subprocess.run; it only matters for raw Popen usage).
+            raise ConversionError("ffmpeg timed out after 30s") from exc
         except subprocess.CalledProcessError as exc:
             stderr = exc.stderr.decode(errors="replace") if exc.stderr else str(exc)
             raise ConversionError(stderr) from exc
+        except FileNotFoundError as exc:
+            # TOCTOU: ffmpeg was on PATH at shutil.which() but gone at
+            # run() (P2-DD-4: map to FFmpegUnavailableError, not bare
+            # FileNotFoundError).
+            raise FFmpegUnavailableError() from exc
 
         with open(out_path, "rb") as fh:
-            return fh.read()
+            output_bytes = fh.read()
+        # [P2 fix #17 / #25] Validate the output: ffmpeg can return a
+        # non-zero exit that was swallowed by the caller's error
+        # handler, or produce a zero-byte / corrupt file. Surface that
+        # as ConversionError so the caller can map to 500 rather than
+        # silently shipping empty audio.
+        if not output_bytes:
+            raise ConversionError("ffmpeg produced empty output")
+        return output_bytes
     finally:
+        if in_fd != -1:  # defensive: mkstemp succeeded but fdopen did not run
+            try:
+                os.close(in_fd)
+            except OSError:  # pragma: no cover
+                pass  # pragma: no cover
+        if out_fd != -1:  # defensive: close any leaked fd
+            try:
+                os.close(out_fd)
+            except OSError:  # pragma: no cover
+                pass  # pragma: no cover
         try:
             os.unlink(in_path)
         except OSError:  # pragma: no cover
             pass  # pragma: no cover
-        if os.path.exists(out_path):
-            try:
-                os.unlink(out_path)
-            except OSError:  # pragma: no cover
-                pass  # pragma: no cover
+        # [P3 fix #19] Drop the redundant os.path.exists() pre-check —
+        # it's a classic TOCTOU (the file can be unlinked between
+        # exists() and unlink()), and EAFP with try/except is
+        # idiomatic.  If the file is already gone, OSError(ENOENT) is
+        # benign; any other OSError should also be swallowed (we are
+        # in a finally block; raising would mask the real exception).
+        try:
+            os.unlink(out_path)
+        except OSError:  # pragma: no cover
+            pass  # pragma: no cover
 
 
 def convert_mp3_to_wav(mp3_bytes: bytes) -> bytes:

@@ -40,9 +40,58 @@ class SpeechRequest(BaseModel):
 
     model: str = "tts-1"
     input: Annotated[str, Field(min_length=1, max_length=8000)]
-    voice: str = DEFAULT_VOICE
+    # [P2 fix #50] Reject empty / over-long voice names at the schema
+    # boundary instead of letting the router silently substitute the
+    # default.  Pydantic's ``min_length`` produces a 422 with a clear
+    # error code, which is what the API contract requires.
+    #
+    # [P1 fix #49] Add a length-capped allowlist on top of the
+    # schema-defined length limits.  The allowlist is populated lazily
+    # by ``set_voice_allowlist`` from the Kokoro backend's
+    # ``/v1/audio/voices`` endpoint.  Until that hook fires, we
+    # accept any well-formed voice name to preserve the previous
+    # contract; once the allowlist is loaded, voices outside it
+    # are rejected with 422.
+    voice: Annotated[str, Field(min_length=1, max_length=128)] = DEFAULT_VOICE
     speed: Annotated[float, Field(ge=0.25, le=4.0)] = DEFAULT_SPEED
     response_format: Literal["mp3", "wav"] = "mp3"
+
+    @field_validator("voice")
+    @classmethod
+    def voice_in_allowlist(cls, v: str) -> str:
+        """Reject voice names that are not in the dynamic allowlist.
+
+        The allowlist is opt-in: callers populate it via
+        :func:`set_voice_allowlist` (typically during app startup,
+        after fetching ``KOKORO_VOICES_URL``).  When the allowlist is
+        empty (the default for unit tests that never call the setter),
+        every non-empty voice is accepted.
+        """
+        if _voice_allowlist and v not in _voice_allowlist:
+            raise ValueError(
+                f"voice {v!r} is not in the Kokoro allowlist"
+            )
+        return v
+
+
+#: Lazily-populated set of voices that the Kokoro backend reports via
+#: ``/v1/audio/voices``.  Tests that never call :func:`set_voice_allowlist`
+#: keep this set empty and the validator therefore acts as a no-op.
+_voice_allowlist: frozenset[str] = frozenset()
+
+
+def set_voice_allowlist(voices: frozenset[str] | list[str] | None) -> None:
+    """Install the voice allowlist used by :class:`SpeechRequest`.
+
+    Passing ``None`` clears the allowlist (back to the permissive
+    default).  Call from app startup after the voices endpoint has
+    been queried.
+    """
+    global _voice_allowlist
+    if voices is None:
+        _voice_allowlist = frozenset()
+    else:
+        _voice_allowlist = frozenset(voices)
 
     @field_validator("input")
     @classmethod

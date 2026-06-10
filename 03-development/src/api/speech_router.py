@@ -120,11 +120,21 @@ async def post_speech(req: SpeechRequest) -> Response:
         raise HTTPException(status_code=502, detail=err) from exc
 
     if fmt == "wav":
-        from src.infrastructure.audio_converter import convert_mp3_to_wav, FFmpegUnavailableError
+        from src.infrastructure.audio_converter import (
+            ConversionError, FFmpegUnavailableError, convert_mp3_to_wav,
+        )
         try:
             audio = convert_mp3_to_wav(audio)
         except FFmpegUnavailableError as exc:
             err = build_error_response("ffmpeg_unavailable", str(exc))
+            raise HTTPException(status_code=500, detail=err) from exc
+        except ConversionError as exc:
+            # [P1 fix #33] Non-FFmpegUnavailableError ConversionError
+            # (corrupt input, non-zero ffmpeg exit, etc.) used to fall
+            # through to the outer except Exception → 502 with code
+            # "synthesis_error". Map to 500 with code "conversion_error"
+            # so the failure surface is consistent with FR-08.
+            err = build_error_response("conversion_error", str(exc))
             raise HTTPException(status_code=500, detail=err) from exc
 
     media_type = "audio/wav" if fmt == "wav" else "audio/mpeg"

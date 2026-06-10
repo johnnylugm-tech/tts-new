@@ -94,13 +94,19 @@ class ParsedSSML:
     warnings: list[str]
 
 
-def _parse_break_time(value: str) -> int:
+def _parse_break_time(value: str, warnings: list[str] | None = None) -> int:
     """Parse a ``<break time="...">`` value to milliseconds.
 
-    Accepts ``"500ms"``, ``"0.5s"`` (etc.). Unknown formats yield 0.
+    Accepts ``"500ms"``, ``"0.5s"`` (etc.). Unknown formats yield 0
+    and, when ``warnings`` is provided, append a warning so the
+    operator can spot the malformed input (P3 #42).
     """
     m = _BREAK_TIME_RE.match(value or "")
     if not m:
+        if warnings is not None and (value or ""):
+            msg = f"<break time={value!r}> invalid; treated as 0ms"
+            warnings.append(msg)
+            log.warning(msg)
         return 0
     num = m.group("num")
     unit = m.group("unit") or "ms"
@@ -246,7 +252,7 @@ def _emit(
         return
 
     if tag == "break":
-        ms = _parse_break_time(elem.attrib.get("time", ""))
+        ms = _parse_break_time(elem.attrib.get("time", ""), warnings)
         segments.append(Segment("", voice, speed, ms))
         return
 
@@ -360,7 +366,20 @@ def parse_ssml(ssml_or_text: str) -> ParsedSSML:
 
     return ParsedSSML(
         plain_text=apply_lexicon("".join(plain_parts)),
-        segments=segments,
+        # [P1 fix #43] Apply the lexicon substitution to every
+        # segment's text as well, not just the concatenated plain_text.
+        # Earlier the segments' ``.text`` carried the pre-lexicon form,
+        # so the per-segment render path (used when <voice> overrides
+        # are present) bypassed the vocabulary normalization.
+        segments=[
+            Segment(
+                text=apply_lexicon(s.text),
+                voice_override=s.voice_override,
+                speed_multiplier=s.speed_multiplier,
+                pad_ms=s.pad_ms,
+            )
+            for s in segments
+        ],
         warnings=warnings,
     )
 

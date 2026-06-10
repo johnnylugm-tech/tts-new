@@ -149,8 +149,21 @@ def main(argv: list[str] | None = None) -> int:
         elif args.input_file:
             import os
             out_dir = args.output
+            # [P2 fix #38] Ensure the output directory exists; the prior
+            # code raised FileNotFoundError mid-loop on the first write
+            # if the user pointed --output at a non-existent path.
+            os.makedirs(out_dir, exist_ok=True)
             with open(args.input_file, encoding="utf-8") as fh:
-                lines = [ln.rstrip("\n") for ln in fh if ln.strip()]
+                raw_lines = [ln.rstrip("\n") for ln in fh]
+                lines = [ln for ln in raw_lines if ln.strip()]
+            # [P3 fix #39] Surface the empty-input case to the operator
+            # (warning + non-zero exit) instead of silently succeeding
+            # with 0 outputs.  A blank file is almost always a
+            # configuration mistake and should not exit 0.
+            if not lines:
+                log.warning("cli_input_file_empty",
+                            extra=sanitize_log_extra({"event": "cli_input_file_empty"}))
+                return 2
             log.debug("cli_input_file",
                       extra=sanitize_log_extra({"event": "cli_input_file"}))
 
@@ -158,7 +171,10 @@ def main(argv: list[str] | None = None) -> int:
                 audio = asyncio.run(
                     _synthesize_text(line, voice, speed, fmt, backend_url)
                 )
-                out_path = os.path.join(out_dir, f"output_{i+1:04d}.mp3")
+                # [P1 fix #37] Honour the --format flag — earlier the
+                # suffix was hard-coded to .mp3 even when the user asked
+                # for wav output.
+                out_path = os.path.join(out_dir, f"output_{i+1:04d}.{fmt}")
                 log.debug("cli_output_write",
                           extra=sanitize_log_extra({"event": "cli_output_write"}))
                 with open(out_path, "wb") as fh:

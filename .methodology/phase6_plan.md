@@ -6,8 +6,6 @@
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 6 - Quality Assurance
 > **Status**: Full version (including Phase 6 detailed tasks)
-> **Mode**: Dynamic (load-context at execution time)
-
 
 ---
 
@@ -27,6 +25,7 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   Verify P5 output artifacts exist: `05-verification/VERIFICATION_REPORT.md` + `05-verification/BASELINE.md`
   Proof: .methodology/quality_manifest.json records Gate 3 PASS from P4.
   If NOT confirmed: return to Phase 4 and complete exit gate first.
+
 - **[D4-PRECHECK]** Verify spec-coverage meets Gate 4 threshold BEFORE starting P6 (avoid late surprise):
   ```bash
   python3 harness_cli.py spec-coverage-check --project . --threshold 90.0
@@ -66,19 +65,23 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   4. Phase 6 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 6 --project . --overwrite`
 
-### 🔄 [PHASE-CONTEXT] — Load Before Starting
-
-```bash
-python3 harness_cli.py load-context --phase 6 --project . --json \
-  > .sessi-work/phase6_ctx.json
-```
-> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
-
 ### P6 Phase End Audit (+ A/B Review)
 
 > A/B collaboration is active for Phase 6 deliverables (HR-01).
 > Agent A generates QUALITY_REPORT.md and RELEASE_NOTES.md.
 > Agent B (reviewer — stateless) reviews the deliverables and verifies Gate 4 score.
+
+### Existing Quality Metrics (from QUALITY_REPORT.md)
+
+- **Generated**: 2026-06-08 19:14:29
+- **Gate**: 4
+- **Overall Score**: 97.1288/100
+- **Critical**: 0
+- **High**: 0
+- **Medium**: 0
+- **Low**: 0
+- **BASELINE.md**: See `05-verification/BASELINE.md` for performance baseline
+- **VERIFICATION_REPORT.md**: See `05-verification/VERIFICATION_REPORT.md` for verification results
 
 ### Pre-Gate Preparation
 - Confirm all FRs are merged to main branch
@@ -245,6 +248,11 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 
 ### Phase 6 → Phase 7: Risk Management
 
+- Generate Phase 7 plan:
+  ```bash
+  python3 harness_cli.py plan-phase --phase 7 --project . \
+    --output .methodology/phase7_plan.md
+  ```
 - **[GIT-TAG]** Push Gate 4 git tag (SKILL.md §0.4):
   ```bash
   SCORE=$(python3 -c "import json; d=json.load(open('.sessi-work/gate4_result.json')); print(d.get('composite_score','XX'))" 2>/dev/null || echo 'XX')

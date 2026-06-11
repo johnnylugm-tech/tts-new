@@ -6,8 +6,6 @@
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 1 - Requirements Specification
 > **Status**: Full version (including Phase 1 detailed tasks)
-> **Mode**: Dynamic (load-context at execution time)
-
 
 ---
 
@@ -54,14 +52,6 @@ Phase 1 is the project starting point. Define complete SRS.
   ```
   Re-verify items 1-3 after running.
   If still failing after `init-project`: escalate to human — provide `init-project` error output.
-
-### 🔄 [PHASE-CONTEXT] — Load Before Starting
-
-```bash
-python3 harness_cli.py load-context --phase 1 --project . --json \
-  > .sessi-work/phase1_ctx.json
-```
-> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -127,7 +117,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["PROJECT_BRIEF.md", "01-requirements/SRS.md"],
+   "docs_embedded":[" stakeholder brief", "SRS.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -195,7 +185,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md review", "01-requirements/SRS.md", "SPEC_TRACKING.md"],
+   "docs_embedded":["Previous Sub-Task B-2 review JSON \u2014 SRS.md", "SRS.md", "SPEC_TRACKING.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -271,7 +261,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md review", "SPEC_TRACKING.md review", "01-requirements/SRS.md", "01-requirements/SPEC_TRACKING.md", "TRACEABILITY_MATRIX.md"],
+   "docs_embedded":["Previous Sub-Task B-2 review JSON \u2014 SRS.md", "Previous Sub-Task B-2 review JSON \u2014 SPEC_TRACKING.md", "SRS.md", "SPEC_TRACKING.md", "TRACEABILITY_MATRIX.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -343,7 +333,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["TRACEABILITY_MATRIX.md review", "01-requirements/SRS.md", "01-requirements/TRACEABILITY_MATRIX.md", "TEST_INVENTORY.yaml"],
+   "docs_embedded":["Previous Sub-Task B-2 review JSON \u2014 TRACEABILITY_MATRIX.md", "SRS.md", "TRACEABILITY_MATRIX.md", "draft TEST_INVENTORY.yaml"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -362,6 +352,22 @@ are not re-opened. This bounds backtracking to a single step.
   > AgentSpawner records dispatches to `.methodology/sessions_spawn.log` (non-blocking debug trail).
 
   > fr_id uses P1 as phase-level placeholder; replace with FR-XX for FR-specific plans.
+
+### FR Requirements (2 total)
+
+#### FR-01: {requirement}
+**Task**: {requirement}
+
+#### FR-02: ...
+**Task**: ...
+
+### NFR Non-Functional Requirements (2 total)
+
+#### NFR-01: Performance
+**Requirement**: {requirement}
+
+#### NFR-02: Security
+**Requirement**: {requirement}
 
 ### Phase 1 Deliverables
 - `SRS.md` - Software Requirements Specification (FRs + NFRs)
@@ -429,7 +435,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["01-requirements/SRS.md", "01-requirements/SPEC_TRACKING.md", "01-requirements/TRACEABILITY_MATRIX.md", "TEST_INVENTORY.yaml"],
+   "docs_embedded":["SRS.md", "SPEC_TRACKING.md", "TRACEABILITY_MATRIX.md", "TEST_INVENTORY.yaml"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -453,6 +459,11 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 1 → Phase 2: Architecture Design
 
+- Generate Phase 2 plan:
+  ```bash
+  python3 harness_cli.py plan-phase --phase 2 --project . \
+    --output .methodology/phase2_plan.md
+  ```
 - Advance FSM to Phase 2 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 1 --project .

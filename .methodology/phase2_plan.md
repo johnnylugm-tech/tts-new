@@ -6,8 +6,6 @@
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 2 - Architecture Design
 > **Status**: Full version (including Phase 2 detailed tasks)
-> **Mode**: Dynamic (load-context at execution time)
-
 
 ---
 
@@ -55,14 +53,6 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
   4. Phase 2 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 2 --project . --overwrite`
-
-### 🔄 [PHASE-CONTEXT] — Load Before Starting
-
-```bash
-python3 harness_cli.py load-context --phase 2 --project . --json \
-  > .sessi-work/phase2_ctx.json
-```
-> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -132,7 +122,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md", "SAD.md"],
+   "docs_embedded":["SRS.md", "SAD.md", "SAD.md \u00a72.1"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -204,7 +194,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md", "SAD.md"],
+   "docs_embedded":["Previous Sub-Task B-2 review JSON \u2014 SAD.md", "SAD.md", "ADR.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -303,7 +293,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md", "SAD.md"],
+   "docs_embedded":["Previous Sub-Task B-2 review JSON \u2014 ADR.md", "SRS.md", "SAD.md", "ADR.md", "TEST_SPEC.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -323,6 +313,14 @@ are not re-opened. This bounds backtracking to a single step.
 
   > fr_id uses P2 as phase-level placeholder; replace with FR-XX for FR-specific plans.
 
+### FR Architecture Mapping (2 total)
+
+#### FR-01: {requirement}
+**Requirement**: {requirement}
+
+#### FR-02: ...
+**Requirement**: ...
+
 ### SAB Generation (Machine-Readable Architecture Baseline)
 
 > **CONTRACT**: The SAB block in SAD.md §5 is parsed by
@@ -338,7 +336,7 @@ are not re-opened. This bounds backtracking to a single step.
     version: "1.0"
     created_at: "{YYYY-MM-DD}"
     phase: 2  # MUST be int, NOT a string — parser raises on 'phase: "2"'
-    project: "tts-new"  # ← replace with actual project name
+    project: "<your-project-name>"
   
     layers:  # EXAMPLE — replace with your project's layers
       - name: api
@@ -470,7 +468,7 @@ are not re-opened. This bounds backtracking to a single step.
   {"review_status":"APPROVE"|"REJECT",
    "reason":"<concise summary>",
    "citations":["file:line"],
-   "docs_embedded":["SRS.md", "SAD.md"],
+   "docs_embedded":["SAD.md", "ADR.md", "TEST_SPEC.md"],
    "gaps":[{"severity":"low|medium|high","message":"<issue>","fr_id":"<FR-XX or null>"}]}
   ```
 
@@ -494,6 +492,11 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 2 → Phase 3: Implementation
 
+- Generate Phase 3 plan:
+  ```bash
+  python3 harness_cli.py plan-phase --phase 3 --project . \
+    --output .methodology/phase3_plan.md
+  ```
 - Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 2 --project .

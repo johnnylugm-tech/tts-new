@@ -1,9 +1,9 @@
 # Phase 6 Full Execution Plan -- tts-new
 
-> **Version**: v2.7.0 (project plan)
+> **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-08
-> **Framework**: harness-methodology v2.7.0
+> **Date**: 2026-06-11
+> **Framework**: harness-methodology v2.9.0
 > **Phase**: 6 - Quality Assurance
 > **Status**: Full version (including Phase 6 detailed tasks)
 > **Mode**: Dynamic (load-context at execution time)
@@ -27,6 +27,12 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   Verify P5 output artifacts exist: `05-verification/VERIFICATION_REPORT.md` + `05-verification/BASELINE.md`
   Proof: .methodology/quality_manifest.json records Gate 3 PASS from P4.
   If NOT confirmed: return to Phase 4 and complete exit gate first.
+- **[D4-PRECHECK]** Verify spec-coverage meets Gate 4 threshold BEFORE starting P6 (avoid late surprise):
+  ```bash
+  python3 harness_cli.py spec-coverage-check --project . --threshold 90.0
+  ```
+  FAIL → add missing test implementations now (Gate 4 blocks at 90%, not 80%).
+  Do NOT proceed to G4a until this passes.
 
 ### Pre-Phase Preflight
 
@@ -38,6 +44,13 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   Re-run `run-phase` after each fix. Max 3 attempts.
   After 3 FAIL: escalate to human — provide last `run-phase --phase 6` full output.
   Human fix → re-run `run-phase --phase 6 --project .` → PASS required before continuing.
+  **Reliability lint fix** (P4+ blocking — if `preflight_reliability_lint` reports findings):
+  Fix flagged patterns before continuing: `subprocess.run/Popen` without `timeout=`,
+  `tempfile.mkstemp` outside try/finally, `os.path.exists` before open/unlink (TOCTOU),
+  `time.sleep` inside async def. Re-run `run-phase` after each fix.
+  **Config liveness fix** (P4+ blocking — if `preflight_config_liveness` reports orphans):
+  Env keys read in code but absent from `.env.example`/`docker-compose*.yml`/`deployment/`.
+  Add the key to the declaration source (or fix the typo). Re-run `run-phase` after each fix.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
   python3 harness_cli.py build-trace-attestation --project . --write
@@ -102,7 +115,7 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 
 
 ### 🔒 CHECKPOINT-GATE-4: Phase 6 Exit
-> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · performance(75) · integration_coverage(75) · test_assertion_quality(70) · traceability(100)  [traceability: framework-owned, harness-computed · CRG recon inside run-gate · D4 spec-coverage unified ≥90%]
+> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · performance(75) · integration_coverage(75) · test_assertion_quality(70) · traceability(100) · composite ≥ 85  [traceability: framework-owned, harness-computed · CRG recon inside run-gate · D4 spec-coverage unified ≥90%]
 
 - **G4a** Prepare Gate 4:
   ```bash
@@ -157,7 +170,7 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 |-----------|-----|
 | mutation_testing | Add/improve tests to kill surviving mutants. Run `mutmut run` → `mutmut results`. Exclude data-only files (constants, dicts, Pydantic models) via `paths_to_exclude` in setup.cfg. Target: kill rate ≥ threshold. |
 | architecture (G3/G4 only) | Community cohesion low → add cross-module integration tests, break hub-and-spoke coupling, or file a DA waiver if the pattern is intentional (Orchestrator). |
-| error_handling | Add try/except blocks in `03-development/src/` files. `grep -r 'try:' 03-development/src/` to see current coverage. |
+| error_handling | (1) **Presence**: add try/except blocks. `grep -r 'try:' 03-development/src/` to see coverage. (2) **Anti-patterns** (v2.9 A1, −5 each): remove `except BaseException:` (flagged even with re-raise), bare `except:` without re-raise, `except Exception: pass`. Run `python3 harness_cli.py run-tool ast-error-handling --project .` to see exact deductions. |
 | documentation | Add docstrings to public functions/classes. `python3 -m ast_docstrings` or manual: every `def`/`class` in `03-development/src/` needs a docstring. |
 | readability | Refactor complex functions (radon-mi < B grade). Run `radon mi 03-development/src/ -j` to see scores per file. |
 | performance | Add pytest-benchmark tests. Create `tests/test_perf.py` with `def test_latency(benchmark): ...` |
@@ -177,7 +190,7 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
 4. Update `.sessi-work/gate{gate_num}_result.json` with new scores
 5. Re-run: `python3 harness_cli.py finalize-gate --gate 4 --phase 6 --project .`
 6. Repeat until CASE 1 PASS or 15 fix rounds exhausted
-7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with remaining dims and escalate
+7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with each remaining dim as a checkbox item ('- [ ] <dim>: <reason>'); every item MUST be resolved and marked '- [x]' before advance-phase (hard-blocked, exit 17, otherwise), then escalate
 
 
 - **G4d** ✅ Verify checkpoint saved (finalize-gate above already pushed + wrote HANDOVER.md):
@@ -243,6 +256,7 @@ python3 harness_cli.py load-context --phase 6 --project . --json \
   - secrets scanning: `gitleaks detect --source .` (exit 20) — whole-repo, runs before linting
   - linting: `ruff check .` (exit 18) — fix violations before advancing
   - type safety: `python3 -m mypy . --ignore-missing-imports` (exit 19)
+    > Note: advance-phase uses mypy; Gate scoring uses pyright. Both must pass.
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0` (exit 10, D4 unified v2.6)
   - mutmut mutation testing (exit 11 — hard block; install: `pip install mutmut`;

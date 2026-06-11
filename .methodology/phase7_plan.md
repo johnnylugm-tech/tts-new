@@ -1,9 +1,9 @@
 # Phase 7 Full Execution Plan -- tts-new
 
-> **Version**: v2.7.0 (project plan)
+> **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-08
-> **Framework**: harness-methodology v2.7.0
+> **Date**: 2026-06-11
+> **Framework**: harness-methodology v2.9.0
 > **Phase**: 7 - Risk Management
 > **Status**: Full version (including Phase 7 detailed tasks)
 > **Mode**: Dynamic (load-context at execution time)
@@ -43,6 +43,13 @@ Each FR gets a Gate 1 risk-aware re-evaluation (CHECKPOINT). No harness run-gate
   Re-run `run-phase` after each fix. Max 3 attempts.
   After 3 FAIL: escalate to human — provide last `run-phase --phase 7` full output.
   Human fix → re-run `run-phase --phase 7 --project .` → PASS required before continuing.
+  **Reliability lint fix** (P4+ blocking — if `preflight_reliability_lint` reports findings):
+  Fix flagged patterns before continuing: `subprocess.run/Popen` without `timeout=`,
+  `tempfile.mkstemp` outside try/finally, `os.path.exists` before open/unlink (TOCTOU),
+  `time.sleep` inside async def. Re-run `run-phase` after each fix.
+  **Config liveness fix** (P4+ blocking — if `preflight_config_liveness` reports orphans):
+  Env keys read in code but absent from `.env.example`/`docker-compose*.yml`/`deployment/`.
+  Add the key to the declaration source (or fix the typo). Re-run `run-phase` after each fix.
   **Attestation fix** (P5+ — if ASPICE Traceability preflight shows `attestation: missing` or `mismatch`):
   ```bash
   python3 harness_cli.py build-trace-attestation --project . --write
@@ -137,6 +144,7 @@ python3 harness_cli.py load-context --phase 7 --project . --json \
   - secrets scanning: `gitleaks detect --source .` (exit 20) — whole-repo, runs before linting
   - linting: `ruff check .` (exit 18) — fix violations before advancing
   - type safety: `python3 -m mypy . --ignore-missing-imports` (exit 19)
+    > Note: advance-phase uses mypy; Gate scoring uses pyright. Both must pass.
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 90.0` (exit 10, D4 unified v2.6)
   - mutmut mutation testing (exit 11 — hard block; install: `pip install mutmut`;

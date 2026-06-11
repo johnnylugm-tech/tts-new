@@ -1,9 +1,9 @@
 # Phase 2 Full Execution Plan -- tts-new
 
-> **Version**: v2.7.0 (project plan)
+> **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-08
-> **Framework**: harness-methodology v2.7.0
+> **Date**: 2026-06-11
+> **Framework**: harness-methodology v2.9.0
 > **Phase**: 2 - Architecture Design
 > **Status**: Full version (including Phase 2 detailed tasks)
 > **Mode**: Dynamic (load-context at execution time)
@@ -101,7 +101,7 @@ are not re-opened. This bounds backtracking to a single step.
   **Embed these documents in full** (copy content, not paths):
   - `01-requirements/SRS.md (full)`
   - `draft 02-architecture/SAD.md (full)`
-  - `templates/SAD.md §2.1 (Directory Structure Design Principles)`
+  - `harness/templates/SAD.md §2.1 (Directory Structure Design Principles)`
 
   **Agent B prompt structure** (use this template verbatim):
   ```
@@ -114,7 +114,7 @@ are not re-opened. This bounds backtracking to a single step.
   === [DOC 2: draft 02-architecture/SAD.md (full)] ===
   <<paste full content here>>
 
-  === [DOC 3: templates/SAD.md §2.1 (Directory Structure Design Principles)] ===
+  === [DOC 3: harness/templates/SAD.md §2.1 (Directory Structure Design Principles)] ===
   <<paste full content here>>
 
   Review checklist:
@@ -174,7 +174,7 @@ are not re-opened. This bounds backtracking to a single step.
   - `Previous Sub-Task B-2 review JSON — SAD.md (Sub-Task 1/3, gaps field may contain non-blocking caveats)`
   - `02-architecture/SAD.md (APPROVED — full content)`
   - `draft 02-architecture/adr/ADR.md (full content)`
-  - `templates/ADR.md (template format)`
+  - `harness/templates/ADR.md (template format)`
 
   **Agent B prompt structure** (use this template verbatim):
   ```
@@ -190,7 +190,7 @@ are not re-opened. This bounds backtracking to a single step.
   === [DOC 3: draft 02-architecture/adr/ADR.md (full content)] ===
   <<paste full content here>>
 
-  === [DOC 4: templates/ADR.md (template format)] ===
+  === [DOC 4: harness/templates/ADR.md (template format)] ===
   <<paste full content here>>
 
   Review checklist:
@@ -247,7 +247,7 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply 7-Question Protocol per FR → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
+- **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply Step 1b Architecture-Risk Triggers FIRST (scan SAD modules: shared mutable state → force NP-13; external process → force NP-15; network client/cache → force NP-07; forced cases go in tests/integration/ and are tagged SAD: in Pattern Activation table) → apply 8-Question Protocol per FR (Q1-Q8 + Step 2.5 Interface Contracts + Step 4 Infrastructure Wiring) → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
   - FORBIDDEN: vague/non-testable acceptance criteria
 - **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
 - **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
@@ -288,9 +288,10 @@ are not re-opened. This bounds backtracking to a single step.
   Review checklist:
   - Upstream deliverable review caveats addressed? (check previous B-2 gaps field)
   - Every FR has ≥1 named test case (happy_path + validation mandatory)?
-  - 7-Question Protocol applied per FR (Q1-Q7 as applicable by classification)?
+  - 8-Question Protocol applied per FR (Q1-Q8 as applicable by classification, YAML names do NOT exempt missing categories)?
   - Classification assigned per FR (API_ENDPOINT|DATA_ENTITY|ALGORITHM|STATE_MACHINE|INTEGRATION|SECURITY_CONTROL|INFRASTRUCTURE)?
   - NFR Pattern Activation table filled (Step 1 of derive_test_cases.md)?
+  - Architecture-risk triggers applied (Step 1b)? SAD modules with shared mutable state → NP-13 forced; external process → NP-15; network client/cache → NP-07. Forced cases recorded in tests/integration/ with SAD: source tag.
   - Every case has concrete Inputs in TRUE form (key="value"), NOT pytest-id form (underscore-replaced)?
   - Sub-assertions table populated per FR (rule_id + predicate + applies_to referencing real case #s)?
   - Self-consistency gate passes? (python3 harness_cli.py check-test-spec-consistency --project .)
@@ -337,7 +338,7 @@ are not re-opened. This bounds backtracking to a single step.
     version: "1.0"
     created_at: "{YYYY-MM-DD}"
     phase: 2  # MUST be int, NOT a string — parser raises on 'phase: "2"'
-    project: "{project_name}"
+    project: "tts-new"  # ← replace with actual project name
   
     layers:  # EXAMPLE — replace with your project's layers
       - name: api
@@ -382,7 +383,7 @@ are not re-opened. This bounds backtracking to a single step.
 
 - **[SAB-VALIDATE]** Validate the SAB block before committing:
   ```bash
-  python3 scripts/generate_sab.py --validate --project .
+  python3 harness/scripts/generate_sab.py --validate --project .
   ```
   - MUST exit 0. On failure the message lists the exact problem
     (e.g. unknown NFR type, `phase` as string).
@@ -390,7 +391,7 @@ are not re-opened. This bounds backtracking to a single step.
 
 - **[SAB-GENERATE]** Generate `.methodology/SAB.json` from the validated SAB block:
   ```bash
-  python3 scripts/generate_sab.py --project .
+  python3 harness/scripts/generate_sab.py --project .
   ```
   > **Note**: If `SAB.json` already exists and needs regeneration, pass `--overwrite`.
   - SAB.json contains all 14 fields from `SABSpec`:

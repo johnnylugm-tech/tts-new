@@ -1,9 +1,9 @@
 # Phase 3 Full Execution Plan -- tts-new
 
-> **Version**: v2.7.0 (project plan)
+> **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-08
-> **Framework**: harness-methodology v2.7.0
+> **Date**: 2026-06-11
+> **Framework**: harness-methodology v2.9.0
 > **Phase**: 3 - Implementation
 > **Status**: Full version (including Phase 3 detailed tasks)
 > **Mode**: Dynamic (load-context at execution time)
@@ -124,7 +124,7 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
 
 
 ### 🔒 CHECKPOINT-GATE-2: Phase 3 Exit
-> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · integration_coverage(60) · test_assertion_quality(60) · traceability(100)  [traceability: framework-owned, harness-computed · D4 spec-coverage unified ≥60%]
+> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · integration_coverage(60) · test_assertion_quality(60) · traceability(100) · composite ≥ 75  [traceability: framework-owned, harness-computed · D4 spec-coverage unified ≥60%]
 
 - **G2a** Prepare Gate 2:
   ```bash
@@ -171,7 +171,7 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
 |-----------|-----|
 | mutation_testing | Add/improve tests to kill surviving mutants. Run `mutmut run` → `mutmut results`. Exclude data-only files (constants, dicts, Pydantic models) via `paths_to_exclude` in setup.cfg. Target: kill rate ≥ threshold. |
 | architecture (G3/G4 only) | Community cohesion low → add cross-module integration tests, break hub-and-spoke coupling, or file a DA waiver if the pattern is intentional (Orchestrator). |
-| error_handling | Add try/except blocks in `03-development/src/` files. `grep -r 'try:' 03-development/src/` to see current coverage. |
+| error_handling | (1) **Presence**: add try/except blocks. `grep -r 'try:' 03-development/src/` to see coverage. (2) **Anti-patterns** (v2.9 A1, −5 each): remove `except BaseException:` (flagged even with re-raise), bare `except:` without re-raise, `except Exception: pass`. Run `python3 harness_cli.py run-tool ast-error-handling --project .` to see exact deductions. |
 | documentation | Add docstrings to public functions/classes. `python3 -m ast_docstrings` or manual: every `def`/`class` in `03-development/src/` needs a docstring. |
 | readability | Refactor complex functions (radon-mi < B grade). Run `radon mi 03-development/src/ -j` to see scores per file. |
 | performance | Add pytest-benchmark tests. Create `tests/test_perf.py` with `def test_latency(benchmark): ...` |
@@ -191,7 +191,7 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
 4. Update `.sessi-work/gate{gate_num}_result.json` with new scores
 5. Re-run: `python3 harness_cli.py finalize-gate --gate 2 --phase 3 --project .`
 6. Repeat until CASE 1 PASS or 10 fix rounds exhausted
-7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with remaining dims and escalate
+7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with each remaining dim as a checkbox item ('- [ ] <dim>: <reason>'); every item MUST be resolved and marked '- [x]' before advance-phase (hard-blocked, exit 17, otherwise), then escalate
 
 
 - **G2d** ✅ Verify checkpoint saved (finalize-gate above already pushed + wrote HANDOVER.md):
@@ -223,6 +223,7 @@ python3 harness_cli.py load-context --phase 3 --project . --json \
   - secrets scanning: `gitleaks detect --source .` (exit 20) — whole-repo, runs before linting
   - linting: `ruff check .` (exit 18) — fix violations before advancing
   - type safety: `python3 -m mypy . --ignore-missing-imports` (exit 19)
+    > Note: advance-phase uses mypy; Gate scoring uses pyright. Both must pass.
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 60.0` (exit 10, D4 unified v2.6)
   - mutmut mutation testing (exit 11 — hard block; install: `pip install mutmut`;

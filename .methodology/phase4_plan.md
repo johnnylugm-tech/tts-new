@@ -1,9 +1,9 @@
 # Phase 4 Full Execution Plan -- tts-new
 
-> **Version**: v2.7.0 (project plan)
+> **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-08
-> **Framework**: harness-methodology v2.7.0
+> **Date**: 2026-06-11
+> **Framework**: harness-methodology v2.9.0
 > **Phase**: 4 - Testing
 > **Status**: Full version (including Phase 4 detailed tasks)
 > **Mode**: Dynamic (load-context at execution time)
@@ -15,7 +15,7 @@
 
 ### Phase 4 Overview
 Phase 4 formulates and executes a complete test plan based on Phase 3 code.
-Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (15 dims).
+Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (16 dims).
 
 > **Crash Recovery**: `python3 harness_cli.py resume-fr-phase --phase 4 --project .`
 > prints the next pending step. Each `run-fr-step` auto-pushes to GitHub on completion.
@@ -44,6 +44,13 @@ Each FR ends with a Gate 1 re-evaluation (CHECKPOINT). Phase exits via Gate 3 (1
   Re-run `run-phase` after each fix. Max 3 attempts.
   After 3 FAIL: escalate to human — provide last `run-phase --phase 4` full output.
   Human fix → re-run `run-phase --phase 4 --project .` → PASS required before continuing.
+  **Reliability lint fix** (P4+ blocking — if `preflight_reliability_lint` reports findings):
+  Fix flagged patterns before continuing: `subprocess.run/Popen` without `timeout=`,
+  `tempfile.mkstemp` outside try/finally, `os.path.exists` before open/unlink (TOCTOU),
+  `time.sleep` inside async def. Re-run `run-phase` after each fix.
+  **Config liveness fix** (P4+ blocking — if `preflight_config_liveness` reports orphans):
+  Env keys read in code but absent from `.env.example`/`docker-compose*.yml`/`deployment/`.
+  Add the key to the declaration source (or fix the typo). Re-run `run-phase` after each fix.
 
 - **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
@@ -149,7 +156,31 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 
 
 ### 🔒 CHECKPOINT-GATE-3: Phase 4 Exit
-> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · integration_coverage(60) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · test_assertion_quality(60) · performance(75) · traceability(100)  [traceability: framework-owned, harness-computed · CRG recon inside run-gate · D4 spec-coverage unified ≥80%]
+> linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · integration_coverage(60) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · test_assertion_quality(60) · performance(75) · traceability(100) · adversarial_review(100) · composite ≥ 80  [traceability: framework-owned, harness-computed · adversarial_review: framework-owned, requires .methodology/bug_hunt_report.json · CRG recon inside run-gate · D4 spec-coverage unified ≥80%]
+
+
+### Step 4b — Adversarial Bug Hunt (v2.9, required before Gate 3)
+
+> `adversarial_review` is a framework-owned Gate 3 dimension (threshold 100, weight 0).
+> It blocks Gate 3 if `.methodology/bug_hunt_report.json` is absent or any confirmed
+> critical/high finding is still `open`. Run the hunt BEFORE `G3a`.
+
+- **[HUNT-TARGETS]** Generate targeting manifest (CRG hubs + mutation survivors + integration gaps):
+  ```bash
+  python3 harness_cli.py bug-hunt-targets --project .
+  ```
+  Output: `.methodology/bug_hunt_targets.json`
+
+- **[HUNT-RUN]** Execute the adversarial bug hunt:
+  - Protocol: `harness/ssi/prompts/hunt_bugs.md` (4-phase: scout → lens hunters → verify → synthesize)
+  - Reference workflow: `templates/workflows/hunt-bugs.js`
+  - **Use a model DIFFERENT from the developer model** to minimise same-source bias
+  - Output: `.methodology/bug_hunt_report.json` + `.audit/*.md`
+
+- **[HUNT-RESOLVE]** For each **confirmed critical/high** finding, set `resolution.status`:
+  - `resolved`: must include `fix_commit` (commit SHA) or `repro_test` (path in `tests/`)
+  - `refuted`: must include `refute_evidence` (explanation + line citation)
+  - Medium/low findings: record only — not required to resolve before Gate 3
 
 - **G3a** Prepare Gate 3:
   ```bash
@@ -203,7 +234,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 |-----------|-----|
 | mutation_testing | Add/improve tests to kill surviving mutants. Run `mutmut run` → `mutmut results`. Exclude data-only files (constants, dicts, Pydantic models) via `paths_to_exclude` in setup.cfg. Target: kill rate ≥ threshold. |
 | architecture (G3/G4 only) | Community cohesion low → add cross-module integration tests, break hub-and-spoke coupling, or file a DA waiver if the pattern is intentional (Orchestrator). |
-| error_handling | Add try/except blocks in `03-development/src/` files. `grep -r 'try:' 03-development/src/` to see current coverage. |
+| error_handling | (1) **Presence**: add try/except blocks. `grep -r 'try:' 03-development/src/` to see coverage. (2) **Anti-patterns** (v2.9 A1, −5 each): remove `except BaseException:` (flagged even with re-raise), bare `except:` without re-raise, `except Exception: pass`. Run `python3 harness_cli.py run-tool ast-error-handling --project .` to see exact deductions. |
 | documentation | Add docstrings to public functions/classes. `python3 -m ast_docstrings` or manual: every `def`/`class` in `03-development/src/` needs a docstring. |
 | readability | Refactor complex functions (radon-mi < B grade). Run `radon mi 03-development/src/ -j` to see scores per file. |
 | performance | Add pytest-benchmark tests. Create `tests/test_perf.py` with `def test_latency(benchmark): ...` |
@@ -215,6 +246,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 | test_coverage | Add tests to cover uncovered lines. Run `pytest --cov=03-development/src --cov-report=term-missing` |
 | secrets_scanning | Remove committed secrets. Run `gitleaks detect --source .` |
 | license_compliance | Replace non-MIT dependencies. Run `pip-licenses` to audit. |
+| adversarial_review (G3 only) | `.methodology/bug_hunt_report.json` missing, or confirmed critical/high findings are still `open`. Fix: run the adversarial bug hunt (Step 4b above), resolve/refute all critical+high findings with evidence (`fix_commit` or `repro_test` for resolved; `refute_evidence` for refuted). |
 
 **Retry workflow:**
 1. Read the failing dims from `finalize-gate` output above
@@ -222,8 +254,8 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 3. Re-run the tool for each fixed dim to confirm the score change
 4. Update `.sessi-work/gate{gate_num}_result.json` with new scores
 5. Re-run: `python3 harness_cli.py finalize-gate --gate 3 --phase 4 --project .`
-6. Repeat until CASE 1 PASS or 15 fix rounds exhausted
-7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with remaining dims and escalate
+6. Repeat until CASE 1 PASS or 16 fix rounds exhausted
+7. If stuck after 3 rounds: write `.methodology/deferred_fixes.md` with each remaining dim as a checkbox item ('- [ ] <dim>: <reason>'); every item MUST be resolved and marked '- [x]' before advance-phase (hard-blocked, exit 17, otherwise), then escalate
 
 
 - **G3d** ✅ Verify checkpoint saved (finalize-gate above already pushed + wrote HANDOVER.md):
@@ -248,7 +280,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
 - `04-testing/COVERAGE_REPORT.md` - Coverage report
 - [x] `.methodology/sessions_spawn.log` — auto-populated by AgentSpawner (non-blocking debug trail)
 - Gate 1 PASS for every FR
-- Gate 3 PASS (phase exit, composite ≥ 80, 15 dims)
+- Gate 3 PASS (phase exit, composite ≥ 80, 16 dims)
 
 ### Phase 4 → Phase 5: Verification & Delivery
 
@@ -256,6 +288,7 @@ python3 harness_cli.py load-context --phase 4 --project . --json \
   - secrets scanning: `gitleaks detect --source .` (exit 20) — whole-repo, runs before linting
   - linting: `ruff check .` (exit 18) — fix violations before advancing
   - type safety: `python3 -m mypy . --ignore-missing-imports` (exit 19)
+    > Note: advance-phase uses mypy; Gate scoring uses pyright. Both must pass.
   - `pytest --tb=short -q --cov=03-development/src --cov-fail-under=100` (exit 9)
   - `python3 harness_cli.py spec-coverage-check --project . --threshold 80.0` (exit 10, D4 unified v2.6)
   - mutmut mutation testing (exit 11 — hard block; install: `pip install mutmut`;

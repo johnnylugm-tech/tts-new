@@ -2,10 +2,18 @@
 
 > **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-11
+> **Date**: 2026-06-13
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 1 - Requirements Specification
 > **Status**: Full version (including Phase 1 detailed tasks)
+> **Mode**: Dynamic (load-context at execution time)
+
+
+> **Hard Rules in Force (this plan)** — explicit reminders:
+> - HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews. Never role-play A or B yourself.
+> - HR-05: harness-methodology wins all conflicts — if a project decision contradicts SKILL.md / INIT / this plan, the harness wins.
+> - HR-16: Trace 4a = 100% required (G2/G3/G4 only). `gate_score_overrides` is a **threshold floor (raises, not lowers)** per `sab_parser.derive_gate_score_overrides` — cannot bypass a failing trace dim. Remediation: fix code/FRs to 100%, accept gate block, or escalate to human. No automated override.
+> - HR-17: NEVER modify files inside `harness/` — debug the framework, never hot-patch the submodule.
 
 ---
 
@@ -52,6 +60,14 @@ Phase 1 is the project starting point. Define complete SRS.
   ```
   Re-verify items 1-3 after running.
   If still failing after `init-project`: escalate to human — provide `init-project` error output.
+
+### 🔄 [PHASE-CONTEXT] — Load Before Starting
+
+```bash
+python3 harness_cli.py load-context --phase 1 --project . --json \
+  > .sessi-work/phase1_ctx.json
+```
+> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -353,22 +369,6 @@ are not re-opened. This bounds backtracking to a single step.
 
   > fr_id uses P1 as phase-level placeholder; replace with FR-XX for FR-specific plans.
 
-### FR Requirements (2 total)
-
-#### FR-01: {requirement}
-**Task**: {requirement}
-
-#### FR-02: ...
-**Task**: ...
-
-### NFR Non-Functional Requirements (2 total)
-
-#### NFR-01: Performance
-**Requirement**: {requirement}
-
-#### NFR-02: Security
-**Requirement**: {requirement}
-
 ### Phase 1 Deliverables
 - `SRS.md` - Software Requirements Specification (FRs + NFRs)
 - `SPEC_TRACKING.md` - Spec tracking matrix
@@ -459,11 +459,6 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 1 → Phase 2: Architecture Design
 
-- Generate Phase 2 plan:
-  ```bash
-  python3 harness_cli.py plan-phase --phase 2 --project . \
-    --output .methodology/phase2_plan.md
-  ```
 - Advance FSM to Phase 2 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 1 --project .

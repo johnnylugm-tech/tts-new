@@ -2,10 +2,18 @@
 
 > **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-11
+> **Date**: 2026-06-13
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 6 - Quality Assurance
 > **Status**: Full version (including Phase 6 detailed tasks)
+> **Mode**: Dynamic (load-context at execution time)
+
+
+> **Hard Rules in Force (this plan)** — explicit reminders:
+> - HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews. Never role-play A or B yourself.
+> - HR-05: harness-methodology wins all conflicts — if a project decision contradicts SKILL.md / INIT / this plan, the harness wins.
+> - HR-16: Trace 4a = 100% required (G2/G3/G4 only). `gate_score_overrides` is a **threshold floor (raises, not lowers)** per `sab_parser.derive_gate_score_overrides` — cannot bypass a failing trace dim. Remediation: fix code/FRs to 100%, accept gate block, or escalate to human. No automated override.
+> - HR-17: NEVER modify files inside `harness/` — debug the framework, never hot-patch the submodule.
 
 ---
 
@@ -58,6 +66,13 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   ```
   Re-run `run-phase` to confirm `Attestation: clean` before continuing.
 
+- **[V2.9.1-B.1-HANDOFF]** Cross-deliverable dependency check (P5 → P6) — v2.9.1 B.1. **Must PASS** before any Phase 6 work begins:
+  ```bash
+  python3 harness_cli.py validate-handoff --from-phase 5 --project .
+  ```
+  > Verifies P5 deliverables are present and well-formed (e.g. P1 TEST_INVENTORY.yaml non-empty + covers all FRs; P2 TEST_SPEC.md has parseable named test cases; P3 all FRs have per-FR Gate 1 sentinels; P4 VERIFICATION_REPORT.md non-trivial; P5 BASELINE.md exists).
+  > If exit 1: read the error list, fix the upstream deliverable, re-run until exit 0. Do NOT proceed with Phase 6 work on a BLOCKED handoff.
+
 - **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
@@ -65,23 +80,19 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
   4. Phase 6 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 6 --project . --overwrite`
 
+### 🔄 [PHASE-CONTEXT] — Load Before Starting
+
+```bash
+python3 harness_cli.py load-context --phase 6 --project . --json \
+  > .sessi-work/phase6_ctx.json
+```
+> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
+
 ### P6 Phase End Audit (+ A/B Review)
 
 > A/B collaboration is active for Phase 6 deliverables (HR-01).
 > Agent A generates QUALITY_REPORT.md and RELEASE_NOTES.md.
 > Agent B (reviewer — stateless) reviews the deliverables and verifies Gate 4 score.
-
-### Existing Quality Metrics (from QUALITY_REPORT.md)
-
-- **Generated**: 2026-06-08 19:14:29
-- **Gate**: 4
-- **Overall Score**: 97.1288/100
-- **Critical**: 0
-- **High**: 0
-- **Medium**: 0
-- **Low**: 0
-- **BASELINE.md**: See `05-verification/BASELINE.md` for performance baseline
-- **VERIFICATION_REPORT.md**: See `05-verification/VERIFICATION_REPORT.md` for verification results
 
 ### Pre-Gate Preparation
 - Confirm all FRs are merged to main branch
@@ -119,6 +130,8 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
 
 ### 🔒 CHECKPOINT-GATE-4: Phase 6 Exit
 > linting(90) · type_safety(85) · test_coverage(80) · security(80) · secrets_scanning(100) · license_compliance(100) · mutation_testing(70) · architecture(80) · readability(80) · error_handling(80) · documentation(75) · performance(75) · integration_coverage(75) · test_assertion_quality(70) · traceability(100) · composite ≥ 85  [traceability: framework-owned, harness-computed · CRG recon inside run-gate · D4 spec-coverage unified ≥90%]
+> HR-08: Phase end requires Quality Gate pass — never advance past a failing gate (max 3 retry rounds, then escalate).
+> _Design note_: HR-08 only appears in P3-P6 (Gate 2/3/4 exits). P5/P7/P8 have no gate-exit checkpoint so HR-08 is correctly absent from those plans.
 
 - **G4a** Prepare Gate 4:
   ```bash
@@ -248,11 +261,6 @@ Agent B peer review of the QA deliverables (HR-01) — both are required to exit
 
 ### Phase 6 → Phase 7: Risk Management
 
-- Generate Phase 7 plan:
-  ```bash
-  python3 harness_cli.py plan-phase --phase 7 --project . \
-    --output .methodology/phase7_plan.md
-  ```
 - **[GIT-TAG]** Push Gate 4 git tag (SKILL.md §0.4):
   ```bash
   SCORE=$(python3 -c "import json; d=json.load(open('.sessi-work/gate4_result.json')); print(d.get('composite_score','XX'))" 2>/dev/null || echo 'XX')

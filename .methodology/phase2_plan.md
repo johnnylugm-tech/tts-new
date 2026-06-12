@@ -2,10 +2,18 @@
 
 > **Version**: v2.9.0 (project plan)
 > **Project**: tts-new
-> **Date**: 2026-06-11
+> **Date**: 2026-06-13
 > **Framework**: harness-methodology v2.9.0
 > **Phase**: 2 - Architecture Design
 > **Status**: Full version (including Phase 2 detailed tasks)
+> **Mode**: Dynamic (load-context at execution time)
+
+
+> **Hard Rules in Force (this plan)** — explicit reminders:
+> - HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews. Never role-play A or B yourself.
+> - HR-05: harness-methodology wins all conflicts — if a project decision contradicts SKILL.md / INIT / this plan, the harness wins.
+> - HR-16: Trace 4a = 100% required (G2/G3/G4 only). `gate_score_overrides` is a **threshold floor (raises, not lowers)** per `sab_parser.derive_gate_score_overrides` — cannot bypass a failing trace dim. Remediation: fix code/FRs to 100%, accept gate block, or escalate to human. No automated override.
+> - HR-17: NEVER modify files inside `harness/` — debug the framework, never hot-patch the submodule.
 
 ---
 
@@ -47,12 +55,27 @@ Phase 2 designs the system architecture based on SRS, producing SAD and ADR.
   After 3 FAIL: escalate to human — provide last `run-phase --phase 2` full output.
   Human fix → re-run `run-phase --phase 2 --project .` → PASS required before continuing.
 
+- **[V2.9.1-B.1-HANDOFF]** Cross-deliverable dependency check (P1 → P2) — v2.9.1 B.1. **Must PASS** before any Phase 2 work begins:
+  ```bash
+  python3 harness_cli.py validate-handoff --from-phase 1 --project .
+  ```
+  > Verifies P1 deliverables are present and well-formed (e.g. P1 TEST_INVENTORY.yaml non-empty + covers all FRs; P2 TEST_SPEC.md has parseable named test cases; P3 all FRs have per-FR Gate 1 sentinels; P4 VERIFICATION_REPORT.md non-trivial; P5 BASELINE.md exists).
+  > If exit 1: read the error list, fix the upstream deliverable, re-run until exit 0. Do NOT proceed with Phase 2 work on a BLOCKED handoff.
+
 - **[PREFLIGHT-CI]** Confirm CI wiring unchanged (should be set since P1):
   1. `.github/workflows/harness_quality_gate.yml` exists
   2. Git hooks installed (`ls .git/hooks/prepare-commit-msg`)
   3. harness importable (submodule, PYTHONPATH, or vendored `quality_gate/`)
   4. Phase 2 confirmed in `.methodology/state.json` (`advance-phase` already run)
   > If stale: run `python3 harness_cli.py init-project --phase 2 --project . --overwrite`
+
+### 🔄 [PHASE-CONTEXT] — Load Before Starting
+
+```bash
+python3 harness_cli.py load-context --phase 2 --project . --json \
+  > .sessi-work/phase2_ctx.json
+```
+> Outputs `fr_ids`, `fr_details`, `modules` from current project state.
 
 ### Task Decomposition (Dependency Analysis)
 
@@ -237,7 +260,7 @@ are not re-opened. This bounds backtracking to a single step.
 **Agent B**: TECH_LEAD
 
 **A/B Work** (HR-04: HybridWorkflow ON — Agent A authors, a separate Agent B sub-agent reviews):
-- **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply Step 1b Architecture-Risk Triggers FIRST (scan SAD modules: shared mutable state → force NP-13; external process → force NP-15; network client/cache → force NP-07; forced cases go in tests/integration/ and are tagged SAD: in Pattern Activation table) → apply 8-Question Protocol per FR (Q1-Q8 + Step 2.5 Interface Contracts + Step 4 Infrastructure Wiring) → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section
+- **[A-1]** Agent A (ARCHITECT): Generate TEST_SPEC.md via derive_test_cases.md skill → preserve TEST_INVENTORY.yaml names where specified → apply Step 1b Architecture-Risk Triggers FIRST (scan SAD modules: shared mutable state → force NP-13; external process → force NP-15; network client/cache → force NP-07; forced cases go in tests/integration/ and are tagged SAD: in Pattern Activation table) → apply 8-Question Protocol per FR (Q1-Q8 + Step 2.5 Interface Contracts + Step 4 Infrastructure Wiring) → fill concrete Inputs + a Sub-assertion predicate table per FR → run check-test-spec-consistency → populate cross-cutting section. **v2.9.1 B.3**: parser expects `### FR-XX: ...` followed by table rows. A prose strategy doc with no table rows will FAIL the D4 spec-coverage check (no vacuous pass when FRs are defined) — re-run this skill if TEST_SPEC.md is wrong shape.
   - FORBIDDEN: vague/non-testable acceptance criteria
 - **[A-2]** Agent A returns `{status, files, confidence, citations, summary}`
 - **[B-1]** Agent B (TECH_LEAD) — dispatch as **STATELESS** subagent:
@@ -313,14 +336,6 @@ are not re-opened. This bounds backtracking to a single step.
 
   > fr_id uses P2 as phase-level placeholder; replace with FR-XX for FR-specific plans.
 
-### FR Architecture Mapping (2 total)
-
-#### FR-01: {requirement}
-**Requirement**: {requirement}
-
-#### FR-02: ...
-**Requirement**: ...
-
 ### SAB Generation (Machine-Readable Architecture Baseline)
 
 > **CONTRACT**: The SAB block in SAD.md §5 is parsed by
@@ -336,7 +351,7 @@ are not re-opened. This bounds backtracking to a single step.
     version: "1.0"
     created_at: "{YYYY-MM-DD}"
     phase: 2  # MUST be int, NOT a string — parser raises on 'phase: "2"'
-    project: "<your-project-name>"
+    project: "{project_name}"
   
     layers:  # EXAMPLE — replace with your project's layers
       - name: api
@@ -492,11 +507,6 @@ are not re-opened. This bounds backtracking to a single step.
 
 ### Phase 2 → Phase 3: Implementation
 
-- Generate Phase 3 plan:
-  ```bash
-  python3 harness_cli.py plan-phase --phase 3 --project . \
-    --output .methodology/phase3_plan.md
-  ```
 - Advance FSM to Phase 3 (writes new HANDOVER.md + local commit):
   ```bash
   python3 harness_cli.py advance-phase --completed 2 --project .
